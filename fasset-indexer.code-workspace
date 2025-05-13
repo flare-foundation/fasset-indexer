@@ -13,6 +13,10 @@
 			"path": "packages/fasset-indexer-api"
 		},
         {
+            "name": "✕ xrp",
+            "path": "packages/fasset-indexer-xrp"
+        },
+        {
             "name": "🐶 doge",
             "path": "packages/fasset-indexer-doge"
         },

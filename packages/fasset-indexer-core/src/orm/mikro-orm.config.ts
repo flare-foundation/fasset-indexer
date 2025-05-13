@@ -51,7 +51,7 @@ import { FtsoPrice } from "./entities/state/price"
 import { TokenBalance } from "./entities/state/balance"
 import { UnderlyingBlock } from "./entities/underlying/block"
 import { UnderlyingAddress } from "./entities/underlying/address"
-import { UnderlyingVoutReference } from "./entities/underlying/reference"
+import { UnderlyingReference } from "./entities/underlying/reference"
 import { updateSchema } from "./utils"
 import { MIN_DATABASE_POOL_CONNECTIONS, MAX_DATABASE_POOL_CONNECTIONS } from "../config/constants"
 import type { Options } from "@mikro-orm/core"
@@ -86,7 +86,7 @@ export const ORM_OPTIONS: Options<AbstractSqlDriver> = defineConfig({
     EscrowFinished, CoreVaultManagerCustodianAddressUpdated,
     AssetManagerSettings, CoreVaultManagerSettings,
     // underlying
-    UnderlyingBlock, UnderlyingVoutReference, UnderlyingAddress
+    UnderlyingBlock, UnderlyingReference, UnderlyingAddress
   ],
   pool: {
     min: MIN_DATABASE_POOL_CONNECTIONS,

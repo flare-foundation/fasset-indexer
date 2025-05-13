@@ -2,6 +2,7 @@ import { Var } from "../orm/entities/state/var"
 import { UnderlyingAddress } from "../orm/entities/underlying/address"
 import type { EntityManager } from "@mikro-orm/core"
 import type { ORM, SchemaUpdate, AddressType } from "./interface"
+import { UnderlyingBlock, UnderlyingTransaction } from "./entities";
 
 
 export async function updateSchema(orm: ORM, update: SchemaUpdate = "full"): Promise<void> {
@@ -45,4 +46,13 @@ export async function findOrCreateUnderlyingAddress(em: EntityManager, address: 
     em.persist(underlyingAddress)
   }
   return underlyingAddress
+}
+
+export async function findOrCreateUnderlyingTransaction(em: EntityManager, hash: string, block: UnderlyingBlock, value: bigint): Promise<UnderlyingTransaction> {
+  let underlyingTransaction = await em.findOne(UnderlyingTransaction, { hash })
+  if (!underlyingTransaction) {
+    underlyingTransaction = new UnderlyingTransaction(block, hash, value)
+    em.persist(underlyingTransaction)
+  }
+  return underlyingTransaction
 }

@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "module": "node16",
-    "target": "es2018",
+    "target": "es2020",
     "moduleResolution": "node16",
     "allowJs": true,
     "declaration": true,
@@ -29,6 +29,9 @@
     },
     {
       "path": "packages/fasset-indexer-core"
+    },
+    {
+      "path": "packages/fasset-indexer-xrp",
     },
     {
       "path": "packages/fasset-indexer-doge"

@@ -1,0 +1,16 @@
+import { ConfigLoader } from "fasset-indexer-core"
+
+export class XrpConfigLoader extends ConfigLoader {
+
+  get xrpRpcUrl(): string {
+    return this.required('XRP_RPC_URL')
+  }
+
+  get xrpRpcApiKey(): string | undefined {
+    return process.env.XRP_RPC_API_KEY
+  }
+
+  get xrpMinBlockNumber(): number {
+    return parseInt(this.required('XRP_MIN_BLOCK_NUMBER'))
+  }
+}

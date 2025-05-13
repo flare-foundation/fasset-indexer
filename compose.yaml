@@ -5,6 +5,13 @@ x-templates:
       db-postgres:
         condition: service_healthy
     restart: unless-stopped
+  postgres-env: &postgres-env
+    DB_TYPE: postgres
+    DB_HOST: db-postgres
+    DB_PORT: 5432
+    DB_NAME: ${POSTGRES_DB}
+    DB_USER: ${POSTGRES_USER}
+    DB_PASSWORD: ${POSTGRES_PASSWORD}
 
 services:
   core:
@@ -13,12 +20,7 @@ services:
     profiles: ["core"]
     command: ["node", "/app/packages/fasset-indexer-core/dist/src/run/run-indexer.js"]
     environment:
-      DB_TYPE: postgres
-      DB_HOST: db-postgres
-      DB_PORT: 5432
-      DB_NAME: ${POSTGRES_DB}
-      DB_USER: ${POSTGRES_USER}
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      <<: *postgres-env
       CHAIN: ${CHAIN}
       RPC_URL: ${RPC_URL}
       RPC_API_KEY: ${RPC_API_KEY:-}
@@ -31,12 +33,7 @@ services:
     profiles: ["watchdog"]
     command: ["node", "/app/packages/fasset-indexer-core/dist/src/run/run-watchdog.js"]
     environment:
-      DB_TYPE: postgres
-      DB_HOST: db-postgres
-      DB_PORT: 5432
-      DB_NAME: ${POSTGRES_DB}
-      DB_USER: ${POSTGRES_USER}
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      <<: *postgres-env
       CHAIN: ${CHAIN}
       RPC_URL: ${RPC_URL}
       RPC_API_KEY: ${RPC_API_KEY:-}
@@ -46,40 +43,38 @@ services:
     profiles: ["dogecoin"]
     command: ["node", "/app/packages/fasset-indexer-doge/dist/src/run/run-indexer.js"]
     environment:
-      DB_TYPE: postgres
-      DB_HOST: db-postgres
-      DB_PORT: 5432
-      DB_NAME: ${POSTGRES_DB}
-      DB_USER: ${POSTGRES_USER}
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      <<: *postgres-env
       DOGE_RPC_URL: ${DOGE_RPC_URL}
       DOGE_RPC_API_KEY: ${DOGE_RPC_API_KEY:-}
       DOGE_RPC_USER: ${DOGE_RPC_USER:-}
       DOGE_RPC_PASSWORD: ${DOGE_RPC_PASSWORD:-}
       DOGE_MIN_BLOCK_NUMBER: ${DOGE_MIN_BLOCK_NUMBER}
+  ripple:
+    <<: *base-svc
+    container_name: ${COMPOSE_PROJECT_NAME}-ripple
+    profiles: ["ripple"]
+    command: ["node", "/app/packages/fasset-indexer-xrp/dist/src/run/run-indexer.js"]
+    environment:
+      <<: *postgres-env
+      XRP_RPC_URL: ${XRP_RPC_URL}
+      XRP_RPC_API_KEY: ${XRP_RPC_API_KEY:-}
+      XRP_MIN_BLOCK_NUMBER: ${XRP_MIN_BLOCK_NUMBER}
   api:
     <<: *base-svc
     container_name: ${COMPOSE_PROJECT_NAME}-api
     profiles: ["api"]
     command: ["node", "/app/packages/fasset-indexer-api/dist/src/main"]
     environment:
-      DB_TYPE: postgres
-      DB_HOST: db-postgres
-      DB_PORT: 5432
-      DB_NAME: ${POSTGRES_DB}
-      DB_USER: ${POSTGRES_USER}
-      DB_PASSWORD: ${POSTGRES_PASSWORD}
+      <<: *postgres-env
       API_ROOT_PATH: ${API_ROOT_PATH:-}
     ports:
       - "${API_PORT}:3000"
   db-postgres:
     image: postgres:16
     container_name: ${COMPOSE_PROJECT_NAME}-db
-    profiles: ["core", "watchdog", "dogecoin", "api"]
+    profiles: ["core", "watchdog", "api", "ripple", "dogecoin"]
     environment:
-      POSTGRES_DB: ${POSTGRES_DB}
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      <<: *postgres-env
     volumes:
       - 'db_data:/var/lib/postgresql/data'
     healthcheck:

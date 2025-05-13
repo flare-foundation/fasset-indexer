@@ -1,5 +1,5 @@
 import { FAssetType } from "fasset-indexer-core"
-import { getVar, setVar, findOrCreateUnderlyingAddress, AddressType, type EntityManager } from "fasset-indexer-core/orm"
+import { getVar, setVar, findOrCreateUnderlyingAddress, AddressType, type EntityManager, findOrCreateUnderlyingTransaction } from "fasset-indexer-core/orm"
 import { UnderlyingBlock, UnderlyingAddress, UnderlyingVoutReference } from "fasset-indexer-core/entities"
 import { PaymentReference } from "fasset-indexer-core/utils"
 import { logger } from "fasset-indexer-core/logger"
@@ -74,7 +74,7 @@ export class DogeIndexer {
       if (reference == null) continue
       const sender = await this.extractTransactionSender(tx)
       const address = await findOrCreateUnderlyingAddress(em, sender, AddressType.AGENT)
-      await this.storeVoutReference(em, reference, txhash, address, block)
+      await this.storeVoutReference(em, reference, tx, address, block)
       break
     }
   }
@@ -86,9 +86,10 @@ export class DogeIndexer {
   }
 
   private async storeVoutReference(
-    em: EntityManager, reference: string, txhash: string, address: UnderlyingAddress, block: UnderlyingBlock
+    em: EntityManager, reference: string, transaction: IDogeTx, address: UnderlyingAddress, block: UnderlyingBlock
   ): Promise<UnderlyingVoutReference> {
-    const ref = new UnderlyingVoutReference(FAssetType.FDOGE, reference, txhash, address, block)
+    const tx = await findOrCreateUnderlyingTransaction(em, transaction.hash, block, BigInt(0))
+    const ref = new UnderlyingVoutReference(FAssetType.FDOGE, reference, tx, address, block)
     em.persist(ref)
     return ref
   }

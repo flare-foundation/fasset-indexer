@@ -2,11 +2,12 @@ import { Entity, ManyToOne, Property, PrimaryKey, Unique, Enum } from "@mikro-or
 import { UnderlyingBlock } from "./block"
 import { UnderlyingAddress } from "../underlying/address"
 import { FAssetType } from "../../../shared"
+import { UnderlyingTransaction } from "./transaction"
 
 
 @Entity()
-@Unique({ properties: ['fasset', 'block', 'reference', 'transactionHash'] })
-export class UnderlyingVoutReference {
+@Unique({ properties: ['fasset', 'block', 'reference', 'transaction'] })
+export class UnderlyingReference {
 
   @PrimaryKey({ autoincrement: true, type: 'integer' })
   id!: number
@@ -17,8 +18,8 @@ export class UnderlyingVoutReference {
   @Property({ type: 'text' })
   reference: string
 
-  @Property({ type: 'text' })
-  transactionHash: string
+  @ManyToOne({ entity: () => UnderlyingTransaction })
+  transaction: UnderlyingTransaction
 
   @ManyToOne(() => UnderlyingAddress)
   address: UnderlyingAddress
@@ -26,10 +27,10 @@ export class UnderlyingVoutReference {
   @ManyToOne(() => UnderlyingBlock)
   block: UnderlyingBlock
 
-  constructor(fasset: FAssetType, reference: string, transactionHash: string, address: UnderlyingAddress, block: UnderlyingBlock) {
+  constructor(fasset: FAssetType, reference: string, transaction: UnderlyingTransaction, address: UnderlyingAddress, block: UnderlyingBlock) {
     this.fasset = fasset
     this.reference = reference
-    this.transactionHash = transactionHash
+    this.transaction = transaction
     this.address = address
     this.block = block
   }

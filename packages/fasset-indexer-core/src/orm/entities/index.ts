@@ -41,6 +41,7 @@ export { AssetManagerSettings } from './state/settings'
 // underlying data
 export { UnderlyingBlock } from "./underlying/block"
 export { UnderlyingAddress } from "./underlying/address"
-export { UnderlyingVoutReference } from "./underlying/reference"
+export { UnderlyingReference as UnderlyingVoutReference } from "./underlying/reference"
+export { UnderlyingTransaction } from "./underlying/transaction"
 // building event bound stuff
 export { EventBound, FAssetEventBound } from "./events/_bound"
