@@ -59,6 +59,7 @@ services:
       XRP_RPC_URL: ${XRP_RPC_URL}
       XRP_RPC_API_KEY: ${XRP_RPC_API_KEY:-}
       XRP_MIN_BLOCK_NUMBER: ${XRP_MIN_BLOCK_NUMBER}
+      XRP_RPC_AMENDMENT_BLOCKED: ${XRP_RPC_AMENDMENT_BLOCKED:-}
   api:
     <<: *base-svc
     container_name: ${COMPOSE_PROJECT_NAME}-api
