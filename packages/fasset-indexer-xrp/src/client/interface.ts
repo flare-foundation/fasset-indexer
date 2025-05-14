@@ -29,9 +29,20 @@ export interface IXrpMemo {
   }
 }
 
-export interface IXrpInfoResponse {
+export interface IXrpLedgerCurrentResponse {
   result: {
     ledger_current_index: number
+    status: string
+  }
+}
+
+export interface IXrpServerInfoResponse {
+  result: {
+    info: {
+      validated_ledger: {
+        seq: number
+      }
+    }
     status: string
   }
 }

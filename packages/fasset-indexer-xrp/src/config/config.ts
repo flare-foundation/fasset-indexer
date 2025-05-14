@@ -13,4 +13,8 @@ export class XrpConfigLoader extends ConfigLoader {
   get xrpMinBlockNumber(): number {
     return parseInt(this.required('XRP_MIN_BLOCK_NUMBER'))
   }
+
+  get xrpNodeIsAmendmentBlocked(): boolean {
+    return process.env.XRP_RPC_AMENDMENT_BLOCKED === "true"
+  }
 }

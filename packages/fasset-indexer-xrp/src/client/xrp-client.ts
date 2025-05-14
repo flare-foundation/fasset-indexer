@@ -1,5 +1,5 @@
 import { XrpConfigLoader } from "../config/config"
-import { IXrpBlock, IXrpBlockQueryResponse, IXrpInfoResponse } from "./interface"
+import { IXrpBlock, IXrpBlockQueryResponse, IXrpLedgerCurrentResponse, IXrpServerInfoResponse } from "./interface"
 
 export class XrpClient {
 
@@ -12,13 +12,25 @@ export class XrpClient {
   }
 
   async blockHeight(): Promise<number> {
-    const resp = await this.getLedgerCurrent()
-    this.ensureSuccess(resp)
-    return resp.result.ledger_current_index
+    let current_block = 0
+    if (this.config.xrpNodeIsAmendmentBlocked) {
+      const resp = await this.getServerInfo()
+      this.ensureSuccess(resp)
+      current_block = resp.result.info.validated_ledger.seq
+    } else {
+      const resp = await this.getLedgerCurrent()
+      this.ensureSuccess(resp)
+      current_block = resp.result.ledger_current_index
+    }
+    return current_block
   }
 
-  private async getLedgerCurrent(): Promise<IXrpInfoResponse> {
+  private async getLedgerCurrent(): Promise<IXrpLedgerCurrentResponse> {
     return this.request('ledger_current', [])
+  }
+
+  private async getServerInfo(): Promise<IXrpServerInfoResponse> {
+    return this.request('server_info', [{}])
   }
 
   private async getLedger(n: number): Promise<IXrpBlockQueryResponse> {
@@ -39,9 +51,9 @@ export class XrpClient {
     return resp.json()
   }
 
-  private ensureSuccess(resp: { result: { status: string }}): any {
+  private ensureSuccess(resp: { result: { status: string, error_message?: string }}): any {
     if (resp.result.status != 'success') {
-      throw new Error(`rpc returned ${resp}`)
+      throw new Error(`rpc returned ${JSON.stringify(resp.result.error_message)}`)
     }
   }
 }
