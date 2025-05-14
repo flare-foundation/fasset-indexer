@@ -1,11 +1,11 @@
 x-templates:
-  base-svc: &base-svc
+  x-base-svc: &base-svc
     image: ${CI_REGISTRY_IMAGE}:${DEPLOY_IMAGE_TAG}
     depends_on:
       db-postgres:
         condition: service_healthy
     restart: unless-stopped
-  postgres-env: &postgres-env
+  x-postgres-env: &postgres-env
     DB_TYPE: postgres
     DB_HOST: db-postgres
     DB_PORT: 5432
