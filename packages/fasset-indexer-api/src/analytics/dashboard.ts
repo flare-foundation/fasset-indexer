@@ -7,7 +7,8 @@ import {
   LiquidationPerformed, TokenBalance, AgentVaultInfo,
   FAssetEventBound, CoreVaultRedemptionRequested,
   ReturnFromCoreVaultConfirmed, TransferToCoreVaultSuccessful,
-  AssetManagerSettings
+  AssetManagerSettings,
+  TransferToCoreVaultStarted
 } from "fasset-indexer-core/entities"
 import { EVENTS } from "fasset-indexer-core/config"
 import { fassetToUsdPrice } from "./utils/prices"
@@ -83,18 +84,25 @@ export class DashboardAnalytics extends SharedAnalytics {
   }
 
   async totalRedeemed(): Promise<FAssetValueResult> {
-    const res = await this.orm.em.fork().createQueryBuilder(RedemptionRequested, 'rr')
+    const em = this.orm.em.fork()
+    const rr = await em.createQueryBuilder(RedemptionRequested, 'rr')
       .select(['rr.fasset', raw('sum(rr.value_uba) as value')])
       .groupBy('fasset')
       .execute() as { fasset: number, value: string }[]
-    return this.convertOrmResultToFAssetValueResult(res, 'value')
+    const tc = await em.createQueryBuilder(TransferToCoreVaultStarted, 'tc')
+      .select(['tc.fasset', raw('sum(tc.value_uba) as value')])
+      .groupBy('fasset')
+      .execute() as { fasset: number, value: string }[]
+    const fvrrr = this.convertOrmResultToFAssetValueResult(rr, 'value')
+    const fvrtc = this.convertOrmResultToFAssetValueResult(tc, 'value')
+    return this.transformFAssetValueResults(fvrrr, fvrtc, (x, y) => x - y)
   }
 
   async totalRedeemedLots(): Promise<FAssetAmountResult> {
     const ret = {} as FAssetAmountResult
     const em = this.orm.em.fork()
     const tr = await this.totalRedeemed()
-    for (const [ fasset, { value }] of Object.entries(tr)) {
+    for (const [fasset, { value }] of Object.entries(tr)) {
       const fassetType = FAssetType[fasset]
       const settings = await em.findOneOrFail(AssetManagerSettings, { fasset: fassetType })
       ret[fasset] = { amount: Number(value / settings.lotSizeAmg) }
@@ -137,10 +145,13 @@ export class DashboardAnalytics extends SharedAnalytics {
   }
 
   async agentRedemptionRequestCount(agentAddress: string): Promise<AmountResult> {
-    const qb = this.orm.em.fork().qb(RedemptionRequested)
-    qb.count().where({ agentVault: { address: { hex: agentAddress } } })
-    const result = await qb.execute()
-    return { amount: Number(result[0].count || 0) }
+    const qbr = this.orm.em.fork().qb(RedemptionRequested)
+    qbr.count().where({ agentVault: { address: { hex: agentAddress } } })
+    const redemptions = await qbr.execute()
+    const qbc = this.orm.em.fork().qb(TransferToCoreVaultStarted)
+    qbc.count().where({ agentVault: { address: { hex: agentAddress } } })
+    const coreVaultTransfers = await qbc.execute()
+    return { amount: Number(redemptions[0].count || 0) - Number(coreVaultTransfers[0].count || 0) }
   }
 
   async agentRedemptionPerformedCount(agentAddress: string): Promise<AmountResult> {
@@ -279,8 +290,13 @@ export class DashboardAnalytics extends SharedAnalytics {
   }
 
   async redeemedAggregateTimeSeries(end: number, npoints: number, start?: number): Promise<TimeSeries<bigint>> {
-    const timeseries = await this.redeemedTimeSeries(end, npoints, start)
-    return this.aggregateTimeSeries(timeseries)
+    const redeemedTs = await this.redeemedTimeSeries(end, npoints, start)
+    const transferredTs = await this.coreVaultTransferredTimeSeries(end, npoints, start)
+    return this.transformTimeSeries(
+      await this.aggregateTimeSeries(redeemedTs),
+      await this.aggregateTimeSeries(transferredTs),
+      (x, y) => x - y
+    )
   }
 
   async coreVaultInflowAggregateTimeSeries(end: number, npoints: number, start?: number): Promise<TimeSeries<bigint>> {
@@ -330,6 +346,19 @@ export class DashboardAnalytics extends SharedAnalytics {
       ($gt, $lt) => em.createQueryBuilder(RedemptionRequested, 'rr')
         .select(['rr.fasset', raw('sum(rr.value_uba) as value')])
         .join('rr.evmLog', 'log')
+        .join('log.block', 'block')
+        .where({ 'block.timestamp': { $gt, $lt } })
+        .groupBy('fasset'),
+      end, npoints, start ?? await this.getMinTimestamp(em)
+    )
+  }
+
+  async coreVaultTransferredTimeSeries(end: number, npoints: number, start?: number): Promise<FAssetTimeSeries<bigint>> {
+    const em = this.orm.em.fork()
+    return this.getTimeSeries(
+      ($gt, $lt) => em.createQueryBuilder(TransferToCoreVaultStarted, 'ts')
+        .select(['ts.fasset', raw('sum(ts.value_uba) as value')])
+        .join('ts.evmLog', 'log')
         .join('log.block', 'block')
         .where({ 'block.timestamp': { $gt, $lt } })
         .groupBy('fasset'),
