@@ -51,7 +51,9 @@ export class XrpIndexer {
 
   protected async processBlock(block: IXrpBlock): Promise<void> {
     await this.context.orm.em.transactional(async em => {
-      const blockEnt = await this.storeXrpBlock(em, block)
+      let blockEnt = await em.findOne(UnderlyingBlock, { hash: block.ledger_hash })
+      if (blockEnt != null) return
+      blockEnt = await this.storeXrpBlock(em, block)
       for (const tx of block.transactions) {
         await this.processTx(em, tx, blockEnt)
       }

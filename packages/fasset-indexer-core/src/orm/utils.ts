@@ -54,7 +54,7 @@ export async function findOrCreateUnderlyingTransaction(
 ): Promise<UnderlyingTransaction> {
   let underlyingTransaction = await em.findOne(UnderlyingTransaction, { hash })
   if (!underlyingTransaction) {
-    underlyingTransaction = new UnderlyingTransaction(block, hash, value)
+    underlyingTransaction = new UnderlyingTransaction(block, hash, value, source, target)
     em.persist(underlyingTransaction)
   }
   return underlyingTransaction
