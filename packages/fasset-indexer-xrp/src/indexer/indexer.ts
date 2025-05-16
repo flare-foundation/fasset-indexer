@@ -67,9 +67,11 @@ export class XrpIndexer {
         logger.error(`reference but no account present at index ${block.height}`)
         continue
       }
-      const address = await findOrCreateUnderlyingAddress(em, transaction.Account, AddressType.AGENT)
-      const utransaction = await findOrCreateUnderlyingTransaction(em, transaction.hash, block, BigInt(transaction.Amount!))
-      await this.storeReference(em, reference, utransaction, address, block)
+      const source = await findOrCreateUnderlyingAddress(em, transaction.Account, AddressType.AGENT)
+      const target = transaction.Destination == null ? undefined :
+        await findOrCreateUnderlyingAddress(em, transaction.Destination, AddressType.USER)
+      const utransaction = await findOrCreateUnderlyingTransaction(em, transaction.hash, block, BigInt(transaction.Amount!), source, target)
+      await this.storeReference(em, reference, utransaction, source, block)
       break
     }
   }

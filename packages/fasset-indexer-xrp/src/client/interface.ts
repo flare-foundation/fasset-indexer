@@ -20,6 +20,7 @@ export interface IXrpTransaction {
   Sequence: number
   hash: string
   TransactionResult: string
+  Destination?: string
 }
 
 export interface IXrpMemo {

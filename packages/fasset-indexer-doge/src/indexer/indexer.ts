@@ -88,7 +88,7 @@ export class DogeIndexer {
   private async storeVoutReference(
     em: EntityManager, reference: string, transaction: IDogeTx, address: UnderlyingAddress, block: UnderlyingBlock
   ): Promise<UnderlyingVoutReference> {
-    const tx = await findOrCreateUnderlyingTransaction(em, transaction.hash, block, BigInt(0))
+    const tx = await findOrCreateUnderlyingTransaction(em, transaction.hash, block, BigInt(0), address, undefined)
     const ref = new UnderlyingVoutReference(FAssetType.FDOGE, reference, tx, address, block)
     em.persist(ref)
     return ref
