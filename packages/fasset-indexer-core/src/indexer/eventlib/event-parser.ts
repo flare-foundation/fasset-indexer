@@ -58,26 +58,6 @@ export class EventParser {
       } else if (await this.isCollateralPoolToken(em, log.address)) {
         return this.context.interfaces.erc20Interface.parseLog(log)
       }
-      ///////////// delete from /////////////
-      if (this.context.config.indexPrices) {
-        let parsed = null
-        try {
-          parsed = this.context.interfaces.erc20Interface.parseLog(log)
-        } catch (e) {
-          return null
-        }
-        const from = parsed?.args[0]
-        const to = parsed?.args[1]
-        if ((from != null && to != null) && (
-          await this.isCollateralPool(em, from)
-          || await this.isAgentVault(em, from)
-          || await this.isCollateralPool(em, to)
-          || await this.isAgentVault(em, to)
-        )) {
-          return parsed
-        }
-      }
-      ///////////// delete to /////////////
     } else if (iface === 'COLLATERAL_POOL') {
       const em = this.context.orm.em.fork()
       if (await this.isCollateralPool(em, log.address)) {

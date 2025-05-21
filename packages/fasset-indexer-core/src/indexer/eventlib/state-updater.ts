@@ -3,10 +3,8 @@ import { AgentManager, AgentOwner, AgentVault } from "../../orm/entities/agent"
 import { AgentVaultSettings } from "../../orm/entities/state/agent"
 import { AgentVaultCreated } from "../../orm/entities/events/agent"
 import { UntrackedAgentVault } from "../../orm/entities/state/var"
-import { CollateralTypeAdded } from "../../orm/entities/events/token"
-import { PricePublished, PricesPublished } from "../../orm/entities/events/price"
+import { PricesPublished } from "../../orm/entities/events/price"
 import { updateAgentVaultInfo, findOrCreateEvmAddress } from "../utils"
-import { getPriceFromDal } from "../../context/dal"
 import { EventStorer } from "./event-storer"
 import type { EntityManager } from "@mikro-orm/knex"
 import type { AgentVaultCreatedEvent } from "../../../chain/typechain/IAssetManager"
@@ -35,10 +33,7 @@ export class StateUpdater extends EventStorer {
   }
 
   protected override async onPublishedPrices(em: EntityManager, evmLog: EvmLog, args: any): Promise<PricesPublished> {
-    const pp = await super.onPublishedPrices(em, evmLog, args)
-    if (this.context.config.indexPrices)
-      await this.addPriceSnapshot(em, pp)
-    return pp
+    return await super.onPublishedPrices(em, evmLog, args)
   }
 
   protected async ensureAgentManager(em: EntityManager, address: string): Promise<AgentManager> {
@@ -73,16 +68,6 @@ export class StateUpdater extends EventStorer {
       agentManager.iconUrl = await this.context.contracts.agentOwnerRegistryContract.getAgentIconUrl(manager)
     }
     return agentManager
-  }
-
-  private async addPriceSnapshot(em: EntityManager, pricesPublished: PricesPublished): Promise<void> {
-    const collateralTypes = await em.findAll(CollateralTypeAdded)
-    const symbols = new Set(collateralTypes.map((ct) => [ct.tokenFtsoSymbol, ct.assetFtsoSymbol]).flat())
-    for (let symbol of symbols) {
-      const [price, decimals] = await getPriceFromDal(symbol, pricesPublished.votingRoundId)
-      const priceEntity = new PricePublished(pricesPublished, symbol, price, decimals)
-      em.persist(priceEntity)
-    }
   }
 
   private async updateAgentVaultInfo(em: EntityManager, agentVault: AgentVault): Promise<void> {
