@@ -47,3 +47,11 @@ export interface IXrpServerInfoResponse {
     status: string
   }
 }
+
+export interface IXrpAccountInfoResponse {
+  result: {
+    account_data: {
+      Balance: string
+    }
+  }
+}

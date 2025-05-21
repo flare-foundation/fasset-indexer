@@ -40,7 +40,7 @@ export { TokenBalance } from "./state/balance"
 export { AssetManagerSettings } from './state/settings'
 // underlying data
 export { UnderlyingBlock } from "./underlying/block"
-export { UnderlyingAddress } from "./underlying/address"
+export { UnderlyingAddress, UnderlyingBalance } from "./underlying/address"
 export { UnderlyingReference as UnderlyingVoutReference } from "./underlying/reference"
 export { UnderlyingTransaction } from "./underlying/transaction"
 // building event bound stuff

@@ -1,7 +1,7 @@
 import { Var } from "../orm/entities/state/var"
-import { UnderlyingAddress } from "../orm/entities/underlying/address"
+import { UnderlyingAddress, UnderlyingBalance } from "../orm/entities/underlying/address"
 import type { EntityManager } from "@mikro-orm/core"
-import type { ORM, SchemaUpdate, AddressType } from "./interface"
+import { ORM, SchemaUpdate, AddressType } from "./interface"
 import { UnderlyingBlock, UnderlyingTransaction } from "./entities";
 
 
@@ -58,4 +58,16 @@ export async function findOrCreateUnderlyingTransaction(
     em.persist(underlyingTransaction)
   }
   return underlyingTransaction
+}
+
+export async function updateUnderlyingBalance(em: EntityManager, address: string, amount: bigint): Promise<UnderlyingBalance> {
+  let balance = await em.findOne(UnderlyingBalance, { address: { text: address } })
+  if (balance == null) {
+    const _address = await findOrCreateUnderlyingAddress(em, address, AddressType.USER)
+    balance = new UnderlyingBalance(_address, amount)
+  } else {
+    balance.balance = amount
+  }
+  em.persist(balance)
+  return balance
 }

@@ -1,5 +1,5 @@
 import { XrpConfigLoader } from "../config/config"
-import { IXrpBlock, IXrpBlockQueryResponse, IXrpLedgerCurrentResponse, IXrpServerInfoResponse } from "./interface"
+import { IXrpAccountInfoResponse, IXrpBlock, IXrpBlockQueryResponse, IXrpLedgerCurrentResponse, IXrpServerInfoResponse } from "./interface"
 
 export class XrpClient {
 
@@ -23,6 +23,15 @@ export class XrpClient {
       current_block = resp.result.ledger_current_index
     }
     return current_block
+  }
+
+  async balanceOf(account: string): Promise<bigint> {
+    const resp = await this.getAccountInfo(account)
+    return BigInt(resp.result.account_data.Balance)
+  }
+
+  private async getAccountInfo(account: string): Promise<IXrpAccountInfoResponse> {
+    return this.request('account_info', [{ account, ledger_index: 'validated' }])
   }
 
   private async getLedgerCurrent(): Promise<IXrpLedgerCurrentResponse> {

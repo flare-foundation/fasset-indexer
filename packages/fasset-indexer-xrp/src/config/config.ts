@@ -17,4 +17,9 @@ export class XrpConfigLoader extends ConfigLoader {
   get xrpNodeIsAmendmentBlocked(): boolean {
     return process.env.XRP_RPC_AMENDMENT_BLOCKED === "true"
   }
+
+  get xrpMonitoredAddresses(): string[] {
+    const addresses = process.env.XRP_MONITORED_ADDRESSES
+    return (addresses != null) ? addresses.split(',') : []
+  }
 }

@@ -4,7 +4,11 @@ import { EvmAddress } from "./entities/evm/address"
 import { EvmBlock } from "./entities/evm/block"
 import { EvmTransaction } from "./entities/evm/transaction"
 import { EvmLog } from "./entities/evm/log"
-import { AgentVaultCreated, AgentSettingChanged, SelfClose, VaultCollateralWithdrawalAnnounced, PoolTokenRedemptionAnnounced, UnderlyingWithdrawalAnnounced, UnderlyingWithdrawalConfirmed } from "./entities/events/agent"
+import {
+  AgentVaultCreated, AgentSettingChanged, SelfClose,
+  VaultCollateralWithdrawalAnnounced, PoolTokenRedemptionAnnounced,
+  UnderlyingWithdrawalAnnounced, UnderlyingWithdrawalConfirmed
+} from "./entities/events/agent"
 import {
   CollateralReserved, MintingExecuted,
   MintingPaymentDefault, CollateralReservationDeleted,
@@ -50,7 +54,7 @@ import { AssetManagerSettings, CoreVaultManagerSettings } from "./entities/state
 import { FtsoPrice } from "./entities/state/price"
 import { TokenBalance } from "./entities/state/balance"
 import { UnderlyingBlock } from "./entities/underlying/block"
-import { UnderlyingAddress } from "./entities/underlying/address"
+import { UnderlyingAddress, UnderlyingBalance } from "./entities/underlying/address"
 import { UnderlyingReference } from "./entities/underlying/reference"
 import { updateSchema } from "./utils"
 import { MIN_DATABASE_POOL_CONNECTIONS, MAX_DATABASE_POOL_CONNECTIONS } from "../config/constants"
@@ -86,7 +90,7 @@ export const ORM_OPTIONS: Options<AbstractSqlDriver> = defineConfig({
     EscrowFinished, CoreVaultManagerCustodianAddressUpdated,
     AssetManagerSettings, CoreVaultManagerSettings,
     // underlying
-    UnderlyingBlock, UnderlyingReference, UnderlyingAddress
+    UnderlyingBlock, UnderlyingReference, UnderlyingAddress, UnderlyingBalance
   ],
   pool: {
     min: MIN_DATABASE_POOL_CONNECTIONS,
