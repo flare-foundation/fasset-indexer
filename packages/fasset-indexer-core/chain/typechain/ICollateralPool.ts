@@ -94,6 +94,14 @@ export interface ICollateralPoolInterface extends Interface {
       | "Exited"
       | "IncompleteSelfCloseExit"
       | "PaidOut"
+      | "CPClaimedReward"
+      | "CPEntered"
+      | "CPExited"
+      | "CPFeeDebtChanged"
+      | "CPFeeDebtPaid"
+      | "CPFeesWithdrawn"
+      | "CPPaidOut"
+      | "CPSelfCloseExited"
   ): EventFragment;
 
   encodeFunctionData(
@@ -399,6 +407,164 @@ export namespace PaidOutEvent {
     recipient: string;
     paidNatWei: bigint;
     burnedTokensWei: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace CPClaimedRewardEvent {
+  export type InputTuple = [
+    amountNatWei: BigNumberish,
+    rewardType: BigNumberish
+  ];
+  export type OutputTuple = [amountNatWei: bigint, rewardType: bigint];
+  export interface OutputObject {
+    amountNatWei: bigint;
+    rewardType: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace CPEnteredEvent {
+  export type InputTuple = [
+    tokenHolder: AddressLike,
+    amountNatWei: BigNumberish,
+    receivedTokensWei: BigNumberish,
+    timelockExpiresAt: BigNumberish
+  ];
+  export type OutputTuple = [
+    tokenHolder: string,
+    amountNatWei: bigint,
+    receivedTokensWei: bigint,
+    timelockExpiresAt: bigint
+  ];
+  export interface OutputObject {
+    tokenHolder: string;
+    amountNatWei: bigint;
+    receivedTokensWei: bigint;
+    timelockExpiresAt: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace CPExitedEvent {
+  export type InputTuple = [
+    tokenHolder: AddressLike,
+    burnedTokensWei: BigNumberish,
+    receivedNatWei: BigNumberish
+  ];
+  export type OutputTuple = [
+    tokenHolder: string,
+    burnedTokensWei: bigint,
+    receivedNatWei: bigint
+  ];
+  export interface OutputObject {
+    tokenHolder: string;
+    burnedTokensWei: bigint;
+    receivedNatWei: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace CPFeeDebtChangedEvent {
+  export type InputTuple = [
+    tokenHolder: AddressLike,
+    newFeeDebtUBA: BigNumberish
+  ];
+  export type OutputTuple = [tokenHolder: string, newFeeDebtUBA: bigint];
+  export interface OutputObject {
+    tokenHolder: string;
+    newFeeDebtUBA: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace CPFeeDebtPaidEvent {
+  export type InputTuple = [
+    tokenHolder: AddressLike,
+    paidFeesUBA: BigNumberish
+  ];
+  export type OutputTuple = [tokenHolder: string, paidFeesUBA: bigint];
+  export interface OutputObject {
+    tokenHolder: string;
+    paidFeesUBA: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace CPFeesWithdrawnEvent {
+  export type InputTuple = [
+    tokenHolder: AddressLike,
+    withdrawnFeesUBA: BigNumberish
+  ];
+  export type OutputTuple = [tokenHolder: string, withdrawnFeesUBA: bigint];
+  export interface OutputObject {
+    tokenHolder: string;
+    withdrawnFeesUBA: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace CPPaidOutEvent {
+  export type InputTuple = [
+    recipient: AddressLike,
+    paidNatWei: BigNumberish,
+    burnedTokensWei: BigNumberish
+  ];
+  export type OutputTuple = [
+    recipient: string,
+    paidNatWei: bigint,
+    burnedTokensWei: bigint
+  ];
+  export interface OutputObject {
+    recipient: string;
+    paidNatWei: bigint;
+    burnedTokensWei: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace CPSelfCloseExitedEvent {
+  export type InputTuple = [
+    tokenHolder: AddressLike,
+    burnedTokensWei: BigNumberish,
+    receivedNatWei: BigNumberish,
+    closedFAssetsUBA: BigNumberish
+  ];
+  export type OutputTuple = [
+    tokenHolder: string,
+    burnedTokensWei: bigint,
+    receivedNatWei: bigint,
+    closedFAssetsUBA: bigint
+  ];
+  export interface OutputObject {
+    tokenHolder: string;
+    burnedTokensWei: bigint;
+    receivedNatWei: bigint;
+    closedFAssetsUBA: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -750,6 +916,62 @@ export interface ICollateralPool extends BaseContract {
     PaidOutEvent.OutputTuple,
     PaidOutEvent.OutputObject
   >;
+  getEvent(
+    key: "CPClaimedReward"
+  ): TypedContractEvent<
+    CPClaimedRewardEvent.InputTuple,
+    CPClaimedRewardEvent.OutputTuple,
+    CPClaimedRewardEvent.OutputObject
+  >;
+  getEvent(
+    key: "CPEntered"
+  ): TypedContractEvent<
+    CPEnteredEvent.InputTuple,
+    CPEnteredEvent.OutputTuple,
+    CPEnteredEvent.OutputObject
+  >;
+  getEvent(
+    key: "CPExited"
+  ): TypedContractEvent<
+    CPExitedEvent.InputTuple,
+    CPExitedEvent.OutputTuple,
+    CPExitedEvent.OutputObject
+  >;
+  getEvent(
+    key: "CPFeeDebtChanged"
+  ): TypedContractEvent<
+    CPFeeDebtChangedEvent.InputTuple,
+    CPFeeDebtChangedEvent.OutputTuple,
+    CPFeeDebtChangedEvent.OutputObject
+  >;
+  getEvent(
+    key: "CPFeeDebtPaid"
+  ): TypedContractEvent<
+    CPFeeDebtPaidEvent.InputTuple,
+    CPFeeDebtPaidEvent.OutputTuple,
+    CPFeeDebtPaidEvent.OutputObject
+  >;
+  getEvent(
+    key: "CPFeesWithdrawn"
+  ): TypedContractEvent<
+    CPFeesWithdrawnEvent.InputTuple,
+    CPFeesWithdrawnEvent.OutputTuple,
+    CPFeesWithdrawnEvent.OutputObject
+  >;
+  getEvent(
+    key: "CPPaidOut"
+  ): TypedContractEvent<
+    CPPaidOutEvent.InputTuple,
+    CPPaidOutEvent.OutputTuple,
+    CPPaidOutEvent.OutputObject
+  >;
+  getEvent(
+    key: "CPSelfCloseExited"
+  ): TypedContractEvent<
+    CPSelfCloseExitedEvent.InputTuple,
+    CPSelfCloseExitedEvent.OutputTuple,
+    CPSelfCloseExitedEvent.OutputObject
+  >;
 
   filters: {
     "ClaimedReward(uint256,uint8)": TypedContractEvent<
@@ -816,6 +1038,94 @@ export interface ICollateralPool extends BaseContract {
       PaidOutEvent.InputTuple,
       PaidOutEvent.OutputTuple,
       PaidOutEvent.OutputObject
+    >;
+
+    "CPClaimedReward(uint256,uint8)": TypedContractEvent<
+      CPClaimedRewardEvent.InputTuple,
+      CPClaimedRewardEvent.OutputTuple,
+      CPClaimedRewardEvent.OutputObject
+    >;
+    CPClaimedReward: TypedContractEvent<
+      CPClaimedRewardEvent.InputTuple,
+      CPClaimedRewardEvent.OutputTuple,
+      CPClaimedRewardEvent.OutputObject
+    >;
+
+    "CPEntered(address,uint256,uint256,uint256)": TypedContractEvent<
+      CPEnteredEvent.InputTuple,
+      CPEnteredEvent.OutputTuple,
+      CPEnteredEvent.OutputObject
+    >;
+    CPEntered: TypedContractEvent<
+      CPEnteredEvent.InputTuple,
+      CPEnteredEvent.OutputTuple,
+      CPEnteredEvent.OutputObject
+    >;
+
+    "CPExited(address,uint256,uint256)": TypedContractEvent<
+      CPExitedEvent.InputTuple,
+      CPExitedEvent.OutputTuple,
+      CPExitedEvent.OutputObject
+    >;
+    CPExited: TypedContractEvent<
+      CPExitedEvent.InputTuple,
+      CPExitedEvent.OutputTuple,
+      CPExitedEvent.OutputObject
+    >;
+
+    "CPFeeDebtChanged(address,int256)": TypedContractEvent<
+      CPFeeDebtChangedEvent.InputTuple,
+      CPFeeDebtChangedEvent.OutputTuple,
+      CPFeeDebtChangedEvent.OutputObject
+    >;
+    CPFeeDebtChanged: TypedContractEvent<
+      CPFeeDebtChangedEvent.InputTuple,
+      CPFeeDebtChangedEvent.OutputTuple,
+      CPFeeDebtChangedEvent.OutputObject
+    >;
+
+    "CPFeeDebtPaid(address,uint256)": TypedContractEvent<
+      CPFeeDebtPaidEvent.InputTuple,
+      CPFeeDebtPaidEvent.OutputTuple,
+      CPFeeDebtPaidEvent.OutputObject
+    >;
+    CPFeeDebtPaid: TypedContractEvent<
+      CPFeeDebtPaidEvent.InputTuple,
+      CPFeeDebtPaidEvent.OutputTuple,
+      CPFeeDebtPaidEvent.OutputObject
+    >;
+
+    "CPFeesWithdrawn(address,uint256)": TypedContractEvent<
+      CPFeesWithdrawnEvent.InputTuple,
+      CPFeesWithdrawnEvent.OutputTuple,
+      CPFeesWithdrawnEvent.OutputObject
+    >;
+    CPFeesWithdrawn: TypedContractEvent<
+      CPFeesWithdrawnEvent.InputTuple,
+      CPFeesWithdrawnEvent.OutputTuple,
+      CPFeesWithdrawnEvent.OutputObject
+    >;
+
+    "CPPaidOut(address,uint256,uint256)": TypedContractEvent<
+      CPPaidOutEvent.InputTuple,
+      CPPaidOutEvent.OutputTuple,
+      CPPaidOutEvent.OutputObject
+    >;
+    CPPaidOut: TypedContractEvent<
+      CPPaidOutEvent.InputTuple,
+      CPPaidOutEvent.OutputTuple,
+      CPPaidOutEvent.OutputObject
+    >;
+
+    "CPSelfCloseExited(address,uint256,uint256,uint256)": TypedContractEvent<
+      CPSelfCloseExitedEvent.InputTuple,
+      CPSelfCloseExitedEvent.OutputTuple,
+      CPSelfCloseExitedEvent.OutputObject
+    >;
+    CPSelfCloseExited: TypedContractEvent<
+      CPSelfCloseExitedEvent.InputTuple,
+      CPSelfCloseExitedEvent.OutputTuple,
+      CPSelfCloseExitedEvent.OutputObject
     >;
   };
 }

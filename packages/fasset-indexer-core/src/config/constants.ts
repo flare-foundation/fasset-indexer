@@ -95,6 +95,15 @@ export const EVENTS = {
     DONATED: "Donated",
     CLAIMED_REWARD: "ClaimedReward",
     PAID_OUT: "PaidOut",
+    // v2 names for flare deploy
+    CP_CLAIMED_REWARD: "CPClaimedReward",
+    CP_ENTERED: "CPEntered",
+    CP_EXITED: "CPExited",
+    CP_FEE_DEBT_CHANGED: "CPFeeDebtChanged",
+    CP_FEE_DEBT_PAID: "CPFeeDebtPaid",
+    CP_FEES_WITHDRAWN: "CPFeesWithdrawn",
+    CP_PAID_OUT: "CPPaidOut",
+    CP_SELF_CLOSE_EXITED: "CPSelfCloseExited",
   },
   ERC20: {
     TRANSFER: "Transfer",

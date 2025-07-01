@@ -71,9 +71,30 @@ import {
   CollateralPoolExited,
   CollateralPoolPaidOut
 } from "../../orm/entities/events/collateral-pool"
+import {
+  CPClaimedReward,
+  CPEntered,
+  CPExited,
+  CPFeeDebtChanged,
+  CPFeeDebtPaid,
+  CPFeesWithdrawn,
+  CPPaidOut,
+  CPSelfCloseExited
+} from "../../orm/entities/events/collateral-pool-v2"
 import { AgentPing, AgentPingResponse } from "../../orm/entities/events/ping"
 import { CurrentUnderlyingBlockUpdated } from "../../orm/entities/events/system"
-import { CoreVaultManagerCustodianAddressUpdated, CoreVaultManagerPaymentConfirmed, CoreVaultManagerSettingsUpdated, CoreVaultManagerTransferRequestCanceled, CoreVaultManagerTransferRequested, EscrowFinished, CoreVaultManagerEscrowInstructions, CoreVaultManagerNotAllEscrowsProcessed, CoreVaultManagerPaymentInstructions } from "../../orm/entities/events/core-vault-manager"
+import {
+  CoreVaultManagerCustodianAddressUpdated,
+  CoreVaultManagerPaymentConfirmed,
+  CoreVaultManagerSettingsUpdated,
+  CoreVaultManagerTransferRequestCanceled,
+  CoreVaultManagerTransferRequested,
+  EscrowFinished,
+  CoreVaultManagerEscrowInstructions,
+  CoreVaultManagerNotAllEscrowsProcessed,
+  CoreVaultManagerPaymentInstructions
+} from "../../orm/entities/events/core-vault-manager"
+import { CoreVaultManagerSettings } from "../../orm/entities/state/settings"
 import { PricesPublished } from "../../orm/entities/events/price"
 import { ContractLookup } from "../../context/lookup"
 import { EVENTS } from '../../config/constants'
@@ -127,17 +148,37 @@ import type {
 } from "../../../chain/typechain/IAssetManager"
 import type {
   ClaimedRewardEvent,
+  CPClaimedRewardEvent,
+  CPEnteredEvent,
+  CPExitedEvent,
+  CPFeeDebtChangedEvent,
+  CPFeeDebtPaidEvent,
+  CPFeesWithdrawnEvent,
+  CPPaidOutEvent,
+  CPSelfCloseExitedEvent,
   DonatedEvent,
   EnteredEvent,
   ExitedEvent,
   PaidOutEvent
 } from "../../../chain/typechain/ICollateralPool"
-import type { CustodianAddressUpdatedEvent, EscrowFinishedEvent, EscrowInstructionsEvent, NotAllEscrowsProcessedEvent, PaymentConfirmedEvent, PaymentInstructionsEvent, SettingsUpdatedEvent, TransferRequestCanceledEvent, TransferRequestedEvent } from "../../../chain/typechain/ICoreVaultManager"
+import type {
+  CustodianAddressUpdatedEvent,
+  EscrowFinishedEvent,
+  EscrowInstructionsEvent,
+  NotAllEscrowsProcessedEvent,
+  PaymentConfirmedEvent,
+  PaymentInstructionsEvent,
+  SettingsUpdatedEvent,
+  TransferRequestCanceledEvent,
+  TransferRequestedEvent
+} from "../../../chain/typechain/ICoreVaultManager"
 import type { TransferEvent } from "../../../chain/typechain/IERC20"
-import type { CurrentUnderlyingBlockUpdatedEvent, RedeemedInCollateralEvent } from "../../../chain/typechain/IAssetManager"
+import type {
+  CurrentUnderlyingBlockUpdatedEvent,
+  RedeemedInCollateralEvent
+} from "../../../chain/typechain/IAssetManager"
 import type { PricesPublishedEvent } from "../../../chain/typechain/IPriceChangeEmitter"
 import type { ORM } from "../../orm/interface"
-import { CoreVaultManagerSettings } from "../../orm/entities/state/settings"
 
 
 export class EventStorer {
@@ -309,6 +350,30 @@ export class EventStorer {
         break
       } case EVENTS.COLLATERAL_POOL.DONATED: {
         ent = await this.onCollateralPoolDonated(em, evmLog, log.args as DonatedEvent.OutputTuple)
+        break
+      } case EVENTS.COLLATERAL_POOL.CP_CLAIMED_REWARD: {
+        await this.onCpClaimedReward(em, evmLog, log.args as CPClaimedRewardEvent.OutputTuple)
+        break
+      } case EVENTS.COLLATERAL_POOL.CP_ENTERED: {
+        ent = await this.onCpEntered(em, evmLog, log.args as CPEnteredEvent.OutputTuple)
+        break
+      } case EVENTS.COLLATERAL_POOL.CP_EXITED: {
+        ent = await this.onCpExited(em, evmLog, log.args as CPExitedEvent.OutputTuple)
+        break
+      } case EVENTS.COLLATERAL_POOL.CP_FEES_WITHDRAWN: {
+        ent = await this.onCpFeesWithdrawn(em, evmLog, log.args as CPFeesWithdrawnEvent.OutputTuple)
+        break
+      } case EVENTS.COLLATERAL_POOL.CP_FEE_DEBT_CHANGED: {
+        ent = await this.onCpFeeDebtChanged(em, evmLog, log.args as CPFeeDebtChangedEvent.OutputTuple)
+        break
+      } case EVENTS.COLLATERAL_POOL.CP_FEE_DEBT_PAID: {
+        ent = await this.onCpFeeDebtPaid(em, evmLog, log.args as CPFeeDebtPaidEvent.OutputTuple)
+        break
+      } case EVENTS.COLLATERAL_POOL.CP_PAID_OUT: {
+        ent = await this.onCpPaidOut(em, evmLog, log.args as CPPaidOutEvent.OutputTuple)
+        break
+      } case EVENTS.COLLATERAL_POOL.CP_SELF_CLOSE_EXITED: {
+        ent = await this.onCpSelfCloseExited(em, evmLog, log.args as CPSelfCloseExitedEvent.OutputTuple)
         break
       } case EVENTS.COLLATERAL_POOL.CLAIMED_REWARD: {
         ent = await this.onCollateralPoolClaimedReward(em, evmLog, log.args as ClaimedRewardEvent.OutputTuple)
@@ -818,6 +883,79 @@ export class EventStorer {
     const agentVault = await em.findOneOrFail(AgentVault, { collateralPool: { hex: evmLog.address.hex }})
     const [ amountNatWei, rewardType ] = logArgs
     return new CollateralPoolClaimedReward(evmLog, agentVault.fasset, amountNatWei, Number(rewardType))
+  }
+
+  // flare deploy changes
+
+  protected async onCpClaimedReward(em: EntityManager, evmLog: EvmLog, logArgs: CPClaimedRewardEvent.OutputTuple):
+    Promise<CPClaimedReward>
+  {
+    const agentVault = await em.findOneOrFail(AgentVault, { collateralPool: { hex: evmLog.address.hex }})
+    const [ amountNatWei, rewardType ] = logArgs
+    return new CPClaimedReward(evmLog, agentVault.fasset, amountNatWei, Number(rewardType))
+  }
+
+  protected async onCpEntered(em: EntityManager, evmLog: EvmLog, logArgs: CPEnteredEvent.OutputTuple):
+    Promise<CPEntered>
+  {
+    const agentVault = await em.findOneOrFail(AgentVault, { collateralPool: { hex: evmLog.address.hex }})
+    const [ tokenHolder, amountNatWei, receivedTokensWei, timelockExpiresAt ] = logArgs
+    const tokenHolderAddress = await findOrCreateEvmAddress(em, tokenHolder, AddressType.USER)
+    return new CPEntered(evmLog, agentVault.fasset, tokenHolderAddress, amountNatWei, receivedTokensWei, timelockExpiresAt)
+  }
+
+  protected async onCpExited(em: EntityManager, evmLog: EvmLog, logArgs: CPExitedEvent.OutputTuple):
+    Promise<CPExited>
+  {
+    const agentVault = await em.findOneOrFail(AgentVault, { collateralPool: { hex: evmLog.address.hex }})
+    const [ tokenHolder, burnedTokensWei, receivedNatWei ] = logArgs
+    const tokenHolderAddress = await findOrCreateEvmAddress(em, tokenHolder, AddressType.USER)
+    return new CPExited(evmLog, agentVault.fasset, tokenHolderAddress, burnedTokensWei, receivedNatWei)
+  }
+
+  protected async onCpFeesWithdrawn(em: EntityManager, evmLog: EvmLog, logArgs: CPFeesWithdrawnEvent.OutputTuple):
+    Promise<CPFeesWithdrawn>
+  {
+    const agentVault = await em.findOneOrFail(AgentVault, { collateralPool: { hex: evmLog.address.hex }})
+    const [ tokenHolder, withdrawnFeesUBA ] = logArgs
+    const tokenHolderAddress = await findOrCreateEvmAddress(em, tokenHolder, AddressType.USER)
+    return new CPFeesWithdrawn(evmLog, agentVault.fasset, tokenHolderAddress, withdrawnFeesUBA)
+  }
+
+  protected async onCpFeeDebtChanged(em: EntityManager, evmLog: EvmLog, logArgs: CPFeeDebtChangedEvent.OutputTuple):
+    Promise<CPFeeDebtChanged>
+  {
+    const agentVault = await em.findOneOrFail(AgentVault, { collateralPool: { hex: evmLog.address.hex }})
+    const [ tokenHolder, newFeeDebtUBA ] = logArgs
+    const tokenHolderAddress = await findOrCreateEvmAddress(em, tokenHolder, AddressType.USER)
+    return new CPFeeDebtChanged(evmLog, agentVault.fasset, tokenHolderAddress, newFeeDebtUBA)
+  }
+
+  protected async onCpFeeDebtPaid(em: EntityManager, evmLog: EvmLog, logArgs: CPFeeDebtPaidEvent.OutputTuple):
+    Promise<CPFeeDebtPaid>
+  {
+    const agentVault = await em.findOneOrFail(AgentVault, { collateralPool: { hex: evmLog.address.hex }})
+    const [ tokenHolder, paidFeesUBA ] = logArgs
+    const tokenHolderAddress = await findOrCreateEvmAddress(em, tokenHolder, AddressType.USER)
+    return new CPFeeDebtPaid(evmLog, agentVault.fasset, tokenHolderAddress, paidFeesUBA)
+  }
+
+  protected async onCpPaidOut(em: EntityManager, evmLog: EvmLog, logArgs: CPPaidOutEvent.OutputTuple):
+    Promise<CPPaidOut>
+  {
+    const agentVault = await em.findOneOrFail(AgentVault, { collateralPool: { hex: evmLog.address.hex }})
+    const [ recipient, paidNatWei, burnedTokensWei ] = logArgs
+    const recipientAddress = await findOrCreateEvmAddress(em, recipient, AddressType.USER)
+    return new CPPaidOut(evmLog, agentVault.fasset, recipientAddress, paidNatWei, burnedTokensWei)
+  }
+
+  protected async onCpSelfCloseExited(em: EntityManager, evmLog: EvmLog, logArgs: CPSelfCloseExitedEvent.OutputTuple):
+    Promise<CPSelfCloseExited>
+  {
+    const agentVault = await em.findOneOrFail(AgentVault, { collateralPool: { hex: evmLog.address.hex }})
+    const [ tokenHolder, burnedTokensWei, receivedNatWei, closedFAssetsUBA ] = logArgs
+    const tokenHolderAddress = await findOrCreateEvmAddress(em, tokenHolder, AddressType.USER)
+    return new CPSelfCloseExited(evmLog, agentVault.fasset, tokenHolderAddress, burnedTokensWei, receivedNatWei, closedFAssetsUBA)
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -35,6 +35,10 @@ import {
   CollateralPoolExited, CollateralPoolPaidOut
 } from "./entities/events/collateral-pool"
 import {
+  CPClaimedReward, CPEntered, CPExited, CPFeeDebtChanged,
+  CPFeeDebtPaid, CPFeesWithdrawn, CPPaidOut, CPSelfCloseExited
+} from "./entities/events/collateral-pool-v2"
+import {
   RedemptionTicketCreated, RedemptionTicketDeleted, RedemptionTicketUpdated
 } from "./entities/events/redemption-ticket"
 import { RedemptionTicket } from "./entities/state/redemption-ticket"
@@ -62,34 +66,51 @@ import type { Options } from "@mikro-orm/core"
 import type { AbstractSqlDriver } from "@mikro-orm/knex"
 import type { ORM, OrmOptions, SchemaUpdate } from "./interface"
 
-
 export const ORM_OPTIONS: Options<AbstractSqlDriver> = defineConfig({
   entities: [
     Var, EvmBlock, EvmTransaction, EvmLog, EvmAddress,
-    AgentManager, AgentOwner, AgentVault, AgentVaultSettings, AgentVaultInfo,
+    // agent entities
+    AgentManager, AgentOwner, AgentVault, AgentVaultInfo,
+    // agent operations
     AgentVaultCreated, AgentSettingChanged, SelfClose, SelfMint,
     VaultCollateralWithdrawalAnnounced, PoolTokenRedemptionAnnounced,
     UnderlyingWithdrawalAnnounced, UnderlyingWithdrawalConfirmed,
+    // minting
     CollateralReserved, MintingExecuted, MintingPaymentDefault, CollateralReservationDeleted,
+    // redemption
     RedemptionRequested, RedemptionPerformed, RedemptionDefault,
     RedemptionPaymentFailed, RedemptionPaymentBlocked, RedemptionRejected,
     RedeemedInCollateral, RedemptionRequestIncomplete,
     RedemptionTicketCreated, RedemptionTicketUpdated, RedemptionTicketDeleted, RedemptionTicket,
+    // liquidation
     AgentInCCB, LiquidationStarted, FullLiquidationStarted, LiquidationPerformed, LiquidationEnded,
+    // challenge
     IllegalPaymentConfirmed, DuplicatePaymentConfirmed, UnderlyingBalanceTooLow,
+    // collateral pool
     CollateralPoolEntered, CollateralPoolExited, CollateralPoolDonated,
     CollateralPoolPaidOut, CollateralPoolClaimedReward,
-    ERC20Transfer, CollateralTypeAdded, AgentPing, AgentPingResponse,
-    CurrentUnderlyingBlockUpdated, PricesPublished, PricePublished,
-    FtsoPrice, UntrackedAgentVault, TokenBalance,
+    // collateral pool v2
+    CPClaimedReward, CPEntered, CPExited, CPFeeDebtChanged,
+    CPFeeDebtPaid, CPFeesWithdrawn, CPPaidOut, CPSelfCloseExited,
+    // erc20
+    ERC20Transfer, TokenBalance,
+    // system tracking
+    CollateralTypeAdded, CurrentUnderlyingBlockUpdated, PricesPublished, PricePublished,
+    // agent ping
+    AgentPing, AgentPingResponse,
+    // core vault
     TransferToCoreVaultStarted, TransferToCoreVaultSuccessful, TransferToCoreVaultDefaulted,
     ReturnFromCoreVaultRequested, ReturnFromCoreVaultConfirmed, ReturnFromCoreVaultCancelled,
-    CoreVaultRedemptionRequested, CoreVaultManagerSettingsUpdated,
-    CoreVaultManagerPaymentConfirmed, CoreVaultManagerPaymentInstructions, CoreVaultManagerEscrowInstructions,
-    CoreVaultManagerTransferRequested, CoreVaultManagerTransferRequestCanceled, CoreVaultManagerNotAllEscrowsProcessed,
-    EscrowFinished, CoreVaultManagerCustodianAddressUpdated,
-    AssetManagerSettings, CoreVaultManagerSettings,
-    // underlying
+    CoreVaultRedemptionRequested,
+    // core vault manager
+    CoreVaultManagerSettingsUpdated, CoreVaultManagerPaymentConfirmed, CoreVaultManagerPaymentInstructions,
+    CoreVaultManagerEscrowInstructions, CoreVaultManagerTransferRequested, CoreVaultManagerTransferRequestCanceled,
+    CoreVaultManagerNotAllEscrowsProcessed, EscrowFinished, CoreVaultManagerCustodianAddressUpdated,
+    // settings
+    AssetManagerSettings, CoreVaultManagerSettings, AgentVaultSettings,
+    // helpers
+    FtsoPrice, UntrackedAgentVault,
+    // underlying chain
     UnderlyingBlock, UnderlyingReference, UnderlyingAddress, UnderlyingBalance
   ],
   pool: {
