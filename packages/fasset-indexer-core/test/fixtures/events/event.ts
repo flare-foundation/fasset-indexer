@@ -4,16 +4,11 @@ import { EvmAddress } from "../../../src/orm/entities/evm/address"
 import { UnderlyingAddress } from "../../../src/orm/entities/underlying/address"
 import { AgentManager, AgentOwner, AgentVault } from "../../../src/orm/entities/agent"
 import { CoreVaultManagerSettings } from "../../../src/orm/entities/state/settings"
-import {
-  randomChoice, randomHash,
-  randomNativeAddress, randomNumber, randomString, randomUnderlyingAddress
-} from "../utils"
-import { ASSET_MANAGERS } from "../constants"
+import { randomNativeAddress, randomString, randomUnderlyingAddress } from "../utils"
+import { EventGeneration } from "./generate"
 import { EVENTS } from "../../../src/config"
-
 import type { Event } from "../../../src/indexer/eventlib/event-scraper"
 import type { EventNameToEventArgs } from "./types"
-import { EventGeneration } from "./generate"
 
 
 export class EventFixture extends EventGeneration {
