@@ -22,7 +22,8 @@ export class EventFixture extends EventGeneration {
     })
   }
 
-  async storeInitialAgents(fasset: FAssetType = FAssetType.FXRP): Promise<void> {
+  async storeInitialAgents(fasset: FAssetType = FAssetType.FXRP): Promise<AgentVault[]> {
+    const agents: AgentVault[] = []
     await this.orm.em.transactional(async (em) => {
       const managerAddress = new EvmAddress(randomNativeAddress(), 1)
       em.persist(managerAddress)
@@ -41,7 +42,9 @@ export class EventFixture extends EventGeneration {
         collateralPoolTokenAddress, agentOwner, false
       )
       em.persist(agentVault)
+      agents.push(agentVault)
     })
+    return agents
   }
 
   async generateEvent(name: keyof EventNameToEventArgs, source?: string, args: any[] = []): Promise<Event> {
@@ -135,6 +138,22 @@ export class EventFixture extends EventGeneration {
         return this.generateCoreVaultRedemptionRequested()
       } case EVENTS.CORE_VAULT_MANAGER.SETTINGS_UPDATED: {
         return this.generateSettingsUpdated()
+      } case EVENTS.COLLATERAL_POOL.CP_ENTERED: {
+        return this.generateCPEntered()
+      } case EVENTS.COLLATERAL_POOL.CP_EXITED: {
+        return this.generateCPExited()
+      } case EVENTS.COLLATERAL_POOL.CP_CLAIMED_REWARD: {
+        return this.generateCPClaimedReward()
+      } case EVENTS.COLLATERAL_POOL.CP_FEES_WITHDRAWN: {
+        return this.generateCPFeesWithdrawn()
+      } case EVENTS.COLLATERAL_POOL.CP_FEE_DEBT_CHANGED: {
+        return this.generateCPFeeDebtChanged()
+      } case EVENTS.COLLATERAL_POOL.CP_FEE_DEBT_PAID: {
+        return this.generateCPFeeDebtPaid()
+      } case EVENTS.COLLATERAL_POOL.CP_PAID_OUT: {
+        return this.generateCPPaidOut()
+      } case EVENTS.COLLATERAL_POOL.CP_SELF_CLOSE_EXITED: {
+        return this.generateCPSelfCloseExited()
       }
     }
   }

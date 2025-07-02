@@ -352,7 +352,7 @@ export class EventStorer {
         ent = await this.onCollateralPoolDonated(em, evmLog, log.args as DonatedEvent.OutputTuple)
         break
       } case EVENTS.COLLATERAL_POOL.CP_CLAIMED_REWARD: {
-        await this.onCpClaimedReward(em, evmLog, log.args as CPClaimedRewardEvent.OutputTuple)
+        ent = await this.onCpClaimedReward(em, evmLog, log.args as CPClaimedRewardEvent.OutputTuple)
         break
       } case EVENTS.COLLATERAL_POOL.CP_ENTERED: {
         ent = await this.onCpEntered(em, evmLog, log.args as CPEnteredEvent.OutputTuple)

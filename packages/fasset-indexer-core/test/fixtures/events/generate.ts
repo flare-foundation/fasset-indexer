@@ -20,9 +20,6 @@ import {
 } from "../utils"
 import { AGENT_SETTINGS, ASSET_MANAGERS, WNAT_TOKEN } from "../constants"
 import type { Event } from "../../../src/indexer/eventlib/event-scraper"
-import type { EnteredEvent, ExitedEvent } from "../../../chain/typechain/ICollateralPool"
-import type { TransferEvent } from "../../../chain/typechain/IERC20"
-import type { SettingsUpdatedEvent } from "../../../chain/typechain/ICoreVaultManager"
 import type {
   AgentVaultCreatedEvent,
   CollateralTypeAddedEvent,
@@ -63,13 +60,27 @@ import type {
   TransferToCoreVaultDefaultedEvent,
   SettingChangedEvent
 } from "../../../chain/typechain/IAssetManager"
+import type { TransferEvent } from "../../../chain/typechain/IERC20"
+import type { SettingsUpdatedEvent } from "../../../chain/typechain/ICoreVaultManager"
+import type {
+  CPClaimedRewardEvent,
+  CPEnteredEvent,
+  CPExitedEvent,
+  CPFeeDebtChangedEvent,
+  CPFeeDebtPaidEvent,
+  CPFeesWithdrawnEvent,
+  CPPaidOutEvent,
+  CPSelfCloseExitedEvent,
+  EnteredEvent,
+  ExitedEvent
+} from "../../../chain/typechain/ICollateralPool"
 
 
 export class EventGeneration {
 
   constructor(public readonly orm: ORM) { }
 
-  generateEventWithoutArgs(source?: string): Omit<Event, 'name' | 'args'> {
+  protected generateEventWithoutArgs(source?: string): Omit<Event, 'name' | 'args'> {
       return {
         blockNumber: randomNumber(1, 1e6),
         transactionIndex: randomNumber(1, 1e6),
@@ -490,6 +501,70 @@ export class EventGeneration {
       BigInt(randomNumber(1e4, 1e12)),
       BigInt(randomNumber(1e4, 1e12)),
       BigInt(randomNumber(1e4, 1e6))
+    ]
+  }
+
+  // collateral pool v2
+
+  protected async generateCPClaimedReward(): Promise<CPClaimedRewardEvent.OutputTuple> {
+    return [
+      BigInt(randomNumber(1e4, 1e12)),
+      BigInt(randomNumber(0, 1))
+    ]
+  }
+
+  protected async generateCPEntered(): Promise<CPEnteredEvent.OutputTuple> {
+    return [
+      randomNativeAddress(),
+      BigInt(randomNumber(1e4, 1e12)),
+      BigInt(randomNumber(1e4, 1e12)),
+      BigInt(randomNumber(1e8, 1e9))
+    ]
+  }
+
+  protected async generateCPExited(): Promise<CPExitedEvent.OutputTuple> {
+    return [
+      randomNativeAddress(),
+      BigInt(randomNumber(1e4, 1e12)),
+      BigInt(randomNumber(1e4, 1e12)),
+    ]
+  }
+
+  protected async generateCPFeeDebtChanged(): Promise<CPFeeDebtChangedEvent.OutputTuple> {
+    return [
+      randomNativeAddress(),
+      BigInt(randomNumber(1e4, 1e12))
+    ]
+  }
+
+  protected async generateCPFeeDebtPaid(): Promise<CPFeeDebtPaidEvent.OutputTuple> {
+    return [
+      randomNativeAddress(),
+      BigInt(randomNumber(1e4, 1e12))
+    ]
+  }
+
+  protected async generateCPFeesWithdrawn(): Promise<CPFeesWithdrawnEvent.OutputTuple> {
+    return [
+      randomNativeAddress(),
+      BigInt(randomNumber(1e4, 1e12))
+    ]
+  }
+
+  protected async generateCPPaidOut(): Promise<CPPaidOutEvent.OutputTuple> {
+    return [
+      randomNativeAddress(),
+      BigInt(randomNumber(1e4, 1e12)),
+      BigInt(randomNumber(1e4, 1e12))
+    ]
+  }
+
+  protected async generateCPSelfCloseExited(): Promise<CPSelfCloseExitedEvent.OutputTuple> {
+    return [
+      randomNativeAddress(),
+      BigInt(randomNumber(1e4, 1e12)),
+      BigInt(randomNumber(1e4, 1e12)),
+      BigInt(randomNumber(1e4, 1e12))
     ]
   }
 

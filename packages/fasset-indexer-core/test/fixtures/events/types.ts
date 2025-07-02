@@ -39,7 +39,17 @@ import type {
   TransferToCoreVaultDefaultedEvent,
   SettingChangedEvent
 } from "../../../chain/typechain/IAssetManager"
-import type { EnteredEvent, ExitedEvent } from "../../../chain/typechain/ICollateralPool"
+import type {
+  CPClaimedRewardEvent,
+  CPEnteredEvent,
+  CPExitedEvent,
+  CPFeeDebtChangedEvent,
+  CPFeesWithdrawnEvent,
+  CPPaidOutEvent,
+  CPSelfCloseExitedEvent,
+  EnteredEvent,
+  ExitedEvent
+} from "../../../chain/typechain/ICollateralPool"
 import type { TransferEvent } from "../../../chain/typechain/IERC20"
 import type { SettingsUpdatedEvent } from "../../../chain/typechain/ICoreVaultManager"
 
@@ -87,4 +97,12 @@ export type EventNameToEventArgs = {
   [EVENTS.ASSET_MANAGER.RETURN_FROM_CORE_VAULT_CANCELLED]: ReturnFromCoreVaultCancelledEvent.OutputTuple
   [EVENTS.ASSET_MANAGER.CORE_VAULT_REDEMPTION_REQUESTED]: CoreVaultRedemptionRequestedEvent.OutputTuple
   [EVENTS.CORE_VAULT_MANAGER.SETTINGS_UPDATED]: SettingsUpdatedEvent.OutputTuple
+  [EVENTS.COLLATERAL_POOL.CP_ENTERED]: CPEnteredEvent.OutputTuple
+  [EVENTS.COLLATERAL_POOL.CP_EXITED]: CPExitedEvent.OutputTuple
+  [EVENTS.COLLATERAL_POOL.CP_CLAIMED_REWARD]: CPClaimedRewardEvent.OutputTuple
+  [EVENTS.COLLATERAL_POOL.CP_FEES_WITHDRAWN]: CPFeesWithdrawnEvent.OutputTuple
+  [EVENTS.COLLATERAL_POOL.CP_SELF_CLOSE_EXITED]: CPSelfCloseExitedEvent.OutputTuple
+  [EVENTS.COLLATERAL_POOL.CP_FEE_DEBT_CHANGED]: CPFeeDebtChangedEvent.OutputTuple
+  [EVENTS.COLLATERAL_POOL.CP_FEE_DEBT_PAID]: CPFeesWithdrawnEvent.OutputTuple
+  [EVENTS.COLLATERAL_POOL.CP_PAID_OUT]: CPPaidOutEvent.OutputTuple
 }

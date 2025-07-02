@@ -39,6 +39,7 @@ import {
 import { CoreVaultManagerSettingsUpdated } from "../src/orm/entities/events/core-vault-manager"
 import { AssetManagerSettings } from "../src/orm/entities"
 import { CoreVaultManagerSettings } from "../src/orm/entities/state/settings"
+import { CPClaimedReward, CPEntered, CPExited, CPFeeDebtChanged, CPFeeDebtPaid, CPFeesWithdrawn, CPPaidOut, CPSelfCloseExited } from "../src/orm/entities/events/collateral-pool-v2"
 
 
 const ASSET_MANAGER_FXRP = "AssetManager_FTestXRP"
@@ -727,6 +728,134 @@ describe("FAsset evm events", () => {
       expect(cvms.escrowAmount).to.equal(su.escrowAmount)
       expect(cvms.minimalAmount).to.equal(su.minimalAmount)
       expect(cvms.chainPaymentFee).to.equal(su.fee)
+    })
+  })
+
+  describe("collateral pool", () => {
+
+    it("should store collateral pool cp-entered event", async () => {
+      const agents = await fixture.storeInitialAgents(FAssetType.FXRP)
+      const ecpe = await fixture.generateEvent(EVENTS.COLLATERAL_POOL.CP_ENTERED, agents[0].collateralPool.hex)
+      await storer.processEvent(ecpe)
+      // check
+      const em = context.orm.em.fork()
+      const cpe = await em.findOneOrFail(CPEntered,
+        { evmLog: { block: { index: ecpe.blockNumber }, index: ecpe.logIndex }},
+        { populate: [ 'tokenHolder' ]}
+      )
+      expect(cpe.fasset).to.equal(FAssetType.FXRP)
+      expect(cpe.tokenHolder.hex).to.equal(ecpe.args[0])
+      expect(cpe.amountNatWei).to.equal(ecpe.args[1])
+      expect(cpe.receivedTokensWei).to.equal(ecpe.args[2])
+      expect(cpe.timelockExpiresAt).to.equal(ecpe.args[3])
+    })
+
+    it("should store collateral pool cp-exited event", async () => {
+      const agents = await fixture.storeInitialAgents(FAssetType.FXRP)
+      const ecpe = await fixture.generateEvent(EVENTS.COLLATERAL_POOL.CP_EXITED, agents[0].collateralPool.hex)
+      await storer.processEvent(ecpe)
+      // check
+      const em = context.orm.em.fork()
+      const cpe = await em.findOneOrFail(CPExited,
+        { evmLog: { block: { index: ecpe.blockNumber }, index: ecpe.logIndex }},
+        { populate: [ 'tokenHolder' ]}
+      )
+      expect(cpe.fasset).to.equal(FAssetType.FXRP)
+      expect(cpe.tokenHolder.hex).to.equal(ecpe.args[0])
+      expect(cpe.burnedTokensWei).to.equal(ecpe.args[1])
+      expect(cpe.receivedNatWei).to.equal(ecpe.args[2])
+    })
+
+    it("should store collateral pool cp-claimed-reward event", async () => {
+      const agents = await fixture.storeInitialAgents(FAssetType.FXRP)
+      const ecpccr = await fixture.generateEvent(EVENTS.COLLATERAL_POOL.CP_CLAIMED_REWARD, agents[0].collateralPool.hex)
+      await storer.processEvent(ecpccr)
+      // check
+      const em = context.orm.em.fork()
+      const ccr = await em.findOneOrFail(CPClaimedReward,
+        { evmLog: { block: { index: ecpccr.blockNumber }, index: ecpccr.logIndex }},
+      )
+      expect(ccr.fasset).to.equal(FAssetType.FXRP)
+      expect(ccr.amountNatWei).to.equal(ecpccr.args[0])
+      expect(ccr.rewardType).to.equal(Number(ecpccr.args[1]))
+    })
+
+    it("should store collateral pool cp-fee-debt-paid event", async () => {
+      const agents = await fixture.storeInitialAgents(FAssetType.FXRP)
+      const ecpcfdp = await fixture.generateEvent(EVENTS.COLLATERAL_POOL.CP_FEE_DEBT_PAID, agents[0].collateralPool.hex)
+      await storer.processEvent(ecpcfdp)
+      // check
+      const em = context.orm.em.fork()
+      const cpcfdp = await em.findOneOrFail(CPFeeDebtPaid,
+        { evmLog: { block: { index: ecpcfdp.blockNumber }, index: ecpcfdp.logIndex }},
+        { populate: [ 'tokenHolder' ] }
+      )
+      expect(cpcfdp.fasset).to.equal(FAssetType.FXRP)
+      expect(cpcfdp.tokenHolder.hex).to.equal(ecpcfdp.args[0])
+      expect(cpcfdp.paidFeesUBA).to.equal(ecpcfdp.args[1])
+    })
+
+    it("should store collateral pool cp-fee-debt-changed event", async () => {
+      const agents = await fixture.storeInitialAgents(FAssetType.FXRP)
+      const ecpcfdc = await fixture.generateEvent(EVENTS.COLLATERAL_POOL.CP_FEE_DEBT_CHANGED, agents[0].collateralPool.hex)
+      await storer.processEvent(ecpcfdc)
+      // check
+      const em = context.orm.em.fork()
+      const cpcfdc = await em.findOneOrFail(CPFeeDebtChanged,
+        { evmLog: { block: { index: ecpcfdc.blockNumber }, index: ecpcfdc.logIndex }},
+        { populate: [ 'tokenHolder' ] }
+      )
+      expect(cpcfdc.fasset).to.equal(FAssetType.FXRP)
+      expect(cpcfdc.tokenHolder.hex).to.equal(ecpcfdc.args[0])
+      expect(cpcfdc.newFeeDebtUBA).to.equal(ecpcfdc.args[1])
+    })
+
+    it("should store collateral pool cp-fees-withdrawn event", async () => {
+      const agents = await fixture.storeInitialAgents(FAssetType.FXRP)
+      const ecpcfw = await fixture.generateEvent(EVENTS.COLLATERAL_POOL.CP_FEES_WITHDRAWN, agents[0].collateralPool.hex)
+      await storer.processEvent(ecpcfw)
+      // check
+      const em = context.orm.em.fork()
+      const cpcfw = await em.findOneOrFail(CPFeesWithdrawn,
+        { evmLog: { block: { index: ecpcfw.blockNumber }, index: ecpcfw.logIndex }},
+        { populate: [ 'tokenHolder' ] }
+      )
+      expect(cpcfw.fasset).to.equal(FAssetType.FXRP)
+      expect(cpcfw.tokenHolder.hex).to.equal(ecpcfw.args[0])
+      expect(cpcfw.withdrawnFeesUBA).to.equal(ecpcfw.args[1])
+    })
+
+    it("should store collateral pool cp-paid-out event", async () => {
+      const agents = await fixture.storeInitialAgents(FAssetType.FXRP)
+      const ecpcpo = await fixture.generateEvent(EVENTS.COLLATERAL_POOL.CP_PAID_OUT, agents[0].collateralPool.hex)
+      await storer.processEvent(ecpcpo)
+      // check
+      const em = context.orm.em.fork()
+      const cpcpo = await em.findOneOrFail(CPPaidOut,
+        { evmLog: { block: { index: ecpcpo.blockNumber }, index: ecpcpo.logIndex }},
+        { populate: [ 'recipient' ] }
+      )
+      expect(cpcpo.fasset).to.equal(FAssetType.FXRP)
+      expect(cpcpo.recipient.hex).to.equal(ecpcpo.args[0])
+      expect(cpcpo.paidNatWei).to.equal(ecpcpo.args[1])
+      expect(cpcpo.burnedTokensWei).to.equal(ecpcpo.args[2])
+    })
+
+     it("should store collateral pool cp-self-close-exited event", async () => {
+      const agents = await fixture.storeInitialAgents(FAssetType.FXRP)
+      const ecpcsce = await fixture.generateEvent(EVENTS.COLLATERAL_POOL.CP_SELF_CLOSE_EXITED, agents[0].collateralPool.hex)
+      await storer.processEvent(ecpcsce)
+      // check
+      const em = context.orm.em.fork()
+      const cpcsce = await em.findOneOrFail(CPSelfCloseExited,
+        { evmLog: { block: { index: ecpcsce.blockNumber }, index: ecpcsce.logIndex }},
+        { populate: [ 'tokenHolder' ] }
+      )
+      expect(cpcsce.fasset).to.equal(FAssetType.FXRP)
+      expect(cpcsce.tokenHolder.hex).to.equal(ecpcsce.args[0])
+      expect(cpcsce.burnedTokensWei).to.equal(ecpcsce.args[1])
+      expect(cpcsce.receivedNatWei).to.equal(ecpcsce.args[2])
+      expect(cpcsce.closedFAssetsUBA).to.equal(ecpcsce.args[3])
     })
   })
 
