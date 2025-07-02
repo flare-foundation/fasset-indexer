@@ -7,7 +7,7 @@ import { EvmLog } from "../src/orm/entities/evm/log"
 import { AgentVaultCreated } from "../src/orm/entities/events/agent"
 import { AgentVaultSettings } from "../src/orm/entities/state/agent"
 import { CollateralTypeAdded, ERC20Transfer } from "../src/orm/entities/events/token"
-import { EventFixture } from "./fixtures/event"
+import { EventFixture } from "./fixtures/events/event"
 import {
   CollateralReservationDeleted, CollateralReserved,
   MintingExecuted, MintingPaymentDefault,

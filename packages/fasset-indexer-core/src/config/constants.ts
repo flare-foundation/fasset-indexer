@@ -122,7 +122,7 @@ export const EVENTS = {
     CUSTODIAN_ADDRESS_UPDATED: "CustodianAddressUpdated",
     SETTINGS_UPDATED: "SettingsUpdated"
   }
-}
+} as const
 
 // metadata
 export const ADDRESS_LENGTH = 42

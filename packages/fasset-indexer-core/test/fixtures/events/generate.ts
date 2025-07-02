@@ -1,18 +1,28 @@
-import { FAssetType } from "../../src"
-import { ORM } from "../../src/orm"
-import { EvmAddress } from "../../src/orm/entities/evm/address"
-import { UnderlyingAddress } from "../../src/orm/entities/underlying/address"
-import { CollateralTypeAdded } from "../../src/orm/entities/events/token"
-import { AgentManager, AgentOwner, AgentVault } from "../../src/orm/entities/agent"
-import { CollateralReserved } from "../../src/orm/entities/events/minting"
-import { RedemptionRequested } from "../../src/orm/entities/events/redemption"
-import { RedemptionTicketCreated } from "../../src/orm/entities/events/redemption-ticket"
-import { ReturnFromCoreVaultRequested, TransferToCoreVaultStarted } from "../../src/orm/entities/events/core-vault"
+import { ORM } from "../../../src/orm"
+import { CollateralTypeAdded } from "../../../src/orm/entities/events/token"
+import { AgentManager, AgentVault } from "../../../src/orm/entities/agent"
+import { CollateralReserved } from "../../../src/orm/entities/events/minting"
+import { RedemptionRequested } from "../../../src/orm/entities/events/redemption"
+import { RedemptionTicketCreated } from "../../../src/orm/entities/events/redemption-ticket"
 import {
-  randomBoolean, randomChoice, randomHash, randomHex,
-  randomNativeAddress, randomNumber, randomString, randomUnderlyingAddress
-} from "./utils"
-import { ASSET_MANAGERS, AGENT_SETTINGS, WNAT_TOKEN } from "./constants"
+  ReturnFromCoreVaultRequested,
+  TransferToCoreVaultStarted
+} from "../../../src/orm/entities/events/core-vault"
+import {
+  randomBoolean,
+  randomChoice,
+  randomHash,
+  randomHex,
+  randomNativeAddress,
+  randomNumber,
+  randomString,
+  randomUnderlyingAddress
+} from "../utils"
+import { AGENT_SETTINGS, ASSET_MANAGERS, WNAT_TOKEN } from "../constants"
+import type { Event } from "../../../src/indexer/eventlib/event-scraper"
+import type { EnteredEvent, ExitedEvent } from "../../../chain/typechain/ICollateralPool"
+import type { TransferEvent } from "../../../chain/typechain/IERC20"
+import type { SettingsUpdatedEvent } from "../../../chain/typechain/ICoreVaultManager"
 import type {
   AgentVaultCreatedEvent,
   CollateralTypeAddedEvent,
@@ -52,64 +62,28 @@ import type {
   TransferToCoreVaultSuccessfulEvent,
   TransferToCoreVaultDefaultedEvent,
   SettingChangedEvent
-} from "../../chain/typechain/IAssetManager"
-import type { EnteredEvent, ExitedEvent } from "../../chain/typechain/ICollateralPool"
-import type { TransferEvent } from "../../chain/typechain/IERC20"
-import type { Event, EventArgs } from "../../src/indexer/eventlib/event-scraper"
-import { SettingsUpdatedEvent } from "../../chain/typechain/ICoreVaultManager"
-import { CoreVaultManagerSettings } from "../../src/orm/entities/state/settings"
+} from "../../../chain/typechain/IAssetManager"
 
 
-export class EventFixture {
+export class EventGeneration {
 
-  constructor(public readonly orm: ORM) {}
+  constructor(public readonly orm: ORM) { }
 
-  async storeInitialCoreVaultManagerSettings(fasset: FAssetType = FAssetType.FXRP): Promise<void> {
-    await this.orm.em.transactional(async em => {
-      const vaultManager = new CoreVaultManagerSettings(fasset, BigInt(0), BigInt(0), 1, BigInt(0))
-      em.persist(vaultManager)
-    })
-  }
-
-  async storeInitialAgents(fasset: FAssetType = FAssetType.FXRP): Promise<void> {
-    await this.orm.em.transactional(async (em) => {
-      const managerAddress = new EvmAddress(randomNativeAddress(), 1)
-      em.persist(managerAddress)
-      const agentManager = new AgentManager(managerAddress, randomString(5), randomString(10), 'http://localhost:3000/awesome/pic.png')
-      em.persist(agentManager)
-      const ownerAddress = new EvmAddress(randomNativeAddress(), 1)
-      const agentOwner = new AgentOwner(ownerAddress, agentManager)
-      em.persist(agentOwner)
-      const vaultAddress = new EvmAddress(randomNativeAddress(), 1)
-      const underlyingVaultAddress = new UnderlyingAddress(randomUnderlyingAddress(), 1)
-      const collateralPoolAddress = new EvmAddress(randomNativeAddress(), 1)
-      const collateralPoolTokenAddress = new EvmAddress(randomNativeAddress(), 1)
-      const agentVault = new AgentVault(
-        fasset,
-        vaultAddress, underlyingVaultAddress, collateralPoolAddress,
-        collateralPoolTokenAddress, agentOwner, false
-      )
-      em.persist(agentVault)
-    })
-  }
-
-  async generateEvent(name: string, source?: string, args: any[] = []): Promise<Event> {
-    return {
-      name: name,
-      args: await this.argumentsFromEventName(name, args),
-      blockNumber: randomNumber(1, 1e6),
-      transactionIndex: randomNumber(1, 1e6),
-      logIndex: randomNumber(1, 1e6),
-      source: source ?? randomChoice(ASSET_MANAGERS),
-      blockTimestamp: Date.now(),
-      transactionHash: randomHash(),
-      transactionSource: randomNativeAddress(),
-      transactionTarget: randomNativeAddress()
+  generateEventWithoutArgs(source?: string): Omit<Event, 'name' | 'args'> {
+      return {
+        blockNumber: randomNumber(1, 1e6),
+        transactionIndex: randomNumber(1, 1e6),
+        logIndex: randomNumber(1, 1e6),
+        source: source ?? randomChoice(ASSET_MANAGERS),
+        blockTimestamp: Date.now(),
+        transactionHash: randomHash(),
+        transactionSource: randomNativeAddress(),
+        transactionTarget: randomNativeAddress()
+      }
     }
-  }
 
   protected async generateSettingChanged(name: string): Promise<SettingChangedEvent.OutputTuple> {
-    return [ name, BigInt(randomNumber(1e2, 1e4)) ]
+    return [name, BigInt(randomNumber(1e2, 1e4))]
   }
 
   protected async generateCollateralTypeAdded(): Promise<CollateralTypeAddedEvent.OutputTuple> {
@@ -172,7 +146,7 @@ export class EventFixture {
   }
 
   protected async generateAgentDestroyed(): Promise<AgentDestroyedEvent.OutputTuple> {
-    return [ await this.getRandomAgentVault() ]
+    return [await this.getRandomAgentVault()]
   }
 
   protected async generateSelfClose(): Promise<SelfCloseEvent.OutputTuple> {
@@ -351,11 +325,11 @@ export class EventFixture {
   }
 
   protected async generateRedemptionRequestIncomplete(): Promise<RedemptionRequestIncompleteEvent.OutputTuple> {
-    return [ randomNativeAddress(), BigInt(randomNumber(1, 1e9)) ]
+    return [randomNativeAddress(), BigInt(randomNumber(1, 1e9))]
   }
 
   protected async generateLiquidationStarted(): Promise<LiquidationStartedEvent.OutputTuple> {
-    return [ await this.getRandomAgentVault(), BigInt(Date.now()) ]
+    return [await this.getRandomAgentVault(), BigInt(Date.now())]
   }
 
   protected async generateLiquidationPerformed(): Promise<LiquidationPerformedEvent.OutputTuple> {
@@ -369,15 +343,15 @@ export class EventFixture {
   }
 
   protected async generateFullLiquidationStarted(): Promise<FullLiquidationStartedEvent.OutputTuple> {
-    return [ await this.getRandomAgentVault(), BigInt(Date.now()) ]
+    return [await this.getRandomAgentVault(), BigInt(Date.now())]
   }
 
   protected async generateLiquidationEnded(): Promise<LiquidationEndedEvent.OutputTuple> {
-    return [ await this.getRandomAgentVault() ]
+    return [await this.getRandomAgentVault()]
   }
 
   protected async generateAvailableAgentExited(): Promise<AvailableAgentExitedEvent.OutputTuple> {
-    return [ await this.getRandomAgentVault() ]
+    return [await this.getRandomAgentVault()]
   }
 
   protected async generateAgentEnteredAvailable(): Promise<AgentAvailableEvent.OutputTuple> {
@@ -411,6 +385,7 @@ export class EventFixture {
       BigInt(randomNumber(1e6, 1e12))
     ]
   }
+
 
   protected async generateTransfer(): Promise<TransferEvent.OutputTuple> {
     return [
@@ -567,9 +542,5 @@ export class EventFixture {
     const returnFromCoreVaultRequested = await this.orm.em.fork().findAll(ReturnFromCoreVaultRequested, { populate: ['agentVault.address'] })
     if (returnFromCoreVaultRequested === null || returnFromCoreVaultRequested.length === 0) throw new Error('ReturnFromCoreVaultRequested not found')
     return randomChoice(returnFromCoreVaultRequested)
-  }
-
-  private async argumentsFromEventName(name: string, args: any[]): Promise<EventArgs> {
-    return (this[`generate${name}` as keyof EventFixture] as any)(...args)
   }
 }
