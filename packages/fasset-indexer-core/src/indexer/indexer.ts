@@ -5,7 +5,6 @@ import { EventScraper } from './eventlib/event-scraper'
 import { logger } from '../logger'
 import {
   FIRST_UNHANDLED_EVENT_BLOCK_DB_KEY,
-  EVM_LOG_FETCH_SIZE,
   EVM_BLOCK_HEIGHT_OFFSET,
   MIN_EVM_BLOCK_NUMBER_DB_KEY
 } from '../config/constants'
@@ -35,8 +34,8 @@ export class EventIndexer {
     if (endBlock === undefined || endBlock > lastBlockToHandle) {
       endBlock = lastBlockToHandle
     }
-    for (let i = startBlock; i <= endBlock; i += EVM_LOG_FETCH_SIZE + 1) {
-      const endLoopBlock = Math.min(endBlock, i + EVM_LOG_FETCH_SIZE)
+    for (let i = startBlock; i <= endBlock; i += this.context.config.logQueryBatchSize + 1) {
+      const endLoopBlock = Math.min(endBlock, i + this.context.config.logQueryBatchSize)
       const logs = await this.eventScraper.getLogs(i, endLoopBlock)
       await this.storeLogs(logs)
       await this.setFirstUnhandledBlock(endLoopBlock + 1)

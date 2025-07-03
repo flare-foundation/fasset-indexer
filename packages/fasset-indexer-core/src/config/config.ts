@@ -71,6 +71,11 @@ export class ConfigLoader {
     return minBlock == null ? undefined : parseInt(minBlock)
   }
 
+  get logQueryBatchSize(): number {
+    const size = process.env.LOG_QUERY_BATCH_SIZE
+    return size == null ? 28 : parseInt(size)
+  }
+
   get indexPrices(): boolean {
     return process.env.INDEX_PRICES === 'true'
   }
