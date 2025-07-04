@@ -97,6 +97,7 @@ import {
 import { CoreVaultManagerSettings } from "../../orm/entities/state/settings"
 import { PricesPublished } from "../../orm/entities/events/price"
 import { ContractLookup } from "../../context/lookup"
+import { EventStorerCpMigration } from "./event-storer-cp-migration"
 import { EVENTS } from '../../config/constants'
 import type { EntityManager } from "@mikro-orm/knex"
 import type { Event } from "./event-scraper"
@@ -340,16 +341,24 @@ export class EventStorer {
         ent = await this.onCoreVaultRedemptionRequested(em, evmLog, log.args as CoreVaultRedemptionRequestedEvent.OutputTuple)
         break
       } case EVENTS.COLLATERAL_POOL.ENTER: {
-        ent = await this.onCollateralPoolEntered(em, evmLog, log.args as EnteredEvent.OutputTuple)
+        const oldEnt = await this.onCollateralPoolEntered(em, evmLog, log.args as EnteredEvent.OutputTuple)
+        ent = EventStorerCpMigration.migrateCollateralPoolEntered(oldEnt)
         break
       } case EVENTS.COLLATERAL_POOL.EXIT: {
-        ent = await this.onCollateralPoolExited(em, evmLog, log.args as ExitedEvent.OutputTuple)
+        const oldEnt = await this.onCollateralPoolExited(em, evmLog, log.args as ExitedEvent.OutputTuple)
+        ent = EventStorerCpMigration.migrateCollateralPoolExited(oldEnt)
         break
       } case EVENTS.COLLATERAL_POOL.PAID_OUT: {
-        ent = await this.onCollateralPoolPaidOut(em, evmLog, log.args as PaidOutEvent.OutputTuple)
+        const oldEnt = await this.onCollateralPoolPaidOut(em, evmLog, log.args as PaidOutEvent.OutputTuple)
+        ent = EventStorerCpMigration.migrateCollateralPoolPaidOut(oldEnt)
+        break
+      } case EVENTS.COLLATERAL_POOL.CLAIMED_REWARD: {
+        const oldEnt = await this.onCollateralPoolClaimedReward(em, evmLog, log.args as ClaimedRewardEvent.OutputTuple)
+        ent = EventStorerCpMigration.migrateCollateralPoolClaimedReward(oldEnt)
         break
       } case EVENTS.COLLATERAL_POOL.DONATED: {
-        ent = await this.onCollateralPoolDonated(em, evmLog, log.args as DonatedEvent.OutputTuple)
+        // **deprecated**
+        // const oldEnt = await this.onCollateralPoolDonated(em, evmLog, log.args as DonatedEvent.OutputTuple)
         break
       } case EVENTS.COLLATERAL_POOL.CP_CLAIMED_REWARD: {
         ent = await this.onCpClaimedReward(em, evmLog, log.args as CPClaimedRewardEvent.OutputTuple)
@@ -374,9 +383,6 @@ export class EventStorer {
         break
       } case EVENTS.COLLATERAL_POOL.CP_SELF_CLOSE_EXITED: {
         ent = await this.onCpSelfCloseExited(em, evmLog, log.args as CPSelfCloseExitedEvent.OutputTuple)
-        break
-      } case EVENTS.COLLATERAL_POOL.CLAIMED_REWARD: {
-        ent = await this.onCollateralPoolClaimedReward(em, evmLog, log.args as ClaimedRewardEvent.OutputTuple)
         break
       } case EVENTS.ERC20.TRANSFER: {
         ent = await this.onERC20Transfer(em, evmLog, log.args as TransferEvent.OutputTuple)

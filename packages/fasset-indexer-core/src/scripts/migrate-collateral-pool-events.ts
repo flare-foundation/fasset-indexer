@@ -1,129 +1,64 @@
-import { Context } from "../context/context"
+import { EventStorerCpMigration } from "../indexer/eventlib/event-storer-cp-migration"
 import { getVar, setVar } from "../orm"
 import { CollateralPoolEntered, CollateralPoolExited } from "../orm/entities"
 import { CollateralPoolClaimedReward, CollateralPoolPaidOut } from "../orm/entities/events/collateral-pool"
-import { CPClaimedReward, CPEntered, CPExited, CPFeeDebtChanged, CPPaidOut, CPSelfCloseExited } from "../orm/entities/events/collateral-pool-v2"
+import type { EntityManager } from "@mikro-orm/knex"
 
 
 const CP_MIGRATED_VAR = 'cp_migrated'
 
-export async function migrateCollateralPoolEnterEvents(context: Context) {
-  const em = context.orm.em.fork()
+export async function migrateCollateralPoolEnterEvents(em: EntityManager) {
   const enteredEvents = await em.findAll(CollateralPoolEntered)
-  for (const oldEntered of enteredEvents) {
-    if (await em.findOne(CPFeeDebtChanged, { evmLog: oldEntered.evmLog })) {
-      continue
-    }
-    await em.persistAndFlush(
-      new CPFeeDebtChanged(
-        oldEntered.evmLog,
-        oldEntered.fasset,
-        oldEntered.tokenHolder,
-        oldEntered.newFAssetFeeDebt
-      )
-    )
-    if (await em.findOne(CPEntered, { evmLog: oldEntered.evmLog })) {
-      continue
-    }
-    await em.persistAndFlush(
-      new CPEntered(
-        oldEntered.evmLog,
-        oldEntered.fasset,
-        oldEntered.tokenHolder,
-        oldEntered.amountNatWei,
-        oldEntered.receivedTokensWei,
-        BigInt(oldEntered.timelockExpiresAt)
-      )
-    )
+  for (const entered of enteredEvents) {
+    await em.transactional(em => {
+      const ents = EventStorerCpMigration.migrateCollateralPoolEntered(entered)
+      em.persist(ents)
+      em.remove(entered)
+    })
   }
 }
 
-export async function migrateCollateralPoolExitEvents(context: Context) {
-  const em = context.orm.em.fork()
+export async function migrateCollateralPoolExitEvents(em: EntityManager) {
   const exitedEvents = await em.findAll(CollateralPoolExited)
-  for (const oldExited of exitedEvents) {
-    if (oldExited.closedFAssetsUBA > 0) {
-      if (!await em.findOne(CPSelfCloseExited, { evmLog: oldExited.evmLog })) {
-        await em.persistAndFlush(
-          new CPSelfCloseExited(
-            oldExited.evmLog,
-            oldExited.fasset,
-            oldExited.tokenHolder,
-            oldExited.burnedTokensWei,
-            oldExited.receivedNatWei,
-            oldExited.closedFAssetsUBA
-          )
-        )
-      }
-    } else {
-      if (!await em.findOne(CPExited, { evmLog: oldExited.evmLog })) {
-        await em.persistAndFlush(
-          new CPExited(
-            oldExited.evmLog,
-            oldExited.fasset,
-            oldExited.tokenHolder,
-            oldExited.burnedTokensWei,
-            oldExited.receivedNatWei
-          )
-        )
-      }
-    }
-    if (!await em.findOne(CPFeeDebtChanged, { evmLog: oldExited.evmLog })) {
-      await em.persistAndFlush(
-        new CPFeeDebtChanged(
-          oldExited.evmLog,
-          oldExited.fasset,
-          oldExited.tokenHolder,
-          oldExited.newFAssetFeeDebt
-        )
-      )
-    }
+  for (const exited of exitedEvents) {
+    await em.transactional(em => {
+      const ents = EventStorerCpMigration.migrateCollateralPoolExited(exited)
+      em.persist(ents)
+      em.remove(exited)
+    })
   }
 }
 
-export async function migrateCollateralPoolPaidOut(context: Context) {
-  const em = context.orm.em.fork()
+export async function migrateCollateralPoolPaidOut(em: EntityManager) {
   const paidOutEvents = await em.findAll(CollateralPoolPaidOut)
-  for (const oldPaidOut of paidOutEvents) {
-    if (!await em.findOne(CPPaidOut, { evmLog: oldPaidOut.evmLog })) {
-      await em.persistAndFlush(
-        new CPPaidOut(
-          oldPaidOut.evmLog,
-          oldPaidOut.fasset,
-          oldPaidOut.recipient,
-          oldPaidOut.paidNatWei,
-          oldPaidOut.burnedTokensWei
-        )
-      )
-    }
+  for (const paidOut of paidOutEvents) {
+    await em.transactional(em => {
+      const ents = EventStorerCpMigration.migrateCollateralPoolPaidOut(paidOut)
+      em.persist(ents)
+      em.remove(paidOut)
+    })
   }
 }
 
-export async function migrateCollateralPoolClaimedReward(context: Context) {
-  const em = context.orm.em.fork()
+export async function migrateCollateralPoolClaimedReward(em: EntityManager) {
   const claimedRewardEvents = await em.findAll(CollateralPoolClaimedReward)
-  for (const oldClaimed of claimedRewardEvents) {
-    if (!await em.findOne(CPClaimedReward, { evmLog: oldClaimed.evmLog })) {
-      await em.persistAndFlush(
-        new CPClaimedReward(
-          oldClaimed.evmLog,
-          oldClaimed.fasset,
-          oldClaimed.amountNatWei,
-          oldClaimed.rewardType
-        )
-      )
-    }
+  for (const claimed of claimedRewardEvents) {
+    await em.transactional(em => {
+      const ents = EventStorerCpMigration.migrateCollateralPoolClaimedReward(claimed)
+      em.persist(ents)
+      em.remove(claimed)
+    })
   }
 }
 
-export async function migrateCollateralPoolEvents(context: Context) {
-  const v = await getVar(context.orm.em.fork(), CP_MIGRATED_VAR)
+export async function migrateCollateralPoolEvents(em: EntityManager) {
+  /* const v = await getVar(context.orm.em.fork(), CP_MIGRATED_VAR)
   if (v != null && v.value == 'true') {
     return
-  }
-  await migrateCollateralPoolEnterEvents(context)
-  await migrateCollateralPoolExitEvents(context)
-  await migrateCollateralPoolPaidOut(context)
-  await migrateCollateralPoolClaimedReward(context)
-  await setVar(context.orm.em.fork(), CP_MIGRATED_VAR, 'true')
+  } */
+  await migrateCollateralPoolEnterEvents(em)
+  await migrateCollateralPoolExitEvents(em)
+  await migrateCollateralPoolPaidOut(em)
+  await migrateCollateralPoolClaimedReward(em)
+  //await setVar(context.orm.em.fork(), CP_MIGRATED_VAR, 'true')
 }
