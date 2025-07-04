@@ -3,12 +3,16 @@ import { ContractLookup, FAsset, FAssetType, FASSETS } from "fasset-indexer-core
 import {
   EvmAddress, EvmBlock, EvmLog, ERC20Transfer, MintingExecuted,
   RedemptionDefault, RedemptionPerformed, RedemptionRequested,
-  CollateralPoolEntered, CollateralPoolExited,
   LiquidationPerformed, TokenBalance, AgentVaultInfo,
   FAssetEventBound, CoreVaultRedemptionRequested,
   ReturnFromCoreVaultConfirmed, TransferToCoreVaultSuccessful,
   AssetManagerSettings,
-  TransferToCoreVaultStarted
+  TransferToCoreVaultStarted,
+  CPClaimedReward,
+  CPEntered,
+  CPExited,
+  CPSelfCloseExited,
+  CPFeesWithdrawn
 } from "fasset-indexer-core/entities"
 import { EVENTS } from "fasset-indexer-core/config"
 import { fassetToUsdPrice } from "./utils/prices"
@@ -173,9 +177,11 @@ export class DashboardAnalytics extends SharedAnalytics {
 
   async poolTransactionsCount(): Promise<AmountResult> {
     const em = this.orm.em.fork()
-    const entered = await em.count(CollateralPoolEntered)
-    const exited = await em.count(CollateralPoolExited)
-    return { amount: entered + exited }
+    const entered = await em.count(CPEntered)
+    const exited = await em.count(CPExited)
+    const claimed = await em.count(CPClaimedReward)
+    const selfCloseExited = await em.count(CPSelfCloseExited)
+    return { amount: entered + exited + claimed + selfCloseExited }
   }
 
   async bestCollateralPools(n: number, minTotalPoolNatWei: bigint, now: number, delta: number, lim: number): Promise<FAssetCollateralPoolScore> {
@@ -410,10 +416,10 @@ export class DashboardAnalytics extends SharedAnalytics {
 
   private async totalClaimedPoolFeesAt(pool?: string, user?: string, timestamp?: number): Promise<FAssetValueResult> {
     const enteredFees = await this.filterEnterOrExitQueryBy(
-      this.orm.em.fork().createQueryBuilder(CollateralPoolExited, 'cpe')
-        .select(['cpe.fasset', raw('sum(cpe.received_fasset_fees_uba) as fees')])
-        .groupBy('cpe.fasset'),
-      'cpe', pool, user, timestamp
+      this.orm.em.fork().createQueryBuilder(CPFeesWithdrawn, 'cpfw')
+        .select(['cpfw.fasset', raw('sum(cpfw.withdrawn_fees_uba) as fees')])
+        .groupBy('cpfw.fasset'),
+      'cpfw', pool, user, timestamp
     ).execute() as { fasset: number, fees: bigint }[]
     return this.convertOrmResultToFAssetValueResult(enteredFees, 'fees')
   }

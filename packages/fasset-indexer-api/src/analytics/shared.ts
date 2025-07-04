@@ -1,7 +1,7 @@
 import { SelectQueryBuilder, ORM, raw } from "fasset-indexer-core/orm"
 import {
-  CollateralPoolEntered, CollateralPoolExited,
-  MintingExecuted, RedemptionRequested, LiquidationPerformed
+  MintingExecuted, RedemptionRequested, LiquidationPerformed,
+  CPExited, CPEntered, CPSelfCloseExited
 } from "fasset-indexer-core/entities"
 
 
@@ -12,12 +12,13 @@ export abstract class SharedAnalytics {
     const entered = await this.poolCollateralEnteredAt(pool, user, timestamp)
     if (entered === BigInt(0)) return BigInt(0)
     const exited = await this.poolCollateralExitedAt(pool, user, timestamp)
-    return entered - exited
+    const selfCloseExited = await this.poolCollateralSelfCloseExitedAt(pool, user, timestamp)
+    return entered - exited - selfCloseExited
   }
 
   protected async poolCollateralEnteredAt(pool?: string, user?: string, timestamp?: number): Promise<bigint> {
     const enteredCollateral = await this.filterEnterOrExitQueryBy(
-      this.orm.em.fork().createQueryBuilder(CollateralPoolEntered, 'cpe')
+      this.orm.em.fork().createQueryBuilder(CPEntered, 'cpe')
         .select([raw('sum(cpe.amount_nat_wei) as collateral')]),
       'cpe', pool, user, timestamp
     ).execute() as { collateral: bigint }[]
@@ -26,11 +27,20 @@ export abstract class SharedAnalytics {
 
   protected async poolCollateralExitedAt(pool?: string, user?: string, timestamp?: number): Promise<bigint> {
     const exitedCollateral = await this.filterEnterOrExitQueryBy(
-      this.orm.em.fork().createQueryBuilder(CollateralPoolExited, 'cpe')
+      this.orm.em.fork().createQueryBuilder(CPExited, 'cpe')
         .select([raw('sum(cpe.received_nat_wei) as collateral')]),
       'cpe', pool, user, timestamp
     ).execute() as { collateral: bigint }[]
     return BigInt(exitedCollateral[0]?.collateral || 0)
+  }
+
+  protected async poolCollateralSelfCloseExitedAt(pool?: string, user?: string, timestamp?: number): Promise<bigint> {
+    const selfCloseExitedCollateral = await this.filterEnterOrExitQueryBy(
+      this.orm.em.fork().createQueryBuilder(CPSelfCloseExited, 'cpsce')
+        .select([raw('sum(cpsce.received_nat_wei) as collateral')]),
+        'cpsce', pool, user, timestamp
+      ).execute() as { collateral: bigint }[]
+    return BigInt(selfCloseExitedCollateral[0]?.collateral || 0)
   }
 
   protected async backedFAssets(vault: string): Promise<bigint> {
