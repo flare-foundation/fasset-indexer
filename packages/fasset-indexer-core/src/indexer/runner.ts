@@ -23,7 +23,8 @@ export class IndexerRunner {
       try {
         await this.indexer.runHistoric(startBlock)
       } catch (e: any) {
-        logger.error(`error running ${this.name} indexer: ${e}`)
+        const stacktrace = (e.stack != null) ? `\n${e.stack}` : ''
+        logger.error(`error running ${this.name} indexer: ${e}${stacktrace}`)
         await sleep(SLEEP_AFTER_ERROR_MS)
         continue
       }
