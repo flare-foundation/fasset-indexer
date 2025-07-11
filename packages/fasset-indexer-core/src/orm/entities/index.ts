@@ -26,6 +26,10 @@ export {
 } from "./events/challenge"
 export { CollateralTypeAdded, ERC20Transfer } from "./events/token"
 export { CollateralPoolEntered, CollateralPoolExited } from "./events/collateral-pool"
+export {
+  CPEntered, CPExited, CPSelfCloseExited, CPClaimedReward,
+  CPFeeDebtChanged, CPFeeDebtPaid, CPFeesWithdrawn, CPPaidOut
+} from "./events/collateral-pool-v2"
 export { AgentPing, AgentPingResponse } from "./events/ping"
 export { CurrentUnderlyingBlockUpdated } from "./events/system"
 export {

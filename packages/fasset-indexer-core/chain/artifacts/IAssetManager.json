@@ -4,6 +4,11 @@
     "sourceName": "contracts/userInterfaces/IAssetManager.sol",
     "abi": [
       {
+        "inputs": [],
+        "name": "InvalidAgentVaultAddress",
+        "type": "error"
+      },
+      {
         "anonymous": false,
         "inputs": [
           {

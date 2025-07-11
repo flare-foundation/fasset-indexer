@@ -144,4 +144,3 @@ export class AgentStatistics extends SharedAnalytics {
     return weightedAverage(timespan, now, delta)
   }
 }
-

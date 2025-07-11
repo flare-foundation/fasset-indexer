@@ -63,6 +63,14 @@
         "EscrowFinished",
         "CustodianAddressUpdated",
         "SettingsUpdated",
-        "SettingChanged"
+        "SettingChanged",
+        "CPClaimedReward",
+        "CPEntered",
+        "CPExited",
+        "CPFeeDebtChanged",
+        "CPFeeDebtPaid",
+        "CPFeesWithdrawn",
+        "CPPaidOut",
+        "CPSelfCloseExited"
       ]
 }
