@@ -68,16 +68,12 @@ export class ConfigLoader {
 
   get minBlock(): number | undefined {
     const minBlock = process.env.MIN_BLOCK_NUMBER
-    return minBlock == null ? undefined : parseInt(minBlock)
+    return minBlock == null || minBlock == '' ? undefined : parseInt(minBlock)
   }
 
   get logQueryBatchSize(): number {
     const size = process.env.LOG_QUERY_BATCH_SIZE
-    return size == null ? 28 : parseInt(size)
-  }
-
-  get indexPrices(): boolean {
-    return process.env.INDEX_PRICES === 'true'
+    return size == null || size == '' ? 28 : parseInt(size)
   }
 
   get json(): ConfigJson | undefined {
