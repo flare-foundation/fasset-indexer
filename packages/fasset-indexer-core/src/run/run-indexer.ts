@@ -5,6 +5,7 @@ import { ConfigLoader } from "../config/config"
 import { Context } from "../context/context"
 import { logger } from "../logger"
 import { IndexerRunner } from "../indexer/runner"
+import { migrateCollateralPoolEvents } from "../scripts/migrate-collateral-pool-events"
 
 
 async function runIndexer(start?: number) {
@@ -22,8 +23,12 @@ async function runIndexer(start?: number) {
   logger.info("ensuring configuration integrity...")
   await ensureConfigIntegrity(context)
   await ensureData(context)
+
   logger.info(`starting FAsset ${context.chain} indexer...`)
-  await runner.run(start)
+  await Promise.all([
+    migrateCollateralPoolEvents(context.orm.em.fork()),
+    runner.run(start)
+  ])
 }
 
 runIndexer()

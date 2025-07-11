@@ -1,13 +1,11 @@
 import { EventStorerCpMigration } from "../indexer/eventlib/event-storer-cp-migration"
-import { getVar, setVar } from "../orm"
 import { CollateralPoolEntered, CollateralPoolExited } from "../orm/entities"
 import { CollateralPoolClaimedReward, CollateralPoolPaidOut } from "../orm/entities/events/collateral-pool"
+import { logger } from "../logger"
 import type { EntityManager } from "@mikro-orm/knex"
 
 
-const CP_MIGRATED_VAR = 'cp_migrated'
-
-export async function migrateCollateralPoolEnterEvents(em: EntityManager) {
+async function migrateCollateralPoolEnterEvents(em: EntityManager) {
   const enteredEvents = await em.findAll(CollateralPoolEntered)
   for (const entered of enteredEvents) {
     await em.transactional(em => {
@@ -18,7 +16,7 @@ export async function migrateCollateralPoolEnterEvents(em: EntityManager) {
   }
 }
 
-export async function migrateCollateralPoolExitEvents(em: EntityManager) {
+async function migrateCollateralPoolExitEvents(em: EntityManager) {
   const exitedEvents = await em.findAll(CollateralPoolExited)
   for (const exited of exitedEvents) {
     await em.transactional(em => {
@@ -29,7 +27,7 @@ export async function migrateCollateralPoolExitEvents(em: EntityManager) {
   }
 }
 
-export async function migrateCollateralPoolPaidOut(em: EntityManager) {
+async function migrateCollateralPoolPaidOut(em: EntityManager) {
   const paidOutEvents = await em.findAll(CollateralPoolPaidOut)
   for (const paidOut of paidOutEvents) {
     await em.transactional(em => {
@@ -40,7 +38,7 @@ export async function migrateCollateralPoolPaidOut(em: EntityManager) {
   }
 }
 
-export async function migrateCollateralPoolClaimedReward(em: EntityManager) {
+async function migrateCollateralPoolClaimedReward(em: EntityManager) {
   const claimedRewardEvents = await em.findAll(CollateralPoolClaimedReward)
   for (const claimed of claimedRewardEvents) {
     await em.transactional(em => {
@@ -52,13 +50,12 @@ export async function migrateCollateralPoolClaimedReward(em: EntityManager) {
 }
 
 export async function migrateCollateralPoolEvents(em: EntityManager) {
-  /* const v = await getVar(context.orm.em.fork(), CP_MIGRATED_VAR)
-  if (v != null && v.value == 'true') {
-    return
-  } */
   await migrateCollateralPoolEnterEvents(em)
+  logger.info('migrated collateral pool enter events')
   await migrateCollateralPoolExitEvents(em)
+  logger.info('migrated collateral pool exit events')
   await migrateCollateralPoolPaidOut(em)
+  logger.info('migrated collateral pool paid out events')
   await migrateCollateralPoolClaimedReward(em)
-  //await setVar(context.orm.em.fork(), CP_MIGRATED_VAR, 'true')
+  logger.info('migrated collateral pool claimed reward events')
 }
