@@ -1,4 +1,4 @@
-import { id as ethersId, Interface } from "ethers"
+import { Interface } from "ethers"
 import {
   IAssetManager__factory, IERC20__factory, ICollateralPool__factory,
   IPriceChangeEmitter__factory, ICoreVaultManager__factory
@@ -50,7 +50,7 @@ export class EventInterface {
     for (const iface of ifaces) {
       const parsed = iface.getEvent(eventName)
       if (parsed != null) {
-        return ethersId(parsed.format('sighash'))
+        return parsed.topicHash
       }
     }
     throw new Error(`Event ${eventName} not found in interface`)

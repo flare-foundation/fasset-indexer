@@ -310,17 +310,7 @@ const _abi = [
           },
           {
             internalType: "uint256",
-            name: "poolTopupCollateralRatioBIPS",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "poolTopupTokenPriceFactorBIPS",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "handshakeType",
+            name: "redemptionPoolFeeShareBIPS",
             type: "uint256",
           },
         ],

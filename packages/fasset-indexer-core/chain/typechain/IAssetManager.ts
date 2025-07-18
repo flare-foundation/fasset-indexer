@@ -36,9 +36,7 @@ export declare namespace IAssetManagerEvents {
     mintingPoolCollateralRatioBIPS: BigNumberish;
     buyFAssetByAgentFactorBIPS: BigNumberish;
     poolExitCollateralRatioBIPS: BigNumberish;
-    poolTopupCollateralRatioBIPS: BigNumberish;
-    poolTopupTokenPriceFactorBIPS: BigNumberish;
-    handshakeType: BigNumberish;
+    redemptionPoolFeeShareBIPS: BigNumberish;
   };
 
   export type AgentVaultCreationDataStructOutput = [
@@ -53,9 +51,7 @@ export declare namespace IAssetManagerEvents {
     mintingPoolCollateralRatioBIPS: bigint,
     buyFAssetByAgentFactorBIPS: bigint,
     poolExitCollateralRatioBIPS: bigint,
-    poolTopupCollateralRatioBIPS: bigint,
-    poolTopupTokenPriceFactorBIPS: bigint,
-    handshakeType: bigint
+    redemptionPoolFeeShareBIPS: bigint
   ] & {
     collateralPool: string;
     collateralPoolToken: string;
@@ -68,9 +64,7 @@ export declare namespace IAssetManagerEvents {
     mintingPoolCollateralRatioBIPS: bigint;
     buyFAssetByAgentFactorBIPS: bigint;
     poolExitCollateralRatioBIPS: bigint;
-    poolTopupCollateralRatioBIPS: bigint;
-    poolTopupTokenPriceFactorBIPS: bigint;
-    handshakeType: bigint;
+    redemptionPoolFeeShareBIPS: bigint;
   };
 }
 
