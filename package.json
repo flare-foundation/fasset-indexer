@@ -40,5 +40,8 @@
     "rimraf": "^5.0.7",
     "typescript": "^5.2.2"
   },
+  "resolutions": {
+    "multer": "^2.0.2"
+  },
   "packageManager": "yarn@3.6.4"
 }
