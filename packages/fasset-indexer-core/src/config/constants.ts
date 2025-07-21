@@ -61,7 +61,6 @@ export const EVENTS = {
     REDEMPTION_TICKET_UPDATED: 'RedemptionTicketUpdated',
     REDEMPTION_TICKET_DELETED: 'RedemptionTicketDeleted',
     // liquidation
-    AGENT_IN_CCB: "AgentInCCB",
     LIQUIDATION_STARTED: "LiquidationStarted",
     FULL_LIQUIDATION_STARTED: "FullLiquidationStarted",
     LIQUIDATION_PERFORMED: "LiquidationPerformed",

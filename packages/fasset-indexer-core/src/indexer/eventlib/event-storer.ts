@@ -44,7 +44,6 @@ import {
   RedemptionTicketUpdated
 } from "../../orm/entities/events/redemption-ticket"
 import {
-  AgentInCCB,
   FullLiquidationStarted,
   LiquidationEnded,
   LiquidationPerformed,

@@ -26,7 +26,6 @@
         "RedemptionTicketUpdated",
         "RedemptionTicketDeleted",
         "RedeemedInCollateral",
-        "AgentInCCB",
         "LiquidationStarted",
         "FullLiquidationStarted",
         "LiquidationPerformed",

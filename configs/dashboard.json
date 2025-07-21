@@ -17,7 +17,6 @@
         "RedemptionPaymentBlocked",
         "RedemptionPaymentFailed",
         "RedemptionRejected",
-        "AgentInCCB",
         "LiquidationStarted",
         "FullLiquidationStarted",
         "LiquidationPerformed",

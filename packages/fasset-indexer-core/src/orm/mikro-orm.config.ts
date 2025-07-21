@@ -21,7 +21,6 @@ import {
   RedeemedInCollateral
 } from "./entities/events/redemption"
 import {
-  AgentInCCB,
   FullLiquidationStarted, LiquidationEnded,
   LiquidationPerformed, LiquidationStarted
 } from "./entities/events/liquidation"
@@ -83,7 +82,7 @@ export const ORM_OPTIONS: Options<AbstractSqlDriver> = defineConfig({
     RedeemedInCollateral, RedemptionRequestIncomplete,
     RedemptionTicketCreated, RedemptionTicketUpdated, RedemptionTicketDeleted, RedemptionTicket,
     // liquidation
-    AgentInCCB, LiquidationStarted, FullLiquidationStarted, LiquidationPerformed, LiquidationEnded,
+    LiquidationStarted, FullLiquidationStarted, LiquidationPerformed, LiquidationEnded,
     // challenge
     IllegalPaymentConfirmed, DuplicatePaymentConfirmed, UnderlyingBalanceTooLow,
     // collateral pool

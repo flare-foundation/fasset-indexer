@@ -16,7 +16,6 @@ export {
   RedeemedInCollateral
 } from "./events/redemption"
 export {
-  AgentInCCB,
   FullLiquidationStarted, LiquidationEnded,
   LiquidationPerformed, LiquidationStarted
 } from "./events/liquidation"
