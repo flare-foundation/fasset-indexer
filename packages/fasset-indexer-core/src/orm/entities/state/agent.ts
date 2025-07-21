@@ -32,6 +32,12 @@ export class AgentVaultSettings {
   poolExitCollateralRatioBIPS: bigint
 
   @Property({ type: new uint256(), nullable: true })
+  poolTopupCollateralRatioBIPS?: bigint
+
+  @Property({ type: new uint256(), nullable: true })
+  poolTopupTokenPriceFactorBIPS?: bigint
+
+  @Property({ type: new uint256(), nullable: true })
   redemptionPoolFeeShareBIPS: bigint
 
   constructor(
@@ -110,6 +116,9 @@ export class AgentVaultInfo {
 
   @Property({ type: new uint256() })
   dustUBA: bigint
+
+  @Property({ type: "number", nullable: true })
+  ccbStartTimestamp?: number
 
   @Property({ type: "number" })
   liquidationStartTimestamp: number
