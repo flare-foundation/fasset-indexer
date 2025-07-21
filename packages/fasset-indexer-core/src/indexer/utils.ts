@@ -74,7 +74,6 @@ async function agentInfoToEntity(em: EntityManager, agentInfo: AgentInfo.InfoStr
     agentInfo.redeemingUBA,
     agentInfo.poolRedeemingUBA,
     agentInfo.dustUBA,
-    Number(agentInfo.ccbStartTimestamp),
     Number(agentInfo.liquidationStartTimestamp),
     agentInfo.maxLiquidationAmountUBA,
     agentInfo.liquidationPaymentFactorPoolBIPS,

@@ -105,7 +105,6 @@ export class EventGeneration {
       true,
       randomChoice(['BTC', 'XRP', 'DOGE']),
       randomChoice(['USDC', 'USDT', 'ETH']),
-      BigInt(randomNumber(14_000, 25_000)),
       BigInt(randomNumber(13_000, 14_000)),
       BigInt(randomNumber(25_000, 30_000))
     ]
@@ -124,8 +123,7 @@ export class EventGeneration {
       mintingPoolCollateralRatioBIPS: BigInt(randomNumber(14_000, 19_000)),
       buyFAssetByAgentFactorBIPS: BigInt(randomNumber(9000, 11000)),
       poolExitCollateralRatioBIPS: BigInt(randomNumber(14_000, 25_000)),
-      poolTopupCollateralRatioBIPS: BigInt(randomNumber(10_000, 13_000)),
-      poolTopupTokenPriceFactorBIPS: BigInt(randomNumber(10_000, 13_000))
+      redemptionPoolFeeShareBIPS: BigInt(randomNumber(1, 10_000))
     }
     return {
       0: await this.getRandomAgentManager(),
@@ -142,8 +140,7 @@ export class EventGeneration {
         struct.mintingPoolCollateralRatioBIPS,
         struct.buyFAssetByAgentFactorBIPS,
         struct.poolExitCollateralRatioBIPS,
-        struct.poolTopupCollateralRatioBIPS,
-        struct.poolTopupTokenPriceFactorBIPS
+        struct.redemptionPoolFeeShareBIPS,
       ]
     } as any
   }

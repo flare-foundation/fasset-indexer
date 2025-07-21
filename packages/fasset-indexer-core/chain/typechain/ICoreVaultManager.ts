@@ -154,7 +154,9 @@ export declare namespace ICoreVaultManager {
 export interface ICoreVaultManagerInterface extends Interface {
   getFunction(
     nameOrSignature:
+      | "assetManager"
       | "availableFunds"
+      | "cancelTransferRequestFromCoreVault"
       | "confirmPayment"
       | "coreVaultAddress"
       | "coreVaultAddressHash"
@@ -179,6 +181,7 @@ export interface ICoreVaultManagerInterface extends Interface {
       | "pause"
       | "paused"
       | "processEscrows"
+      | "requestTransferFromCoreVault"
       | "totalRequestAmountWithFee"
       | "triggerInstructions"
   ): FunctionFragment;
@@ -188,6 +191,7 @@ export interface ICoreVaultManagerInterface extends Interface {
       | "AllowedDestinationAddressAdded"
       | "AllowedDestinationAddressRemoved"
       | "CustodianAddressUpdated"
+      | "CustomInstructions"
       | "EmergencyPauseSenderAdded"
       | "EmergencyPauseSenderRemoved"
       | "EscrowFinished"
@@ -207,8 +211,16 @@ export interface ICoreVaultManagerInterface extends Interface {
   ): EventFragment;
 
   encodeFunctionData(
+    functionFragment: "assetManager",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "availableFunds",
     values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "cancelTransferRequestFromCoreVault",
+    values: [string]
   ): string;
   encodeFunctionData(
     functionFragment: "confirmPayment",
@@ -301,6 +313,10 @@ export interface ICoreVaultManagerInterface extends Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "requestTransferFromCoreVault",
+    values: [string, BytesLike, BigNumberish, boolean]
+  ): string;
+  encodeFunctionData(
     functionFragment: "totalRequestAmountWithFee",
     values?: undefined
   ): string;
@@ -310,7 +326,15 @@ export interface ICoreVaultManagerInterface extends Interface {
   ): string;
 
   decodeFunctionResult(
+    functionFragment: "assetManager",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "availableFunds",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "cancelTransferRequestFromCoreVault",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -404,6 +428,10 @@ export interface ICoreVaultManagerInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "requestTransferFromCoreVault",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "totalRequestAmountWithFee",
     data: BytesLike
   ): Result;
@@ -442,6 +470,28 @@ export namespace CustodianAddressUpdatedEvent {
   export type OutputTuple = [custodianAddress: string];
   export interface OutputObject {
     custodianAddress: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace CustomInstructionsEvent {
+  export type InputTuple = [
+    sequence: BigNumberish,
+    account: string,
+    instructionsHash: BytesLike
+  ];
+  export type OutputTuple = [
+    sequence: bigint,
+    account: string,
+    instructionsHash: string
+  ];
+  export interface OutputObject {
+    sequence: bigint;
+    account: string;
+    instructionsHash: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -766,7 +816,15 @@ export interface ICoreVaultManager extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
+  assetManager: TypedContractMethod<[], [string], "view">;
+
   availableFunds: TypedContractMethod<[], [bigint], "view">;
+
+  cancelTransferRequestFromCoreVault: TypedContractMethod<
+    [_destinationAddress: string],
+    [void],
+    "nonpayable"
+  >;
 
   confirmPayment: TypedContractMethod<
     [_proof: IPayment.ProofStruct],
@@ -863,17 +921,34 @@ export interface ICoreVaultManager extends BaseContract {
     "nonpayable"
   >;
 
+  requestTransferFromCoreVault: TypedContractMethod<
+    [
+      _destinationAddress: string,
+      _paymentReference: BytesLike,
+      _amount: BigNumberish,
+      _cancelable: boolean
+    ],
+    [string],
+    "nonpayable"
+  >;
+
   totalRequestAmountWithFee: TypedContractMethod<[], [bigint], "view">;
 
-  triggerInstructions: TypedContractMethod<[], [void], "nonpayable">;
+  triggerInstructions: TypedContractMethod<[], [bigint], "nonpayable">;
 
   getFunction<T extends ContractMethod = ContractMethod>(
     key: string | FunctionFragment
   ): T;
 
   getFunction(
+    nameOrSignature: "assetManager"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
     nameOrSignature: "availableFunds"
   ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "cancelTransferRequestFromCoreVault"
+  ): TypedContractMethod<[_destinationAddress: string], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "confirmPayment"
   ): TypedContractMethod<[_proof: IPayment.ProofStruct], [void], "nonpayable">;
@@ -974,11 +1049,23 @@ export interface ICoreVaultManager extends BaseContract {
     nameOrSignature: "processEscrows"
   ): TypedContractMethod<[_maxCount: BigNumberish], [boolean], "nonpayable">;
   getFunction(
+    nameOrSignature: "requestTransferFromCoreVault"
+  ): TypedContractMethod<
+    [
+      _destinationAddress: string,
+      _paymentReference: BytesLike,
+      _amount: BigNumberish,
+      _cancelable: boolean
+    ],
+    [string],
+    "nonpayable"
+  >;
+  getFunction(
     nameOrSignature: "totalRequestAmountWithFee"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "triggerInstructions"
-  ): TypedContractMethod<[], [void], "nonpayable">;
+  ): TypedContractMethod<[], [bigint], "nonpayable">;
 
   getEvent(
     key: "AllowedDestinationAddressAdded"
@@ -1000,6 +1087,13 @@ export interface ICoreVaultManager extends BaseContract {
     CustodianAddressUpdatedEvent.InputTuple,
     CustodianAddressUpdatedEvent.OutputTuple,
     CustodianAddressUpdatedEvent.OutputObject
+  >;
+  getEvent(
+    key: "CustomInstructions"
+  ): TypedContractEvent<
+    CustomInstructionsEvent.InputTuple,
+    CustomInstructionsEvent.OutputTuple,
+    CustomInstructionsEvent.OutputObject
   >;
   getEvent(
     key: "EmergencyPauseSenderAdded"
@@ -1146,6 +1240,17 @@ export interface ICoreVaultManager extends BaseContract {
       CustodianAddressUpdatedEvent.InputTuple,
       CustodianAddressUpdatedEvent.OutputTuple,
       CustodianAddressUpdatedEvent.OutputObject
+    >;
+
+    "CustomInstructions(uint256,string,bytes32)": TypedContractEvent<
+      CustomInstructionsEvent.InputTuple,
+      CustomInstructionsEvent.OutputTuple,
+      CustomInstructionsEvent.OutputObject
+    >;
+    CustomInstructions: TypedContractEvent<
+      CustomInstructionsEvent.InputTuple,
+      CustomInstructionsEvent.OutputTuple,
+      CustomInstructionsEvent.OutputObject
     >;
 
     "EmergencyPauseSenderAdded(address)": TypedContractEvent<

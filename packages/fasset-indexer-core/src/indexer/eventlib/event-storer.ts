@@ -129,7 +129,6 @@ import type {
   IllegalPaymentConfirmedEvent,
   DuplicatePaymentConfirmedEvent,
   UnderlyingBalanceTooLowEvent,
-  AgentInCCBEvent,
   SelfMintEvent,
   RedemptionTicketCreatedEvent,
   RedemptionTicketUpdatedEvent,
@@ -279,9 +278,6 @@ export class EventStorer {
         break
       } case EVENTS.ASSET_MANAGER.REDEMPTION_REQUEST_INCOMPLETE: {
         ent = await this.onRedemptionPaymentIncomplete(em, evmLog, log.args as RedemptionRequestIncompleteEvent.OutputTuple)
-        break
-      } case EVENTS.ASSET_MANAGER.AGENT_IN_CCB: {
-        ent = await this.onAgentInCCB(em, evmLog, log.args as AgentInCCBEvent.OutputTuple)
         break
       } case EVENTS.ASSET_MANAGER.LIQUIDATION_STARTED: {
         ent = await this.onLiquidationStarted(em, evmLog, log.args as LiquidationStartedEvent.OutputTuple)
@@ -480,7 +476,7 @@ export class EventStorer {
     const { 0: owner, 1: agentVault } = logArgs
     const [ collateralPool, collateralPoolToken, underlyingAddress, vaultCollateralToken, poolWNatToken,
       feeBIPS, poolFeeShareBIPS, mintingVaultCollateralRatioBIPS, mintingPoolCollateralRatioBIPS,
-      buyFAssetByAgentFactorBIPS, poolExitCollateralRatioBIPS, poolTopupCollateralRatioBIPS, poolTopupTokenPriceFactorBIPS
+      buyFAssetByAgentFactorBIPS, poolExitCollateralRatioBIPS, redemptionPoolFeeShareBIPS
     ] = (logArgs as any).creationData
     const agentOwnerEntity = await em.findOneOrFail(AgentOwner, { manager: { address: { hex: owner }}})
     // addresses
@@ -502,7 +498,7 @@ export class EventStorer {
     const agentVaultSettings = new AgentVaultSettings(
       agentVaultEntity, vaultCollateralTokenEntity, feeBIPS, poolFeeShareBIPS, mintingVaultCollateralRatioBIPS,
       mintingPoolCollateralRatioBIPS, buyFAssetByAgentFactorBIPS, poolExitCollateralRatioBIPS,
-      poolTopupCollateralRatioBIPS, poolTopupTokenPriceFactorBIPS
+      redemptionPoolFeeShareBIPS
     )
     const agentVaultCreated = new AgentVaultCreated(evmLog, fasset, agentVaultEntity)
     return [agentVaultEntity, agentVaultSettings, agentVaultCreated]
@@ -576,11 +572,8 @@ export class EventStorer {
       } case "poolExitCollateralRatioBIPS": {
         agentSettings.poolExitCollateralRatioBIPS = BigInt(value)
         break
-      } case "poolTopupCollateralRatioBIPS": {
-        agentSettings.poolTopupCollateralRatioBIPS = BigInt(value)
-        break
-      } case "poolTopupTokenPriceFactorBIPS": {
-        agentSettings.poolTopupTokenPriceFactorBIPS = BigInt(value)
+      } case "redemptionPoolFeeShareBIPS": {
+        agentSettings.redemptionPoolFeeShareBIPS = BigInt(value)
         break
       } default: {
         break
@@ -762,13 +755,6 @@ export class EventStorer {
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   // liquidations
-
-  protected async onAgentInCCB(em: EntityManager, evmLog: EvmLog, logArgs: AgentInCCBEvent.OutputTuple): Promise<AgentInCCB> {
-    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
-    const [ agentVault, timestamp ] = logArgs
-    const agentVaultEntity = await em.findOneOrFail(AgentVault, { address: { hex: agentVault }})
-    return new AgentInCCB(evmLog, fasset, agentVaultEntity, Number(timestamp))
-  }
 
   protected async onLiquidationStarted(em: EntityManager, evmLog: EvmLog, logArgs: LiquidationStartedEvent.OutputTuple):
     Promise<LiquidationStarted>

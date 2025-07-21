@@ -10,6 +10,96 @@ import type {
 
 const _abi = [
   {
+    inputs: [],
+    name: "AmountZero",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "ContractPaused",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "DestinationNotAllowed",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "EscrowAlreadyFinished",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "FeeZero",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InsufficientFunds",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidAddress",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidAmount",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidChain",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidEndTime",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "InvalidPreimageHash",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "NotAuthorized",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "NotCoreVault",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "NotFound",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "OnlyAssetManager",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "PaymentFailed",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "PaymentNotProven",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "RequestExists",
+    type: "error",
+  },
+  {
     anonymous: false,
     inputs: [
       {
@@ -46,6 +136,31 @@ const _abi = [
       },
     ],
     name: "CustodianAddressUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "sequence",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "account",
+        type: "string",
+      },
+      {
+        indexed: false,
+        internalType: "bytes32",
+        name: "instructionsHash",
+        type: "bytes32",
+      },
+    ],
+    name: "CustomInstructions",
     type: "event",
   },
   {
@@ -369,6 +484,19 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "assetManager",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "availableFunds",
     outputs: [
       {
@@ -378,6 +506,19 @@ const _abi = [
       },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "string",
+        name: "_destinationAddress",
+        type: "string",
+      },
+    ],
+    name: "cancelTransferRequestFromCoreVault",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -960,6 +1101,40 @@ const _abi = [
     type: "function",
   },
   {
+    inputs: [
+      {
+        internalType: "string",
+        name: "_destinationAddress",
+        type: "string",
+      },
+      {
+        internalType: "bytes32",
+        name: "_paymentReference",
+        type: "bytes32",
+      },
+      {
+        internalType: "uint128",
+        name: "_amount",
+        type: "uint128",
+      },
+      {
+        internalType: "bool",
+        name: "_cancelable",
+        type: "bool",
+      },
+    ],
+    name: "requestTransferFromCoreVault",
+    outputs: [
+      {
+        internalType: "bytes32",
+        name: "_actualPaymentReference",
+        type: "bytes32",
+      },
+    ],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "totalRequestAmountWithFee",
     outputs: [
@@ -975,7 +1150,13 @@ const _abi = [
   {
     inputs: [],
     name: "triggerInstructions",
-    outputs: [],
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "_numberOfInstructions",
+        type: "uint256",
+      },
+    ],
     stateMutability: "nonpayable",
     type: "function",
   },

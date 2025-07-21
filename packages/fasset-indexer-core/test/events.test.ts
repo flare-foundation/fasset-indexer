@@ -159,6 +159,7 @@ describe("FAsset evm events", () => {
     expect(agentVaultSettings.agentVault).to.equal(agentVaultCreated.agentVault)
     expect(agentVaultSettings.collateralToken).to.equal(collateralTypeAdded)
     expect(agentVaultSettings.feeBIPS).to.equal(agentVaultCreatedEvent.args.creationData[5])
+    expect(agentVaultSettings.redemptionPoolFeeShareBIPS).to.equal(agentVaultCreatedEvent.args.creationData[11])
   })
 
   it("should store all minting events", async () => {

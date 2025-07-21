@@ -31,11 +31,8 @@ export class AgentVaultSettings {
   @Property({ type: new uint256() })
   poolExitCollateralRatioBIPS: bigint
 
-  @Property({ type: new uint256() })
-  poolTopupCollateralRatioBIPS: bigint
-
-  @Property({ type: new uint256() })
-  poolTopupTokenPriceFactorBIPS: bigint
+  @Property({ type: new uint256(), nullable: true })
+  redemptionPoolFeeShareBIPS: bigint
 
   constructor(
     agentVault: AgentVault,
@@ -46,8 +43,7 @@ export class AgentVaultSettings {
     mintingPoolCollateralRatioBIPS: bigint,
     buyFAssetByAgentFactorBIPS: bigint,
     poolExitCollateralRatioBIPS: bigint,
-    poolTopupCollateralRatioBIPS: bigint,
-    poolTopupTokenPriceFactorBIPS: bigint
+    redemptionPoolFeeShareBIPS: bigint
   ) {
     this.agentVault = agentVault
     this.collateralToken = collateralToken
@@ -57,8 +53,7 @@ export class AgentVaultSettings {
     this.mintingPoolCollateralRatioBIPS = mintingPoolCollateralRatioBIPS
     this.buyFAssetByAgentFactorBIPS = buyFAssetByAgentFactorBIPS
     this.poolExitCollateralRatioBIPS = poolExitCollateralRatioBIPS
-    this.poolTopupCollateralRatioBIPS = poolTopupCollateralRatioBIPS
-    this.poolTopupTokenPriceFactorBIPS = poolTopupTokenPriceFactorBIPS
+    this.redemptionPoolFeeShareBIPS = redemptionPoolFeeShareBIPS
   }
 }
 
@@ -117,9 +112,6 @@ export class AgentVaultInfo {
   dustUBA: bigint
 
   @Property({ type: "number" })
-  ccbStartTimestamp: number
-
-  @Property({ type: "number" })
   liquidationStartTimestamp: number
 
   @Property({ type: new uint256() })
@@ -158,7 +150,6 @@ export class AgentVaultInfo {
     redeemingUBA: bigint,
     poolRedeemingUBA: bigint,
     dustUBA: bigint,
-    ccbStartTimestamp: number,
     liquidationStartTimestamp: number,
     maxLiquidationAmountUBA: bigint,
     liquidationPaymentFactorVaultBIPS: bigint,
@@ -184,7 +175,6 @@ export class AgentVaultInfo {
     this.redeemingUBA = redeemingUBA
     this.poolRedeemingUBA = poolRedeemingUBA
     this.dustUBA = dustUBA
-    this.ccbStartTimestamp = ccbStartTimestamp
     this.liquidationStartTimestamp = liquidationStartTimestamp
     this.maxLiquidationAmountUBA = maxLiquidationAmountUBA
     this.liquidationPaymentFactorVaultBIPS = liquidationPaymentFactorVaultBIPS
