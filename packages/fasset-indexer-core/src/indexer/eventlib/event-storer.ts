@@ -575,7 +575,7 @@ export class EventStorer {
         agentSettings.redemptionPoolFeeShareBIPS = BigInt(value)
         break
       } default: {
-        break
+        throw new Error(`agent has no setting ${name}`)
       }
     }
   }

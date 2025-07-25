@@ -125,11 +125,10 @@ describe("FAsset evm events", () => {
 
   it("should store agent created event", async () => {
     const assetManager = context.getContractAddress(ASSET_MANAGER_FXRP)
-    await fixture.storeInitialAgents()
     const em = context.orm.em.fork()
     // add initial collateral token type
     const collateralTypeAddedEvent = await fixture.generateEvent(EVENTS.ASSET_MANAGER.COLLATERAL_TYPE_ADDED, assetManager)
-    await storer.processEventUnsafe(em, collateralTypeAddedEvent)
+    await storer.processEvent(collateralTypeAddedEvent)
     const collateralTypeAdded = await em.findOneOrFail(CollateralTypeAdded,
       { evmLog: { index: collateralTypeAddedEvent.logIndex, block: { index: collateralTypeAddedEvent.blockNumber }}},
       { populate: ['evmLog.block', 'address'] })
@@ -138,6 +137,8 @@ describe("FAsset evm events", () => {
     expect(collateralTypeAdded.evmLog.block.index).to.equal(collateralTypeAddedEvent.blockNumber)
     expect(collateralTypeAdded.address.hex).to.equal(collateralTypeAddedEvent.args[1])
     expect(collateralTypeAdded.fasset).to.equal(FAssetType.FXRP)
+    // store agents
+    await fixture.storeInitialAgents(FAssetType.FXRP, true)
     // create agent
     const agentVaultCreatedEvent = await fixture.generateEvent(EVENTS.ASSET_MANAGER.AGENT_VAULT_CREATED, assetManager)
     await storer.processEventUnsafe(em, agentVaultCreatedEvent)
@@ -857,6 +858,19 @@ describe("FAsset evm events", () => {
       expect(cpcsce.burnedTokensWei).to.equal(ecpcsce.args[1])
       expect(cpcsce.receivedNatWei).to.equal(ecpcsce.args[2])
       expect(cpcsce.closedFAssetsUBA).to.equal(ecpcsce.args[3])
+    })
+  })
+
+  describe("edge cases", async () => {
+    it("should fetch null bigint when storing agent settings updated", async () => {
+      const assetManager = context.getContractAddress(ASSET_MANAGER_FXRP)
+      // add initial collateral token type
+      const collateralTypeAddedEvent = await fixture.generateEvent(EVENTS.ASSET_MANAGER.COLLATERAL_TYPE_ADDED, assetManager)
+      await storer.processEvent(collateralTypeAddedEvent)
+      // store
+      await fixture.storeInitialAgents(FAssetType.FXRP, true)
+      const settingChanged = await fixture.generateEvent(EVENTS.ASSET_MANAGER.AGENT_SETTING_CHANGED, assetManager)
+      await storer.processEvent(settingChanged)
     })
   })
 

@@ -86,7 +86,7 @@ export class EventGeneration {
         transactionIndex: randomNumber(1, 1e6),
         logIndex: randomNumber(1, 1e6),
         source: source ?? randomChoice(ASSET_MANAGERS),
-        blockTimestamp: Date.now(),
+        blockTimestamp: Math.floor(Date.now() / 1000),
         transactionHash: randomHash(),
         transactionSource: randomNativeAddress(),
         transactionTarget: randomNativeAddress()

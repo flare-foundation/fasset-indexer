@@ -9,6 +9,7 @@ import { EventGeneration } from "./generate"
 import { EVENTS } from "../../../src/config"
 import type { Event } from "../../../src/indexer/eventlib/event-scraper"
 import type { EventNameToEventArgs } from "./types"
+import { AgentVaultSettings, CollateralTypeAdded } from "../../../src/orm/entities"
 
 
 export class EventFixture extends EventGeneration {
@@ -22,7 +23,7 @@ export class EventFixture extends EventGeneration {
     })
   }
 
-  async storeInitialAgents(fasset: FAssetType = FAssetType.FXRP): Promise<AgentVault[]> {
+  async storeInitialAgents(fasset: FAssetType = FAssetType.FXRP, settings = false): Promise<AgentVault[]> {
     const agents: AgentVault[] = []
     await this.orm.em.transactional(async (em) => {
       const managerAddress = new EvmAddress(randomNativeAddress(), 1)
@@ -42,6 +43,21 @@ export class EventFixture extends EventGeneration {
         collateralPoolTokenAddress, agentOwner, false
       )
       em.persist(agentVault)
+      if (settings) {
+        const collateralTypeAdded = await em.findOneOrFail(CollateralTypeAdded, { collateralClass: 1 })
+        const agentVaultSettings = new AgentVaultSettings(
+          agentVault,
+          collateralTypeAdded,
+          BigInt(0),
+          BigInt(0),
+          BigInt(0),
+          BigInt(0),
+          BigInt(0),
+          BigInt(0),
+          BigInt(0)
+        )
+        em.persist(agentVaultSettings)
+      }
       agents.push(agentVault)
     })
     return agents

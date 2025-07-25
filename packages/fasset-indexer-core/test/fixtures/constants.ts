@@ -11,6 +11,5 @@ export const AGENT_SETTINGS = [
   'mintingPoolCollateralRatioBIPS',
   'buyFAssetByAgentFactorBIPS',
   'poolExitCollateralRatioBIPS',
-  'poolTopupCollateralRatioBIPS',
-  'poolTopupTokenPriceFactorBIPS'
+  'redemptionPoolFeeShareBIPS'
 ]

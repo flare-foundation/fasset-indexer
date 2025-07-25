@@ -48,6 +48,15 @@ export async function findOrCreateUnderlyingAddress(em: EntityManager, address: 
   return underlyingAddress
 }
 
+export async function findOrCreateUnderlyingBlock(em: EntityManager, index: number, hash: string, timestamp: number): Promise<UnderlyingBlock> {
+  let underlyingBlock = await em.findOne(UnderlyingBlock, { height: index })
+  if (!underlyingBlock) {
+    underlyingBlock = new UnderlyingBlock(hash, index, timestamp)
+    em.persist(underlyingBlock)
+  }
+  return underlyingBlock
+}
+
 export async function findOrCreateUnderlyingTransaction(
   em: EntityManager, hash: string, block: UnderlyingBlock, value: bigint,
   source: UnderlyingAddress, target?: UnderlyingAddress
