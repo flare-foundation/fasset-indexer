@@ -3,7 +3,9 @@
 /* eslint-disable */
 export type { IAgentOwnerRegistry } from "./IAgentOwnerRegistry";
 export type { IAssetManager } from "./IAssetManager";
+export type { IAssetManagerPreUpgrade } from "./IAssetManagerPreUpgrade";
 export type { ICollateralPool } from "./ICollateralPool";
+export type { ICollateralPoolPreUpgrade } from "./ICollateralPoolPreUpgrade";
 export type { ICoreVaultManager } from "./ICoreVaultManager";
 export type { IERC20 } from "./IERC20";
 export type { IPriceChangeEmitter } from "./IPriceChangeEmitter";
@@ -11,7 +13,9 @@ export type { IPriceReader } from "./IPriceReader";
 export * as factories from "./factories";
 export { IAgentOwnerRegistry__factory } from "./factories/IAgentOwnerRegistry__factory";
 export { IAssetManager__factory } from "./factories/IAssetManager__factory";
+export { IAssetManagerPreUpgrade__factory } from "./factories/IAssetManagerPreUpgrade__factory";
 export { ICollateralPool__factory } from "./factories/ICollateralPool__factory";
+export { ICollateralPoolPreUpgrade__factory } from "./factories/ICollateralPoolPreUpgrade__factory";
 export { ICoreVaultManager__factory } from "./factories/ICoreVaultManager__factory";
 export { IERC20__factory } from "./factories/IERC20__factory";
 export { IPriceChangeEmitter__factory } from "./factories/IPriceChangeEmitter__factory";

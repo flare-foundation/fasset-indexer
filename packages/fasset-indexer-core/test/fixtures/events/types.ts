@@ -46,10 +46,9 @@ import type {
   CPFeeDebtChangedEvent,
   CPFeesWithdrawnEvent,
   CPPaidOutEvent,
-  CPSelfCloseExitedEvent,
-  EnteredEvent,
-  ExitedEvent
+  CPSelfCloseExitedEvent
 } from "../../../chain/typechain/ICollateralPool"
+import type { EnteredEvent, ExitedEvent } from "../../../chain/typechain/ICollateralPoolPreUpgrade"
 import type { TransferEvent } from "../../../chain/typechain/IERC20"
 import type { SettingsUpdatedEvent } from "../../../chain/typechain/ICoreVaultManager"
 

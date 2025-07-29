@@ -1,12 +1,12 @@
-import { CollateralPoolEntered, CollateralPoolExited } from "../../orm/entities"
-import { CollateralPoolClaimedReward, CollateralPoolPaidOut } from "../../orm/entities/events/collateral-pool"
+import { CollateralPoolEntered, CollateralPoolExited } from "../../../orm/entities"
+import { CollateralPoolClaimedReward, CollateralPoolPaidOut } from "../../../orm/entities/events/collateral-pool"
 import {
   CPClaimedReward, CPEntered, CPExited, CPFeeDebtChanged,
   CPFeeDebtPaid, CPFeesWithdrawn, CPPaidOut, CPSelfCloseExited
-} from "../../orm/entities/events/collateral-pool-v2"
+} from "../../../orm/entities/events/collateral-pool-v2"
 
 
-export class EventStorerCpMigration {
+export class CollateralPoolEventMigration {
 
   static migrateCollateralPoolEntered(entered: CollateralPoolEntered): [CPEntered, CPFeeDebtChanged, CPFeeDebtPaid] {
     return [

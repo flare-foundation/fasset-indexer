@@ -70,10 +70,12 @@ import type {
   CPFeeDebtPaidEvent,
   CPFeesWithdrawnEvent,
   CPPaidOutEvent,
-  CPSelfCloseExitedEvent,
+  CPSelfCloseExitedEvent
+} from "../../../chain/typechain/ICollateralPool"
+import type {
   EnteredEvent,
   ExitedEvent
-} from "../../../chain/typechain/ICollateralPool"
+} from "../../../chain/typechain/ICollateralPoolPreUpgrade"
 
 
 export class EventGeneration {
@@ -82,6 +84,7 @@ export class EventGeneration {
 
   protected generateEventWithoutArgs(source?: string): Omit<Event, 'name' | 'args'> {
       return {
+        topic: '0x',
         blockNumber: randomNumber(1, 1e6),
         transactionIndex: randomNumber(1, 1e6),
         logIndex: randomNumber(1, 1e6),

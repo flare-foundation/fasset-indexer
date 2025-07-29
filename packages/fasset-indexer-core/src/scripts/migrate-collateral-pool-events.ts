@@ -1,4 +1,4 @@
-import { EventStorerCpMigration } from "../indexer/eventlib/event-storer-cp-migration"
+import { CollateralPoolEventMigration } from "../indexer/eventlib/migrations/collateral-pool-migrations"
 import { CollateralPoolEntered, CollateralPoolExited } from "../orm/entities"
 import { CollateralPoolClaimedReward, CollateralPoolPaidOut } from "../orm/entities/events/collateral-pool"
 import { logger } from "../logger"
@@ -9,7 +9,7 @@ async function migrateCollateralPoolEnterEvents(em: EntityManager) {
   const enteredEvents = await em.findAll(CollateralPoolEntered)
   for (const entered of enteredEvents) {
     await em.transactional(em => {
-      const ents = EventStorerCpMigration.migrateCollateralPoolEntered(entered)
+      const ents = CollateralPoolEventMigration.migrateCollateralPoolEntered(entered)
       em.persist(ents)
       em.remove(entered)
     })
@@ -20,7 +20,7 @@ async function migrateCollateralPoolExitEvents(em: EntityManager) {
   const exitedEvents = await em.findAll(CollateralPoolExited)
   for (const exited of exitedEvents) {
     await em.transactional(em => {
-      const ents = EventStorerCpMigration.migrateCollateralPoolExited(exited)
+      const ents = CollateralPoolEventMigration.migrateCollateralPoolExited(exited)
       em.persist(ents)
       em.remove(exited)
     })
@@ -31,7 +31,7 @@ async function migrateCollateralPoolPaidOut(em: EntityManager) {
   const paidOutEvents = await em.findAll(CollateralPoolPaidOut)
   for (const paidOut of paidOutEvents) {
     await em.transactional(em => {
-      const ents = EventStorerCpMigration.migrateCollateralPoolPaidOut(paidOut)
+      const ents = CollateralPoolEventMigration.migrateCollateralPoolPaidOut(paidOut)
       em.persist(ents)
       em.remove(paidOut)
     })
@@ -42,7 +42,7 @@ async function migrateCollateralPoolClaimedReward(em: EntityManager) {
   const claimedRewardEvents = await em.findAll(CollateralPoolClaimedReward)
   for (const claimed of claimedRewardEvents) {
     await em.transactional(em => {
-      const ents = EventStorerCpMigration.migrateCollateralPoolClaimedReward(claimed)
+      const ents = CollateralPoolEventMigration.migrateCollateralPoolClaimedReward(claimed)
       em.persist(ents)
       em.remove(claimed)
     })

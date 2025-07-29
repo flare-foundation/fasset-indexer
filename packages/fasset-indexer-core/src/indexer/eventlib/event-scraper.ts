@@ -5,6 +5,7 @@ import type { Log } from "ethers"
 export type EventArgs = any
 
 export interface Event {
+  topic: string
   name: string
   args: EventArgs
   blockNumber: number

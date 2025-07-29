@@ -1,7 +1,8 @@
-import { Interface } from "ethers"
+import { Interface, Log, LogDescription } from "ethers"
 import {
   IAssetManager__factory, IERC20__factory, ICollateralPool__factory,
-  IPriceChangeEmitter__factory, ICoreVaultManager__factory
+  IPriceChangeEmitter__factory, ICoreVaultManager__factory,
+  IAssetManagerPreUpgrade__factory, ICollateralPoolPreUpgrade__factory
 } from "../../chain/typechain"
 import { EVENTS } from "../config/constants"
 import type { IAssetManagerInterface } from "../../chain/typechain/IAssetManager"
@@ -10,25 +11,51 @@ import type { IPriceChangeEmitterInterface } from "../../chain/typechain/IPriceC
 import type { IERC20Interface } from "../../chain/typechain/IERC20"
 import type { FAssetIface } from "../shared"
 import type { ICoreVaultManagerInterface } from "../../chain/typechain/ICoreVaultManager"
+// upgrades
+import type { IAssetManagerPreUpgradeInterface } from "../../chain/typechain/IAssetManagerPreUpgrade"
+import type { ICollateralPoolPreUpgradeInterface } from "../../chain/typechain/ICollateralPoolPreUpgrade"
 
 
 export class EventInterface {
   public interfaces: {
-    assetManagerInterface: IAssetManagerInterface,
-    erc20Interface: IERC20Interface,
-    collateralPoolInterface: ICollateralPoolInterface,
-    priceReader: IPriceChangeEmitterInterface,
-    coreVaultManager: ICoreVaultManagerInterface
+    assetManagerInterface: [IAssetManagerPreUpgradeInterface, IAssetManagerInterface],
+    erc20Interface: [IERC20Interface],
+    collateralPoolInterface: [ICollateralPoolPreUpgradeInterface, ICollateralPoolInterface],
+    priceReader: [IPriceChangeEmitterInterface],
+    coreVaultManager: [ICoreVaultManagerInterface]
   }
 
   constructor() {
     this.interfaces = {
-      assetManagerInterface: IAssetManager__factory.createInterface(),
-      erc20Interface: IERC20__factory.createInterface(),
-      collateralPoolInterface: ICollateralPool__factory.createInterface(),
-      priceReader: IPriceChangeEmitter__factory.createInterface(),
-      coreVaultManager: ICoreVaultManager__factory.createInterface()
+      assetManagerInterface: [
+        IAssetManagerPreUpgrade__factory.createInterface(),
+        IAssetManager__factory.createInterface()
+      ],
+      erc20Interface: [
+        IERC20__factory.createInterface()
+      ],
+      collateralPoolInterface: [
+        ICollateralPoolPreUpgrade__factory.createInterface(),
+        ICollateralPool__factory.createInterface()
+      ],
+      priceReader: [
+        IPriceChangeEmitter__factory.createInterface()
+      ],
+      coreVaultManager: [
+        ICoreVaultManager__factory.createInterface()
+      ]
     }
+  }
+
+  parseLog(contract: string, log: Log): LogDescription | null {
+    const ifaces = this.contractToIface(contract)
+    for (const iface of ifaces) {
+      const parsed = iface.parseLog(log)
+      if (parsed != null) {
+        return parsed
+      }
+    }
+    return null
   }
 
   getTopicToIfaceMap(eventNames?: string[]): Map<string, FAssetIface> {
@@ -59,15 +86,15 @@ export class EventInterface {
   contractToIface(name: string): Interface[] {
     switch (name) {
       case "ERC20":
-        return [this.interfaces.erc20Interface]
+        return this.interfaces.erc20Interface
       case "ASSET_MANAGER":
-        return [this.interfaces.assetManagerInterface]
+        return this.interfaces.assetManagerInterface
       case "COLLATERAL_POOL":
-        return [this.interfaces.collateralPoolInterface]
+        return this.interfaces.collateralPoolInterface
       case "PRICE_READER":
-        return [this.interfaces.priceReader]
+        return this.interfaces.priceReader
       case "CORE_VAULT_MANAGER":
-        return [this.interfaces.coreVaultManager]
+        return this.interfaces.coreVaultManager
       default:
         throw new Error(`Unknown interface ${name}`)
     }

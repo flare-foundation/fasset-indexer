@@ -96,7 +96,7 @@ import {
 import { CoreVaultManagerSettings } from "../../orm/entities/state/settings"
 import { PricesPublished } from "../../orm/entities/events/price"
 import { ContractLookup } from "../../context/lookup"
-import { EventStorerCpMigration } from "./event-storer-cp-migration"
+import { CollateralPoolEventMigration } from "./migrations/collateral-pool-migrations"
 import { EVENTS } from '../../config/constants'
 import type { EntityManager } from "@mikro-orm/knex"
 import type { Event } from "./event-scraper"
@@ -146,7 +146,13 @@ import type {
   SettingChangedEvent
 } from "../../../chain/typechain/IAssetManager"
 import type {
+  DonatedEvent,
+  EnteredEvent,
+  ExitedEvent,
+  PaidOutEvent,
   ClaimedRewardEvent,
+} from "../../../chain/typechain/ICollateralPoolPreUpgrade"
+import type {
   CPClaimedRewardEvent,
   CPEnteredEvent,
   CPExitedEvent,
@@ -154,11 +160,7 @@ import type {
   CPFeeDebtPaidEvent,
   CPFeesWithdrawnEvent,
   CPPaidOutEvent,
-  CPSelfCloseExitedEvent,
-  DonatedEvent,
-  EnteredEvent,
-  ExitedEvent,
-  PaidOutEvent
+  CPSelfCloseExitedEvent
 } from "../../../chain/typechain/ICollateralPool"
 import type {
   CustodianAddressUpdatedEvent,
@@ -178,10 +180,18 @@ import type {
 } from "../../../chain/typechain/IAssetManager"
 import type { PricesPublishedEvent } from "../../../chain/typechain/IPriceChangeEmitter"
 import type { ORM } from "../../orm/interface"
+import { AssetManagerEventMigration } from "./migrations/asset-manager-migration"
 
 
 export class EventStorer {
-  constructor(readonly orm: ORM, public readonly lookup: ContractLookup) { }
+  oldCollateralTypeAddedTopic: string
+  oldAgentVaultCreatedTopic: string
+
+  constructor(readonly orm: ORM, public readonly lookup: ContractLookup) {
+    const oldIface = this.lookup.interfaces.assetManagerInterface[0]
+    this.oldCollateralTypeAddedTopic = this.lookup.getEventTopic(EVENTS.ASSET_MANAGER.COLLATERAL_TYPE_ADDED, [oldIface])
+    this.oldAgentVaultCreatedTopic = this.lookup.getEventTopic(EVENTS.ASSET_MANAGER.AGENT_VAULT_CREATED, [oldIface])
+  }
 
   async processEvent(log: Event): Promise<void> {
     await this.orm.em.fork().transactional(async (em) => {
@@ -204,9 +214,15 @@ export class EventStorer {
         ent = await this.onAssetManagerSettingChanged(em, evmLog, log.args as SettingChangedEvent.OutputTuple)
         break
       } case EVENTS.ASSET_MANAGER.COLLATERAL_TYPE_ADDED: {
+        if (log.topic == this.oldCollateralTypeAddedTopic) {
+          log.args = AssetManagerEventMigration.migrateCollateralTypeAdded(log.args)
+        }
         ent = await this.onCollateralTypeAdded(em, evmLog, log.args as CollateralTypeAddedEvent.OutputTuple)
         break
       } case EVENTS.ASSET_MANAGER.AGENT_VAULT_CREATED: {
+        if (log.topic === this.oldAgentVaultCreatedTopic) {
+          log.args = AssetManagerEventMigration.migrateAgentVaultCreated(log.args)
+        }
         ent = await this.onAgentVaultCreated(em, evmLog, log.args as AgentVaultCreatedEvent.OutputTuple)
         break
       } case EVENTS.ASSET_MANAGER.AGENT_SETTING_CHANGED: {
@@ -337,19 +353,19 @@ export class EventStorer {
         break
       } case EVENTS.COLLATERAL_POOL.ENTER: {
         const oldEnt = await this.onCollateralPoolEntered(em, evmLog, log.args as EnteredEvent.OutputTuple)
-        ent = EventStorerCpMigration.migrateCollateralPoolEntered(oldEnt)
+        ent = CollateralPoolEventMigration.migrateCollateralPoolEntered(oldEnt)
         break
       } case EVENTS.COLLATERAL_POOL.EXIT: {
         const oldEnt = await this.onCollateralPoolExited(em, evmLog, log.args as ExitedEvent.OutputTuple)
-        ent = EventStorerCpMigration.migrateCollateralPoolExited(oldEnt)
+        ent = CollateralPoolEventMigration.migrateCollateralPoolExited(oldEnt)
         break
       } case EVENTS.COLLATERAL_POOL.PAID_OUT: {
         const oldEnt = await this.onCollateralPoolPaidOut(em, evmLog, log.args as PaidOutEvent.OutputTuple)
-        ent = EventStorerCpMigration.migrateCollateralPoolPaidOut(oldEnt)
+        ent = CollateralPoolEventMigration.migrateCollateralPoolPaidOut(oldEnt)
         break
       } case EVENTS.COLLATERAL_POOL.CLAIMED_REWARD: {
         const oldEnt = await this.onCollateralPoolClaimedReward(em, evmLog, log.args as ClaimedRewardEvent.OutputTuple)
-        ent = EventStorerCpMigration.migrateCollateralPoolClaimedReward(oldEnt)
+        ent = CollateralPoolEventMigration.migrateCollateralPoolClaimedReward(oldEnt)
         break
       } case EVENTS.COLLATERAL_POOL.DONATED: {
         // **deprecated**
