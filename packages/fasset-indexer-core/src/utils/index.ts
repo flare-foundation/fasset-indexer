@@ -1,2 +1,2 @@
 export { PaymentReference } from './reference'
-export { sleep } from './general'
+export { sleep, join } from './general'

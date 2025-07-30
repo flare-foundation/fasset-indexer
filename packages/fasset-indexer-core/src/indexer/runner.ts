@@ -1,27 +1,27 @@
-import { getVar, setVar } from "../orm/utils"
 import { sleep } from "../utils/general"
 import { logger } from "../logger"
 import { SLEEP_AFTER_ERROR_MS, EVM_LOG_FETCH_SLEEP_MS } from "../config/constants"
-import type { ORM } from "../orm"
 
 
 interface Indexer {
-  context: { orm: ORM }
-  runHistoric(startBlock?: number): Promise<void>
+  run(startBlock?: number): Promise<Indexer | void>
 }
 
 export class IndexerRunner {
 
   constructor(
-    public readonly indexer: Indexer,
-    public readonly name: string
+    public indexer: Indexer,
+    public name: string
   ) { }
 
-  async run(startBlock?: number, minBlockDbKey?: string): Promise<void> {
-    await this.setMinBlock(startBlock, minBlockDbKey)
+  async run(startBlock?: number) {
     while (true) {
       try {
-        await this.indexer.runHistoric(startBlock)
+        const resp = await this.indexer.run(startBlock)
+        if (resp != null) {
+          logger.info('finished layered indexing, switching to regular')
+          this.indexer = resp
+        }
       } catch (e: any) {
         const stacktrace = (e.stack != null) ? `\n${e.stack}` : ''
         logger.error(`error running ${this.name} indexer: ${e}${stacktrace}`)
@@ -29,16 +29,6 @@ export class IndexerRunner {
         continue
       }
       await sleep(EVM_LOG_FETCH_SLEEP_MS)
-    }
-  }
-
-  protected async setMinBlock(min?: number, minBlockDbKey?: string): Promise<void> {
-    if (min != null && minBlockDbKey != null) {
-      const em = this.indexer.context.orm.em.fork()
-      const minBlock = await getVar(em, minBlockDbKey)
-      if (minBlock == null) {
-        await setVar(em, minBlockDbKey, min.toString())
-      }
     }
   }
 }

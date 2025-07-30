@@ -10,6 +10,12 @@ interface ConfigJson {
   indexEvents: string[]
 }
 
+interface ReindexConfig {
+  type: "back" | "race"
+  diff: string[]
+  name: string
+}
+
 export class ConfigLoader {
   private _configJson: ConfigJson | undefined
 
@@ -68,12 +74,12 @@ export class ConfigLoader {
 
   get minBlock(): number | undefined {
     const minBlock = process.env.MIN_BLOCK_NUMBER
-    return minBlock == null || minBlock == '' ? undefined : parseInt(minBlock)
+    return this.isNull(minBlock) ? undefined : parseInt(minBlock!)
   }
 
   get logQueryBatchSize(): number {
     const size = process.env.LOG_QUERY_BATCH_SIZE
-    return size == null || size == '' ? 28 : parseInt(size)
+    return this.isNull(size) ? 28 : parseInt(size!)
   }
 
   get json(): ConfigJson | undefined {
@@ -85,6 +91,17 @@ export class ConfigLoader {
       }
     }
     return this._configJson
+  }
+
+  get reindexing(): ReindexConfig | null {
+    const type = process.env.REINDEX_TYPE
+    if (this.isNull(type)) return null
+    if (type !== 'back' && type !== 'race') {
+      throw new Error(`REINDEX_TYPE cab be either "back" or "race"`)
+    }
+    const diff = this.required('REINDEX_DIFF')
+    const name = this.required('REINDEX_NAME')
+    return { type, diff: diff.split(','), name }
   }
 
   protected get dbType(): string {
@@ -114,9 +131,13 @@ export class ConfigLoader {
 
   protected required(key: string): string {
     const value = process.env[key]
-    if (value == null) {
+    if (this.isNull(value)) {
       throw new Error(`required environment key ${key} has value ${value}`)
     }
-    return value
+    return value!
+  }
+
+  protected isNull(value: string | undefined): boolean {
+    return value == '' || value == null
   }
 }

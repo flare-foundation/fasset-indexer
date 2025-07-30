@@ -25,7 +25,11 @@ export class EventIndexer {
     this.stateUpdater = new StateUpdater(context)
   }
 
-  async runHistoric(startBlock?: number, endBlock?: number): Promise<void> {
+  async run(startBlock?: number): Promise<undefined> {
+    return this.runHistoric(startBlock)
+  }
+
+  async runHistoric(startBlock?: number, endBlock?: number): Promise<undefined> {
     const firstUnhandledBlock = await this.firstUnhandledBlock(startBlock)
     if (startBlock === undefined || firstUnhandledBlock > startBlock) {
       startBlock = firstUnhandledBlock

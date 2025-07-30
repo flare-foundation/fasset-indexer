@@ -15,12 +15,16 @@ export class DogeIndexer {
     this.deforker = new DogeDeforker(context)
   }
 
+  async run(startBlock?: number) {
+    return await this.runHistoric(startBlock)
+  }
+
   async runHistoric(startBlock?: number, endBlock?: number) {
     await this.deforker.defork()
     await this.runHistoricWithoutDefork(startBlock, endBlock)
   }
 
-  async runHistoricWithoutDefork(startBlock?: number, endBlock?: number): Promise<void> {
+  async runHistoricWithoutDefork(startBlock?: number, endBlock?: number) {
     const firstUnhandledBlock = await this.firstUnhandledBlock(startBlock)
     if (startBlock === undefined || firstUnhandledBlock > startBlock) {
       startBlock = firstUnhandledBlock
