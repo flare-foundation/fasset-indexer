@@ -48,7 +48,6 @@
         "CoreVaultRedemptionRequested",
         "Entered",
         "Exited",
-        "Donated",
         "ClaimedReward",
         "PaidOut",
         "Transfer",
@@ -70,6 +69,17 @@
         "CPFeeDebtPaid",
         "CPFeesWithdrawn",
         "CPPaidOut",
-        "CPSelfCloseExited"
+        "CPSelfCloseExited",
+        "CollateralRatiosChanged",
+        "ContractChanged",
+        "UnderlyingWithdrawalCancelled",
+        "UnderlyingBalanceToppedUp",
+        "UnderlyingBalanceChanged",
+        "RedemptionPoolFeeMinted",
+        "DustChanged",
+        "EmergencyPauseTriggered",
+        "EmergencyPauseCanceled",
+        "EmergencyPauseTransfersTriggered",
+        "EmergencyPauseTransfersCanceled"
       ]
 }

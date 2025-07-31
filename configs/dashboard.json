@@ -38,7 +38,6 @@
         "CoreVaultRedemptionRequested",
         "Entered",
         "Exited",
-        "Donated",
         "ClaimedReward",
         "PaidOut",
         "Transfer",
@@ -50,6 +49,10 @@
         "CPFeeDebtPaid",
         "CPFeesWithdrawn",
         "CPPaidOut",
-        "CPSelfCloseExited"
+        "CPSelfCloseExited",
+        "UnderlyingBalanceChanged",
+        "RedemptionTicketCreated",
+        "RedemptionTicketUpdated",
+        "RedemptionTicketDeleted"
       ]
 }

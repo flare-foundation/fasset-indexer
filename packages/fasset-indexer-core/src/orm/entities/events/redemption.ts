@@ -122,6 +122,16 @@ export class RedemptionRequestIncomplete extends FAssetEventBound {
 }
 
 @Entity()
+export class RedemptionPoolFeeMinted extends FAssetEventBound {
+
+  @OneToOne({ entity: () => RedemptionRequested, owner: true })
+  redemptionRequested!: RedemptionRequested
+
+  @Property({ type: new uint256() })
+  poolFeeUBA!: bigint
+}
+
+@Entity()
 export class RedeemedInCollateral extends FAssetEventBound {
 
   @ManyToOne({ entity: () => AgentVault })

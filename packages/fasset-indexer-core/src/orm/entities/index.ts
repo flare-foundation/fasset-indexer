@@ -4,9 +4,11 @@ export { EvmBlock } from "./evm/block"
 export { EvmTransaction } from "./evm/transaction"
 export { EvmLog } from "./evm/log"
 export {
-  AgentVaultCreated, AgentSettingChanged, SelfClose,
+  AgentVaultCreated, AgentVaultDestroyed, AgentSettingChanged, SelfClose,
   VaultCollateralWithdrawalAnnounced, PoolTokenRedemptionAnnounced,
   UnderlyingWithdrawalAnnounced, UnderlyingWithdrawalConfirmed,
+  UnderlyingWithdrawalCancelled, UnderlyingBalanceToppedUp,
+  UnderlyingBalanceChanged, DustChanged
 } from "./events/agent"
 export {
   CollateralReserved, MintingExecuted,
@@ -17,7 +19,7 @@ export {
   RedemptionRequested, RedemptionPerformed, RedemptionDefault,
   RedemptionPaymentFailed, RedemptionPaymentBlocked, RedemptionRejected,
   RedemptionRequestIncomplete,
-  RedeemedInCollateral
+  RedeemedInCollateral, RedemptionPoolFeeMinted as RedemptionPoolFeeMintedEvent
 } from "./events/redemption"
 export {
   RedemptionTicketCreated, RedemptionTicketUpdated, RedemptionTicketDeleted
@@ -41,12 +43,16 @@ export {
   CPFeeDebtChanged, CPFeeDebtPaid, CPFeesWithdrawn, CPPaidOut
 } from "./events/collateral-pool-v2"
 export { AgentPing, AgentPingResponse } from "./events/ping"
-export { CurrentUnderlyingBlockUpdated } from "./events/system"
+export { CurrentUnderlyingBlockUpdated, ContractChanged, CollateralRatiosChanged } from "./events/system"
 export {
   TransferToCoreVaultStarted, TransferToCoreVaultSuccessful, TransferToCoreVaultDefaulted,
   ReturnFromCoreVaultRequested, ReturnFromCoreVaultConfirmed, ReturnFromCoreVaultCancelled,
   CoreVaultRedemptionRequested
 } from "./events/core-vault"
+export {
+  EmergencyPauseTriggered, EmergencyPauseCancelled,
+  EmergencyPauseTransfersTriggered, EmergencyPauseTransfersCancelled
+} from './events/emergency-pause'
 export { AgentVaultInfo, AgentVaultSettings } from "./state/agent"
 export { AgentManager, AgentOwner, AgentVault } from "./agent"
 export { FtsoPrice } from "./state/price"

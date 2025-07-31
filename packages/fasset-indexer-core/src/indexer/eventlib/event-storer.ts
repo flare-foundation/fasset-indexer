@@ -42,8 +42,14 @@ export class EventStorer {
 
   protected async _processEvent(em: EntityManager, log: Event, evmLog: Entities.EvmLog): Promise<boolean> {
     switch (log.name) {
-      case EVENTS.ASSET_MANAGER.SETTING_CHANGED: {
+      case EVENTS.ASSET_MANAGER.CONTRACT_CHANGED: {
+        await this.onAssetManagerContractChanged(em, evmLog, log.args)
+        break
+      } case EVENTS.ASSET_MANAGER.SETTING_CHANGED: {
         await this.onAssetManagerSettingChanged(em, evmLog, log.args)
+        break
+      } case EVENTS.ASSET_MANAGER.COLLATERAL_RATIOS_CHANGED: {
+        await this.onCollateralRatiosChanged(em, evmLog, log.args)
         break
       } case EVENTS.ASSET_MANAGER.COLLATERAL_TYPE_ADDED: {
         if (log.topic == this.oldCollateralTypeAddedTopic) {
@@ -56,6 +62,9 @@ export class EventStorer {
           log.args = AssetManagerEventMigration.migrateAgentVaultCreated(log.args)
         }
         await this.onAgentVaultCreated(em, evmLog, log.args)
+        break
+      } case EVENTS.ASSET_MANAGER.AGENT_VAULT_DESTROYED: {
+        await this.onAgentVaultDestroyed(em, evmLog, log.args)
         break
       } case EVENTS.ASSET_MANAGER.AGENT_SETTING_CHANGED: {
         await this.onAgentSettingChanged(em, evmLog, log.args)
@@ -74,6 +83,18 @@ export class EventStorer {
         break
       } case EVENTS.ASSET_MANAGER.UNDERLYING_WITHDRAWAL_CONFIRMED: {
         await this.onUnderlyingWithdrawalConfirmed(em, evmLog, log.args)
+        break
+      } case EVENTS.ASSET_MANAGER.UNDERLYING_WITHDRAWAL_CANCELLED: {
+        await this.onUnderlyingWithdrawalCancelled(em, evmLog, log.args)
+        break
+      } case EVENTS.ASSET_MANAGER.UNDERLYING_BALANCE_TOPPED_UP: {
+        await this.onUnderlyingBalanceToppedUp(em, evmLog, log.args)
+        break
+      } case EVENTS.ASSET_MANAGER.UNDERLYING_BALANCE_CHANGED: {
+        await this.onUnderlyingBalanceChanged(em, evmLog, log.args)
+        break
+      } case EVENTS.ASSET_MANAGER.DUST_CHANGED: {
+        await this.onDustChanged(em, evmLog, log.args)
         break
       } case EVENTS.ASSET_MANAGER.SELF_CLOSE: {
         await this.onSelfClose(em, evmLog, log.args)
@@ -125,6 +146,9 @@ export class EventStorer {
         break
       } case EVENTS.ASSET_MANAGER.REDEMPTION_REQUEST_INCOMPLETE: {
         await this.onRedemptionPaymentIncomplete(em, evmLog, log.args)
+        break
+      } case EVENTS.ASSET_MANAGER.REDEMPTION_POOL_FEE_MINTED: {
+        await this.onRedemptionPoolFeeMinted(em, evmLog, log.args)
         break
       } case EVENTS.ASSET_MANAGER.LIQUIDATION_STARTED: {
         await this.onLiquidationStarted(em, evmLog, log.args)
@@ -182,6 +206,18 @@ export class EventStorer {
         break
       } case EVENTS.ASSET_MANAGER.CORE_VAULT_REDEMPTION_REQUESTED: {
         await this.onCoreVaultRedemptionRequested(em, evmLog, log.args)
+        break
+      } case EVENTS.ASSET_MANAGER.EMERGENCY_PAUSE_TRIGGERED: {
+        await this.onEmergencyPauseTriggered(em, evmLog, log.args)
+        break
+      } case EVENTS.ASSET_MANAGER.EMERGENCY_PAUSE_CANCELLED: {
+        await this.onEmergencyPauseCancelled(em, evmLog, log.args)
+        break
+      } case EVENTS.ASSET_MANAGER.EMERGENCY_PAUSE_TRANSFERS_TRIGGERED: {
+        await this.onEmergencyPauseTransfersTriggered(em, evmLog, log.args)
+        break
+      } case EVENTS.ASSET_MANAGER.EMERGENCY_PAUSE_TRANSFERS_CANCELLED: {
+        await this.onEmergencyPauseTransfersCancelled(em, evmLog, log.args)
         break
       } case EVENTS.COLLATERAL_POOL.ENTER: {
         const oldEnt = await this.onCollateralPoolEntered(em, evmLog, log.args)
@@ -272,6 +308,17 @@ export class EventStorer {
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   // settings
 
+  protected async onAssetManagerContractChanged(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.ContractChangedEvent.OutputTuple
+  ): Promise<Entities.ContractChanged> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ name, value ] = logArgs
+    const _value = await findOrCreateEntity(em, Entities.EvmAddress, { hex: value })
+    return em.create(Entities.ContractChanged, { evmLog, fasset, name, value: _value })
+  }
+
   protected async onAssetManagerSettingChanged(
     em: EntityManager,
     evmLog: Entities.EvmLog,
@@ -289,6 +336,20 @@ export class EventStorer {
       }
     }
     return settings
+  }
+
+  protected async onCollateralRatiosChanged(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.CollateralRatiosChangedEvent.OutputTuple
+  ): Promise<Entities.CollateralRatiosChanged> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ collateralClass, collateralToken, minCollateralRatioBIPS, safetyMinCollateralRatioBIPS ] = logArgs
+    const address = await findOrCreateEntity(em, Entities.EvmAddress, { hex: collateralToken })
+    const collateralType = await em.findOneOrFail(Entities.CollateralTypeAdded, { address, fasset })
+    return em.create(Entities.CollateralRatiosChanged, {
+      evmLog, fasset, collateralToken: collateralType, minCollateralRatioBIPS, safetyMinCollateralRatioBIPS
+    })
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -341,6 +402,17 @@ export class EventStorer {
     })
     const agentVaultCreated = em.create(Entities.AgentVaultCreated, { evmLog, fasset, agentVault: _agentVault })
     return [_agentVault, agentVaultSettings, agentVaultCreated]
+  }
+
+  protected async onAgentVaultDestroyed(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.AgentDestroyedEvent.OutputTuple
+  ): Promise<Entities.AgentVaultDestroyed> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ agentVault ] = logArgs
+    const _agentVault = await em.findOneOrFail(Entities.AgentVault, { address: { hex: agentVault } })
+    return em.create(Entities.AgentVaultDestroyed, { evmLog, fasset, agentVault: _agentVault })
   }
 
   protected async onAgentSettingChanged(
@@ -679,6 +751,18 @@ export class EventStorer {
     return em.create(Entities.RedemptionRequestIncomplete, { evmLog, fasset, redeemer: _redeemer, remainingLots })
   }
 
+  protected async onRedemptionPoolFeeMinted(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.RedemptionPoolFeeMintedEvent.OutputTuple
+  ): Promise<Entities.RedemptionPoolFeeMintedEvent>
+  {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ agentVault, requestId, poolFeeUBA ] = logArgs
+    const redemptionRequested = await em.findOneOrFail(Entities.RedemptionRequested, { fasset, requestId: Number(requestId) })
+    return em.create(Entities.RedemptionPoolFeeMintedEvent, { evmLog, fasset, redemptionRequested, poolFeeUBA })
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   // liquidations
 
@@ -1011,6 +1095,55 @@ export class EventStorer {
     })
   }
 
+  protected async onUnderlyingWithdrawalCancelled(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.UnderlyingWithdrawalCancelledEvent.OutputTuple
+  ): Promise<Entities.UnderlyingWithdrawalCancelled> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ agentVault, announcementId ] = logArgs
+    const underlyingWithdrawalAnnounced = await em.findOneOrFail(Entities.UnderlyingWithdrawalAnnounced,
+      { announcementId , fasset })
+    return em.create(Entities.UnderlyingWithdrawalCancelled, { evmLog, fasset, underlyingWithdrawalAnnounced })
+  }
+
+  protected async onUnderlyingBalanceToppedUp(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.UnderlyingBalanceToppedUpEvent.OutputTuple
+  ): Promise<Entities.UnderlyingBalanceToppedUp> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ agentVault, transactionHash, depositedUBA ] = logArgs
+    const _agentVault = await em.findOneOrFail(Entities.AgentVault, { address: { hex: agentVault } })
+    return em.create(Entities.UnderlyingBalanceToppedUp, {
+      evmLog, fasset, agentVault: _agentVault, transactionHash, depositedUBA
+    })
+  }
+
+  protected async onUnderlyingBalanceChanged(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.UnderlyingBalanceChangedEvent.OutputTuple
+  ): Promise<Entities.UnderlyingBalanceChanged> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ agentVault, underlyingBalanceUBA ] = logArgs
+    const _agentVault = await em.findOneOrFail(Entities.AgentVault, { address: { hex: agentVault } })
+    return em.create(Entities.UnderlyingBalanceChanged, {
+      evmLog, fasset, agentVault: _agentVault, balanceUBA: underlyingBalanceUBA
+    })
+  }
+
+  protected async onDustChanged(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.DustChangedEvent.OutputTuple
+  ): Promise<Entities.DustChanged> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ agentVault, dustUBA ] = logArgs
+    const _agentVault = await em.findOneOrFail(Entities.AgentVault, { address: { hex: agentVault } })
+    return em.create(Entities.DustChanged, { evmLog, fasset, agentVault: _agentVault, dustUBA })
+  }
+
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   // agent ping
 
@@ -1150,6 +1283,47 @@ export class EventStorer {
       evmLog, fasset, redeemer: _redeemer, paymentAddress: _paymentAddress,
       paymentReference, valueUBA, feeUBA
     })
+  }
+
+  ////////////////////////////////////////////////////////////////////////////////////////////////////////
+  // emergency pause
+
+  protected async onEmergencyPauseTriggered(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.EmergencyPauseTriggeredEvent.OutputTuple
+  ): Promise<Entities.EmergencyPauseTriggered> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ pausedUntil ] = logArgs
+    return em.create(Entities.EmergencyPauseTriggered, { evmLog, fasset, pausedUntil })
+  }
+
+  protected async onEmergencyPauseCancelled(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.EmergencyPauseCanceledEvent.OutputTuple
+  ): Promise<Entities.EmergencyPauseCancelled> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    return em.create(Entities.EmergencyPauseCancelled, { evmLog, fasset })
+  }
+
+  protected async onEmergencyPauseTransfersTriggered(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.EmergencyPauseTransfersTriggeredEvent.OutputTuple
+  ): Promise<Entities.EmergencyPauseTransfersTriggered> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ pausedUntil ] = logArgs
+    return em.create(Entities.EmergencyPauseTransfersTriggered, { evmLog, fasset, pausedUntil })
+  }
+
+  protected async onEmergencyPauseTransfersCancelled(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.EmergencyPauseTransfersCanceledEvent.OutputTuple
+  ): Promise<Entities.EmergencyPauseTransfersCancelled> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    return em.create(Entities.EmergencyPauseTransfersCancelled, { evmLog, fasset })
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////

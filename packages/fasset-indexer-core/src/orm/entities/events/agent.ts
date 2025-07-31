@@ -12,6 +12,13 @@ export class AgentVaultCreated extends FAssetEventBound {
 }
 
 @Entity()
+export class AgentVaultDestroyed extends FAssetEventBound {
+
+  @OneToOne({ entity: () => AgentVault, owner: true })
+  agentVault!: AgentVault
+}
+
+@Entity()
 export class AgentSettingChanged extends FAssetEventBound {
 
   @ManyToOne({ entity: () => AgentVault })
@@ -76,7 +83,7 @@ export class UnderlyingWithdrawalAnnounced extends FAssetEventBound {
 @Entity()
 export class UnderlyingWithdrawalConfirmed extends FAssetEventBound {
 
-  @OneToOne({ entity: () => UnderlyingWithdrawalAnnounced })
+  @OneToOne({ entity: () => UnderlyingWithdrawalAnnounced, owner: true })
   underlyingWithdrawalAnnounced!: UnderlyingWithdrawalAnnounced
 
   @Property({ type: new uint256() })
@@ -84,4 +91,44 @@ export class UnderlyingWithdrawalConfirmed extends FAssetEventBound {
 
   @Property({ type: 'string' })
   transactionHash!: string
+}
+
+@Entity()
+export class UnderlyingWithdrawalCancelled extends FAssetEventBound {
+
+  @OneToOne({ entity: () => UnderlyingWithdrawalAnnounced, owner: true })
+  underlyingWithdrawalAnnounced!: UnderlyingWithdrawalAnnounced
+}
+
+@Entity()
+export class UnderlyingBalanceToppedUp extends FAssetEventBound {
+
+  @ManyToOne({ entity: () => AgentVault })
+  agentVault!: AgentVault
+
+  @Property({ type: 'text' })
+  transactionHash!: string
+
+  @Property({ type: new uint256() })
+  depositedUBA!: bigint
+}
+
+@Entity()
+export class UnderlyingBalanceChanged extends FAssetEventBound {
+
+  @ManyToOne({ entity: () => AgentVault })
+  agentVault!: AgentVault
+
+  @Property({ type: new uint256() })
+  balanceUBA!: bigint
+}
+
+@Entity()
+export class DustChanged extends FAssetEventBound {
+
+  @ManyToOne({ entity: () => AgentVault })
+  agentVault!: AgentVault
+
+  @Property({ type: new uint256() })
+  dustUBA!: bigint
 }

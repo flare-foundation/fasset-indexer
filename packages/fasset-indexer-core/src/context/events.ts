@@ -11,7 +11,7 @@ import type { IPriceChangeEmitterInterface } from "../../chain/typechain/IPriceC
 import type { IERC20Interface } from "../../chain/typechain/IERC20"
 import type { FAssetIface } from "../shared"
 import type { ICoreVaultManagerInterface } from "../../chain/typechain/ICoreVaultManager"
-// upgrades
+// deprecated due to upgrades
 import type { IAssetManagerPreUpgradeInterface } from "../../chain/typechain/IAssetManagerPreUpgrade"
 import type { ICollateralPoolPreUpgradeInterface } from "../../chain/typechain/ICollateralPoolPreUpgrade"
 
