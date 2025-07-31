@@ -14,13 +14,14 @@ export class IndexerRunner {
     public name: string
   ) { }
 
-  async run(startBlock?: number) {
+  async run(startBlock?: number, layered: boolean = false) {
     while (true) {
       try {
         const resp = await this.indexer.run(startBlock)
         if (resp != null) {
           logger.info('finished layered indexing, switching to regular')
           this.indexer = resp
+          layered = false
         }
       } catch (e: any) {
         const stacktrace = (e.stack != null) ? `\n${e.stack}` : ''
@@ -28,7 +29,9 @@ export class IndexerRunner {
         await sleep(SLEEP_AFTER_ERROR_MS)
         continue
       }
-      await sleep(EVM_LOG_FETCH_SLEEP_MS)
+      if (!layered) {
+        await sleep(EVM_LOG_FETCH_SLEEP_MS)
+      }
     }
   }
 }

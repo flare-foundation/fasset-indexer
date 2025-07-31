@@ -23,7 +23,7 @@ async function runIndexer() {
   } else if (config.reindexing.type == 'back') {
     indexer = new EventIndexerParallelBackPopulation(
       context, allEvents, config.reindexing.name, allEvents)
-  } else if (config?.reindexing?.type == 'race') {
+  } else if (config.reindexing.type == 'race') {
     const newEvents = new Set(config.reindexing.diff)
     const oldEvents = allEvents.filter(event => !newEvents.has(event))
     indexer = new EventIndexerParallelRacePopulation(
@@ -46,7 +46,7 @@ async function runIndexer() {
   const runner = new IndexerRunner(indexer, 'native')
   await Promise.all([
     migrateCollateralPoolEvents(context.orm.em.fork()),
-    runner.run()
+    runner.run(undefined, config.reindexing != null)
   ])
 }
 
