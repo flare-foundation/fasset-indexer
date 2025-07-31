@@ -1,8 +1,6 @@
 import { Entity, ManyToOne, Property, Unique } from "@mikro-orm/core"
 import { uint256 } from "../../custom/uint"
-import { FAssetType } from "../../../shared"
 import { FAssetEventBound } from "./_bound"
-import { EvmLog } from "../evm/log"
 import { BYTES32_LENGTH } from "../../../config/constants"
 import { UnderlyingAddress } from "../underlying/address"
 
@@ -11,28 +9,16 @@ import { UnderlyingAddress } from "../underlying/address"
 export class CoreVaultManagerSettingsUpdated extends FAssetEventBound {
 
   @Property({ type: 'integer' })
-  escrowEndTimeSeconds: number
+  escrowEndTimeSeconds!: number
 
   @Property({ type: new uint256() })
-  escrowAmount: bigint
+  escrowAmount!: bigint
 
   @Property({ type: new uint256() })
-  minimalAmount: bigint
+  minimalAmount!: bigint
 
   @Property({ type: new uint256() })
-  fee: bigint
-
-  constructor(evmLog: EvmLog, fasset: FAssetType,
-    escrowEndTimeSeconds: number, escrowAmount: bigint,
-    minimalAmount: bigint, fee: bigint
-  ) {
-    super(evmLog, fasset)
-    this.escrowEndTimeSeconds = escrowEndTimeSeconds
-    this.escrowAmount = escrowAmount
-    this.minimalAmount = minimalAmount
-    this.fee = fee
-  }
-
+  fee!: bigint
 }
 
 @Entity()
@@ -40,145 +26,89 @@ export class CoreVaultManagerSettingsUpdated extends FAssetEventBound {
 export class CoreVaultManagerPaymentConfirmed extends FAssetEventBound {
 
   @Property({ type: 'text', length: BYTES32_LENGTH, unique: true })
-  transactionId: string
+  transactionId!: string
 
   @Property({ type: 'text' })
-  paymentReference: string
+  paymentReference!: string
 
   @Property({ type: new uint256() })
-  amount: bigint
-
-  constructor(evmLog: EvmLog, fasset: FAssetType, transactionId: string, paymentReference: string, amount: bigint) {
-    super(evmLog, fasset)
-    this.transactionId = transactionId
-    this.paymentReference = paymentReference
-    this.amount = amount
-  }
+  amount!: bigint
 }
 
 @Entity()
 export class CoreVaultManagerPaymentInstructions extends FAssetEventBound {
 
   @Property({ type: new uint256() })
-  sequence: bigint
+  sequence!: bigint
 
   @ManyToOne({ entity: () => UnderlyingAddress })
-  account: UnderlyingAddress
+  account!: UnderlyingAddress
 
   @ManyToOne({ entity: () => UnderlyingAddress })
-  destination: UnderlyingAddress
+  destination!: UnderlyingAddress
 
   @Property({ type: new uint256() })
-  amount: bigint
+  amount!: bigint
 
   @Property({ type: new uint256() })
-  fee: bigint
+  fee!: bigint
 
   @Property({ type: 'text', length: BYTES32_LENGTH })
-  paymentReference: string
-
-  constructor(evmLog: EvmLog, fasset: FAssetType,
-    sequence: bigint, account: UnderlyingAddress, destination: UnderlyingAddress,
-    amount: bigint, fee: bigint, paymentReference: string
-  ) {
-    super(evmLog, fasset)
-    this.sequence = sequence
-    this.account = account
-    this.destination = destination
-    this.amount = amount
-    this.fee = fee
-    this.paymentReference = paymentReference
-  }
-
+  paymentReference!: string
 }
 
 @Entity()
 export class CoreVaultManagerEscrowInstructions extends FAssetEventBound {
 
   @Property({ type: new uint256() })
-  sequence: bigint
+  sequence!: bigint
 
   @Property({ type: 'text', length: BYTES32_LENGTH })
-  preimageHash: string
+  preimageHash!: string
 
   @ManyToOne({ entity: () => UnderlyingAddress })
-  account: UnderlyingAddress
+  account!: UnderlyingAddress
 
   @ManyToOne({ entity: () => UnderlyingAddress })
-  destination: UnderlyingAddress
+  destination!: UnderlyingAddress
 
   @Property({ type: new uint256() })
-  amount: bigint
+  amount!: bigint
 
   @Property({ type: new uint256() })
-  fee: bigint
+  fee!: bigint
 
   @Property({ type: new uint256() })
-  cancelAfterTs: bigint
-
-  constructor(evmLog: EvmLog, fasset: FAssetType,
-    sequence: bigint, preimageHash: string, account: UnderlyingAddress,
-    destination: UnderlyingAddress, amount: bigint, fee: bigint, cancelAfterTs: bigint
-  ) {
-    super(evmLog, fasset)
-    this.sequence = sequence
-    this.preimageHash = preimageHash
-    this.account = account
-    this.destination = destination
-    this.amount = amount
-    this.fee = fee
-    this.cancelAfterTs = cancelAfterTs
-  }
+  cancelAfterTs!: bigint
 }
 
 @Entity()
 export class CoreVaultManagerTransferRequested extends FAssetEventBound {
 
   @ManyToOne({ entity: () => UnderlyingAddress })
-  destination: UnderlyingAddress
+  destination!: UnderlyingAddress
 
   @Property({ type: 'text', length: BYTES32_LENGTH })
-  paymentReference: string
+  paymentReference!: string
 
   @Property({ type: new uint256() })
-  amount: bigint
+  amount!: bigint
 
   @Property({ type: 'boolean' })
-  cancelable: boolean
-
-  constructor(evmLog: EvmLog, fasset: FAssetType,
-    destination: UnderlyingAddress, paymentReference: string,
-    amount: bigint, cancelable: boolean
-  ) {
-    super(evmLog, fasset)
-    this.destination = destination
-    this.paymentReference = paymentReference
-    this.amount = amount
-    this.cancelable = cancelable
-  }
+  cancelable!: boolean
 }
 
 @Entity()
 export class CoreVaultManagerTransferRequestCanceled extends FAssetEventBound {
 
   @ManyToOne({ entity: () => UnderlyingAddress })
-  destination: UnderlyingAddress
+  destination!: UnderlyingAddress
 
   @Property({ type: 'text', length: BYTES32_LENGTH })
-  paymentReference: string
+  paymentReference!: string
 
   @Property({ type: new uint256() })
-  amount: bigint
-
-  constructor(evmLog: EvmLog, fasset: FAssetType,
-    destination: UnderlyingAddress, paymentReference: string, amount: bigint
-  ) {
-    super(evmLog, fasset)
-    this.destination = destination
-    this.paymentReference = paymentReference
-    this.amount = amount
-  }
-
+  amount!: bigint
 }
 
 @Entity()
@@ -188,26 +118,15 @@ export class CoreVaultManagerNotAllEscrowsProcessed extends FAssetEventBound {}
 export class EscrowFinished extends FAssetEventBound {
 
   @Property({ type: 'text', length: BYTES32_LENGTH })
-  preimageHash: string
+  preimageHash!: string
 
   @Property({ type: new uint256() })
-  amount: bigint
-
-  constructor(evmLog: EvmLog, fasset: FAssetType, preimageHash: string, amount: bigint) {
-    super(evmLog, fasset)
-    this.preimageHash = preimageHash
-    this.amount = amount
-  }
+  amount!: bigint
 }
 
 @Entity()
 export class CoreVaultManagerCustodianAddressUpdated extends FAssetEventBound {
 
   @ManyToOne({ entity: () => UnderlyingAddress })
-  custodian: UnderlyingAddress
-
-  constructor(evmLog: EvmLog, fasset: FAssetType, custodian: UnderlyingAddress) {
-    super(evmLog, fasset)
-    this.custodian = custodian
-  }
+  custodian!: UnderlyingAddress
 }

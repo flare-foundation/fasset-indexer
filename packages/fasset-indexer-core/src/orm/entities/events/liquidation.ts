@@ -3,23 +3,15 @@ import { uint256 } from '../../custom/uint'
 import { FAssetEventBound } from './_bound'
 import { AgentVault } from '../agent'
 import { EvmAddress } from '../evm/address'
-import type { EvmLog } from '../evm/log'
-import type { FAssetType } from '../../../shared'
 
 
 class LiquidationStartedBase extends FAssetEventBound {
 
   @ManyToOne({ entity: () => AgentVault })
-  agentVault: AgentVault
+  agentVault!: AgentVault
 
   @Property({ type: 'number' })
-  timestamp: number
-
-  constructor(evmLog: EvmLog, fasset: FAssetType, agentVault: AgentVault, timestamp: number) {
-    super(evmLog, fasset)
-    this.agentVault = agentVault
-    this.timestamp = timestamp
-  }
+  timestamp!: number
 }
 
 @Entity()
@@ -32,46 +24,24 @@ export class FullLiquidationStarted extends LiquidationStartedBase { }
 export class LiquidationPerformed extends FAssetEventBound {
 
   @ManyToOne({ entity: () => AgentVault })
-  agentVault: AgentVault
+  agentVault!: AgentVault
 
   @ManyToOne({ entity: () => EvmAddress })
-  liquidator: EvmAddress
+  liquidator!: EvmAddress
 
   @Property({ type: new uint256() })
-  valueUBA: bigint
+  valueUBA!: bigint
 
   @Property({ type: new uint256(), nullable: true })
-  paidVaultCollateralWei: bigint
+  paidVaultCollateralWei!: bigint
 
   @Property({ type: new uint256(), nullable: true })
-  paidPoolCollateralWei: bigint
-
-  constructor(
-    evmLog: EvmLog,
-    fasset: FAssetType,
-    agentVault: AgentVault,
-    liquidator: EvmAddress,
-    valueUBA: bigint,
-    paidVaultCollateralWei: bigint,
-    paidPoolCollateralWei: bigint
-  ) {
-    super(evmLog, fasset)
-    this.agentVault = agentVault
-    this.liquidator = liquidator
-    this.valueUBA = valueUBA
-    this.paidVaultCollateralWei = paidVaultCollateralWei
-    this.paidPoolCollateralWei = paidPoolCollateralWei
-  }
+  paidPoolCollateralWei!: bigint
 }
 
 @Entity()
 export class LiquidationEnded extends FAssetEventBound {
 
   @ManyToOne({ entity: () => AgentVault })
-  agentVault: AgentVault
-
-  constructor(evmLog: EvmLog, fasset: FAssetType, agentVault: AgentVault) {
-    super(evmLog, fasset)
-    this.agentVault = agentVault
-  }
+  agentVault!: AgentVault
 }

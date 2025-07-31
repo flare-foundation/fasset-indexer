@@ -3,13 +3,13 @@ import { ORM } from "../../../src/orm"
 import { EvmAddress } from "../../../src/orm/entities/evm/address"
 import { UnderlyingAddress } from "../../../src/orm/entities/underlying/address"
 import { AgentManager, AgentOwner, AgentVault } from "../../../src/orm/entities/agent"
+import { AgentVaultSettings, CollateralTypeAdded } from "../../../src/orm/entities"
 import { CoreVaultManagerSettings } from "../../../src/orm/entities/state/settings"
 import { randomNativeAddress, randomString, randomUnderlyingAddress } from "../utils"
 import { EventGeneration } from "./generate"
 import { EVENTS } from "../../../src/config"
 import type { Event } from "../../../src/indexer/eventlib/event-scraper"
 import type { EventNameToEventArgs } from "./types"
-import { AgentVaultSettings, CollateralTypeAdded } from "../../../src/orm/entities"
 
 
 export class EventFixture extends EventGeneration {
@@ -18,7 +18,13 @@ export class EventFixture extends EventGeneration {
 
   async storeInitialCoreVaultManagerSettings(fasset: FAssetType = FAssetType.FXRP): Promise<void> {
     await this.orm.em.transactional(async em => {
-      const vaultManager = new CoreVaultManagerSettings(fasset, BigInt(0), BigInt(0), 1, BigInt(0))
+      const vaultManager = em.create(CoreVaultManagerSettings, {
+        fasset,
+        escrowAmount: BigInt(0),
+        escrowEndTimeSeconds: 1,
+        minimalAmount: BigInt(0),
+        chainPaymentFee: BigInt(0)
+      })
       em.persist(vaultManager)
     })
   }
@@ -26,37 +32,37 @@ export class EventFixture extends EventGeneration {
   async storeInitialAgents(fasset: FAssetType = FAssetType.FXRP, settings = false): Promise<AgentVault[]> {
     const agents: AgentVault[] = []
     await this.orm.em.transactional(async (em) => {
-      const managerAddress = new EvmAddress(randomNativeAddress(), 1)
-      em.persist(managerAddress)
-      const agentManager = new AgentManager(managerAddress, randomString(5), randomString(10), 'http://localhost:3000/awesome/pic.png')
-      em.persist(agentManager)
-      const ownerAddress = new EvmAddress(randomNativeAddress(), 1)
-      const agentOwner = new AgentOwner(ownerAddress, agentManager)
-      em.persist(agentOwner)
-      const vaultAddress = new EvmAddress(randomNativeAddress(), 1)
-      const underlyingVaultAddress = new UnderlyingAddress(randomUnderlyingAddress(), 1)
-      const collateralPoolAddress = new EvmAddress(randomNativeAddress(), 1)
-      const collateralPoolTokenAddress = new EvmAddress(randomNativeAddress(), 1)
-      const agentVault = new AgentVault(
-        fasset,
-        vaultAddress, underlyingVaultAddress, collateralPoolAddress,
-        collateralPoolTokenAddress, agentOwner, false
-      )
-      em.persist(agentVault)
+      const managerAddress = em.create(EvmAddress, { hex: randomNativeAddress() })
+      const agentManager = em.create(AgentManager, {
+        address: managerAddress,
+        name: randomString(5),
+        description: randomString(10),
+        iconUrl: 'http://localhost:3000/awesome/pic.png'
+      })
+      const ownerAddress = em.create(EvmAddress, { hex: randomNativeAddress() })
+      const agentOwner = em.create(AgentOwner, { address: ownerAddress, manager: agentManager })
+      const vaultAddress = em.create(EvmAddress, { hex: randomNativeAddress() })
+      const underlyingVaultAddress = em.create(UnderlyingAddress, { text: randomUnderlyingAddress() })
+      const collateralPoolAddress = em.create(EvmAddress, { hex: randomNativeAddress() })
+      const collateralPoolTokenAddress = em.create(EvmAddress, { hex: randomNativeAddress() })
+      const agentVault = em.create(AgentVault, {
+        fasset, address: vaultAddress, underlyingAddress: underlyingVaultAddress,
+        collateralPool: collateralPoolAddress, collateralPoolToken: collateralPoolTokenAddress,
+        owner: agentOwner, destroyed: false
+      })
       if (settings) {
         const collateralTypeAdded = await em.findOneOrFail(CollateralTypeAdded, { collateralClass: 1 })
-        const agentVaultSettings = new AgentVaultSettings(
+        em.create(AgentVaultSettings, {
           agentVault,
-          collateralTypeAdded,
-          BigInt(0),
-          BigInt(0),
-          BigInt(0),
-          BigInt(0),
-          BigInt(0),
-          BigInt(0),
-          BigInt(0)
-        )
-        em.persist(agentVaultSettings)
+          feeBIPS: BigInt(0),
+          poolFeeShareBIPS: BigInt(0),
+          collateralToken: collateralTypeAdded,
+          poolExitCollateralRatioBIPS: BigInt(0),
+          mintingVaultCollateralRatioBIPS: BigInt(0),
+          mintingPoolCollateralRatioBIPS: BigInt(0),
+          buyFAssetByAgentFactorBIPS: BigInt(0),
+          redemptionPoolFeeShareBIPS: BigInt(0)
+        })
       }
       agents.push(agentVault)
     })

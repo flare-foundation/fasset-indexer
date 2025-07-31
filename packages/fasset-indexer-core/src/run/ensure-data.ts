@@ -19,7 +19,9 @@ async function ensureAssetManagerSettings(context: Context) {
         const assetManagerAddress = context.fAssetTypeToAssetManagerAddress(fasset)
         const assetManager = context.getAssetManagerContract(assetManagerAddress)
         const settings = await assetManager.getSettings()
-        assetManagerSettings = new AssetManagerSettings(fasset, settings.lotSizeAMG)
+        assetManagerSettings = em.create(AssetManagerSettings, {
+          fasset, lotSizeAmg: settings.lotSizeAMG
+        })
         em.persist(assetManagerSettings)
       }
     })
@@ -34,10 +36,13 @@ async function ensureCoreVaultManagerSettings(context: Context) {
       const coreVaultManagerAddress = context.fassetTypeToCoreVaultManagerAddress(fasset)
       const coreVaultManager = context.getCoreVaultManagerContract(coreVaultManagerAddress)
       const settings = await coreVaultManager.getSettings()
-      coreVaultManagerSettings = new CoreVaultManagerSettings(fasset,
-        settings._escrowAmount, settings._minimalAmount,
-        Number(settings._escrowEndTimeSeconds), settings._fee
-      )
+      coreVaultManagerSettings = em.create(CoreVaultManagerSettings, {
+        fasset,
+        escrowAmount: settings._escrowAmount,
+        minimalAmount: settings._minimalAmount,
+        escrowEndTimeSeconds: Number(settings._escrowEndTimeSeconds),
+        chainPaymentFee: settings._fee
+      })
       em.persist(coreVaultManagerSettings)
     }
   })

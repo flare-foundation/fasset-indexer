@@ -1,8 +1,7 @@
 import { Var } from "../orm/entities/state/var"
 import { UnderlyingAddress, UnderlyingBalance } from "../orm/entities/underlying/address"
-import type { EntityManager } from "@mikro-orm/core"
-import { ORM, SchemaUpdate, AddressType } from "./interface"
-import { UnderlyingBlock, UnderlyingTransaction } from "./entities";
+import { ORM, SchemaUpdate } from "./interface"
+import type { CreateOptions, EntityManager, EntityName, FilterQuery, RequiredEntityData } from "@mikro-orm/core"
 
 
 export async function updateSchema(orm: ORM, update: SchemaUpdate = "full"): Promise<void> {
@@ -16,14 +15,21 @@ export async function updateSchema(orm: ORM, update: SchemaUpdate = "full"): Pro
   }
 }
 
+export async function findOrCreateEntity<T extends object>(
+  em: EntityManager,
+  entityClass: EntityName<T>,
+  where: FilterQuery<T>,
+  opts: CreateOptions<true> = { persist: true },
+  args: Partial<RequiredEntityData<T>> = {}
+): Promise<T> {
+  const existing = await em.findOne(entityClass, where)
+  return existing != null ? existing : em.create(entityClass,
+    { ...where, ...args } as RequiredEntityData<T>, opts)
+}
+
 export async function setVar(em: EntityManager, key: string, value?: string): Promise<void> {
-  const vr = await em.findOne(Var, { key })
-  if (!vr) {
-    const vr = new Var(key, value)
-    em.persist(vr)
-  } else {
-    vr.value = value
-  }
+  const vr = await findOrCreateEntity(em, Var, { key }, {}, { value })
+  vr.value = value
   await em.flush()
 }
 
@@ -39,44 +45,9 @@ export async function deleteVar(em: EntityManager, key: string): Promise<void> {
   }
 }
 
-export async function findOrCreateUnderlyingAddress(em: EntityManager, address: string, type: AddressType): Promise<UnderlyingAddress> {
-  let underlyingAddress = await em.findOne(UnderlyingAddress, { text: address })
-  if (!underlyingAddress) {
-    underlyingAddress = new UnderlyingAddress(address, type)
-    em.persist(underlyingAddress)
-  }
-  return underlyingAddress
-}
-
-export async function findOrCreateUnderlyingBlock(em: EntityManager, index: number, hash: string, timestamp: number): Promise<UnderlyingBlock> {
-  let underlyingBlock = await em.findOne(UnderlyingBlock, { height: index })
-  if (!underlyingBlock) {
-    underlyingBlock = new UnderlyingBlock(hash, index, timestamp)
-    em.persist(underlyingBlock)
-  }
-  return underlyingBlock
-}
-
-export async function findOrCreateUnderlyingTransaction(
-  em: EntityManager, hash: string, block: UnderlyingBlock, value: bigint,
-  source: UnderlyingAddress, target?: UnderlyingAddress
-): Promise<UnderlyingTransaction> {
-  let underlyingTransaction = await em.findOne(UnderlyingTransaction, { hash })
-  if (!underlyingTransaction) {
-    underlyingTransaction = new UnderlyingTransaction(block, hash, value, source, target)
-    em.persist(underlyingTransaction)
-  }
-  return underlyingTransaction
-}
-
 export async function updateUnderlyingBalance(em: EntityManager, address: string, amount: bigint): Promise<UnderlyingBalance> {
-  let balance = await em.findOne(UnderlyingBalance, { address: { text: address } })
-  if (balance == null) {
-    const _address = await findOrCreateUnderlyingAddress(em, address, AddressType.USER)
-    balance = new UnderlyingBalance(_address, amount)
-  } else {
-    balance.balance = amount
-  }
-  em.persist(balance)
-  return balance
+  const _address = await findOrCreateEntity(em, UnderlyingAddress, { text: address })
+  const _balance = await findOrCreateEntity(em, UnderlyingBalance, { address: _address }, {}, { balance: amount })
+  _balance.balance = amount
+  return _balance
 }

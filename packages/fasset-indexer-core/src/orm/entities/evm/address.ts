@@ -1,5 +1,4 @@
-import { Entity, Enum, PrimaryKey, Property } from "@mikro-orm/core"
-import { AddressType } from "../../interface"
+import { Entity, PrimaryKey, Property } from "@mikro-orm/core"
 import { ADDRESS_LENGTH } from "../../../config/constants"
 
 
@@ -10,13 +9,5 @@ export class EvmAddress {
   id!: number
 
   @Property({ type: 'text', length: ADDRESS_LENGTH, unique: true })
-  hex: string
-
-  @Enum(() => AddressType)
-  type: AddressType
-
-  constructor(address: string, type: AddressType) {
-    this.hex = address
-    this.type = type
-  }
+  hex!: string
 }

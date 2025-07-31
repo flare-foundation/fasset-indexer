@@ -8,7 +8,7 @@ import { FAssetType } from "../../shared"
 export class AgentManager {
 
   @OneToOne({ entity: () => EvmAddress, owner: true, primary: true })
-  address: EvmAddress
+  address!: EvmAddress
 
   @Property({ type: 'text', nullable: true})
   name?: string
@@ -21,13 +21,6 @@ export class AgentManager {
 
   @OneToMany(() => AgentOwner, vault => vault.manager, { cascade: [Cascade.ALL] })
   agents = new Collection<AgentOwner>(this)
-
-  constructor(address: EvmAddress, name?: string, description?: string, iconUrl?: string) {
-    this.address = address
-    this.name = name
-    this.description = description
-    this.iconUrl = iconUrl
-  }
 }
 
 @Entity()
@@ -37,67 +30,39 @@ export class AgentOwner {
   id!: number
 
   @ManyToOne(() => EvmAddress)
-  address: EvmAddress
+  address!: EvmAddress
 
   @ManyToOne(() => AgentManager, { fieldName: 'agents' })
-  manager: AgentManager
+  manager!: AgentManager
 
   @OneToMany(() => AgentVault, vault => vault.owner, { cascade: [Cascade.ALL] })
   vaults = new Collection<AgentVault>(this)
-
-  constructor(address: EvmAddress, manager: AgentManager) {
-    this.address = address
-    this.manager = manager
-  }
 }
 
 @Entity()
 export class AgentVault {
 
   @Enum(() => FAssetType)
-  fasset: FAssetType
+  fasset!: FAssetType
 
   @OneToOne({ entity: () => EvmAddress, owner: true, primary: true })
-  address: EvmAddress
+  address!: EvmAddress
 
   @OneToOne({ entity: () => UnderlyingAddress, owner: true })
-  underlyingAddress: UnderlyingAddress
+  underlyingAddress!: UnderlyingAddress
 
   @ManyToOne({ entity: () => EvmAddress, unique: true })
-  collateralPool: EvmAddress
+  collateralPool!: EvmAddress
 
   @ManyToOne({ entity: () => EvmAddress, unique: true, nullable: true })
-  collateralPoolToken: EvmAddress
+  collateralPoolToken!: EvmAddress
 
   @Property({ type: 'text', nullable: true })
   collateralPoolTokenSymbol?: string
 
   @ManyToOne(() => AgentOwner, { fieldName: 'vaults' })
-  owner: AgentOwner
+  owner!: AgentOwner
 
   @Property({ type: 'boolean' })
-  destroyed: boolean
-
-  constructor(
-    fasset: FAssetType,
-    address: EvmAddress,
-    underlyingAddress: UnderlyingAddress,
-    collateralPool: EvmAddress,
-    collateralPoolToken: EvmAddress,
-    owner: AgentOwner,
-    destroyed: boolean,
-    collateralPoolTokenSymbol?: string
-  ) {
-    this.fasset = fasset
-    this.address = address
-    this.underlyingAddress = underlyingAddress
-    this.collateralPool = collateralPool
-    this.collateralPoolToken = collateralPoolToken
-    if (collateralPoolTokenSymbol) {
-      this.collateralPoolTokenSymbol = collateralPoolTokenSymbol
-    }
-    this.owner = owner
-    this.destroyed = destroyed
-  }
-
+  destroyed!: boolean
 }

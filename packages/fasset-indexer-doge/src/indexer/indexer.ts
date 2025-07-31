@@ -1,6 +1,6 @@
 import { FAssetType } from "fasset-indexer-core"
-import { getVar, setVar, findOrCreateUnderlyingAddress, AddressType, type EntityManager, findOrCreateUnderlyingTransaction } from "fasset-indexer-core/orm"
-import { UnderlyingBlock, UnderlyingAddress, UnderlyingVoutReference } from "fasset-indexer-core/entities"
+import { getVar, setVar, type EntityManager, findOrCreateEntity } from "fasset-indexer-core/orm"
+import { UnderlyingBlock, UnderlyingAddress, UnderlyingVoutReference, UnderlyingTransaction } from "fasset-indexer-core/entities"
 import { PaymentReference } from "fasset-indexer-core/utils"
 import { logger } from "fasset-indexer-core/logger"
 import { DogeDeforker } from "./deforker"
@@ -77,25 +77,26 @@ export class DogeIndexer {
       const reference = this.extractReference(vout)
       if (reference == null) continue
       const sender = await this.extractTransactionSender(tx)
-      const address = await findOrCreateUnderlyingAddress(em, sender, AddressType.AGENT)
+      const address = await findOrCreateEntity(em, UnderlyingAddress, { text: sender })
       await this.storeVoutReference(em, reference, tx, address, block)
       break
     }
   }
 
   private async storeDogeBlock(em: EntityManager, dogeBlock: IDogeBlock): Promise<UnderlyingBlock> {
-    const block = new UnderlyingBlock(dogeBlock.hash, dogeBlock.height, dogeBlock.time)
-    em.persist(block)
-    return block
+    return em.create(UnderlyingBlock, { hash: dogeBlock.hash, height: dogeBlock.height, timestamp: dogeBlock.time })
   }
 
   private async storeVoutReference(
-    em: EntityManager, reference: string, transaction: IDogeTx, address: UnderlyingAddress, block: UnderlyingBlock
+    em: EntityManager, reference: string, transaction: IDogeTx,
+    address: UnderlyingAddress, block: UnderlyingBlock
   ): Promise<UnderlyingVoutReference> {
-    const tx = await findOrCreateUnderlyingTransaction(em, transaction.hash, block, BigInt(0), address, undefined)
-    const ref = new UnderlyingVoutReference(FAssetType.FDOGE, reference, tx, address, block)
-    em.persist(ref)
-    return ref
+    const _transaction = await findOrCreateEntity(em, UnderlyingTransaction, {
+      hash: transaction.hash, block, value: BigInt(0), source: address
+    })
+    return em.create(UnderlyingVoutReference, {
+      fasset: FAssetType.FDOGE, reference, transaction: _transaction, address, block
+    })
   }
 
   private extractReference(vout: IDogeVout): string | null {

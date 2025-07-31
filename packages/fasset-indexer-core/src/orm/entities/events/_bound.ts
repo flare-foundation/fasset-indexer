@@ -5,20 +5,11 @@ import { EvmLog } from "../evm/log"
 export class EventBound {
 
   @OneToOne({ entity: () => EvmLog, owner: true, primary: true })
-  evmLog: EvmLog
-
-  constructor(evmLog: EvmLog) {
-    this.evmLog = evmLog
-  }
+  evmLog!: EvmLog
 }
 
 export class FAssetEventBound extends EventBound {
 
   @Enum(() => FAssetType)
-  fasset: FAssetType
-
-  constructor(evmLog: EvmLog, fasset: FAssetType) {
-    super(evmLog)
-    this.fasset = fasset
-  }
+  fasset!: FAssetType
 }

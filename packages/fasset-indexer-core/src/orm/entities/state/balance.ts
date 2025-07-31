@@ -10,17 +10,11 @@ export class TokenBalance {
   id!: number
 
   @ManyToOne({ entity: () => EvmAddress })
-  holder: EvmAddress
+  holder!: EvmAddress
 
   @ManyToOne({ entity: () => EvmAddress })
-  token: EvmAddress
+  token!: EvmAddress
 
   @Property({ type: new uint256() })
-  amount: bigint
-
-  constructor(token: EvmAddress, holder: EvmAddress, amount: bigint) {
-    this.token = token
-    this.holder = holder
-    this.amount = amount
-  }
+  amount!: bigint
 }

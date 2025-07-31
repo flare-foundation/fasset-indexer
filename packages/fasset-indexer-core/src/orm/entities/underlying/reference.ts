@@ -13,26 +13,17 @@ export class UnderlyingReference {
   id!: number
 
   @Enum(() => FAssetType)
-  fasset: FAssetType
+  fasset!: FAssetType
 
   @Property({ type: 'text' })
-  reference: string
+  reference!: string
 
   @ManyToOne({ entity: () => UnderlyingTransaction })
-  transaction: UnderlyingTransaction
+  transaction!: UnderlyingTransaction
 
   @ManyToOne(() => UnderlyingAddress)
-  address: UnderlyingAddress
+  address!: UnderlyingAddress
 
   @ManyToOne(() => UnderlyingBlock)
-  block: UnderlyingBlock
-
-  constructor(fasset: FAssetType, reference: string, transaction: UnderlyingTransaction, address: UnderlyingAddress, block: UnderlyingBlock) {
-    this.fasset = fasset
-    this.reference = reference
-    this.transaction = transaction
-    this.address = address
-    this.block = block
-  }
-
+  block!: UnderlyingBlock
 }

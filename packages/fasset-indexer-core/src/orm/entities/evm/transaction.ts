@@ -12,31 +12,17 @@ export class EvmTransaction {
   id!: number
 
   @Property({ type: "text", length: BYTES32_LENGTH, unique: true })
-  hash: string
+  hash!: string
 
   @ManyToOne({ entity: () => EvmBlock })
-  block: EvmBlock
+  block!: EvmBlock
 
   @Property({ type: "number" })
-  index: number
+  index!: number
 
   @ManyToOne({ entity: () => EvmAddress })
-  source: EvmAddress
+  source!: EvmAddress
 
   @ManyToOne({ entity: () => EvmAddress, nullable: true })
   target?: EvmAddress
-
-  constructor(
-    hash: string,
-    block: EvmBlock,
-    index: number,
-    source: EvmAddress,
-    target?: EvmAddress
-  ) {
-    this.hash = hash
-    this.index = index
-    this.block = block
-    this.source = source
-    this.target = target
-  }
 }

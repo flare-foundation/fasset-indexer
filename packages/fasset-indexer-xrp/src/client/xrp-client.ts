@@ -1,5 +1,11 @@
 import { XrpConfigLoader } from "../config/config"
-import { IXrpAccountInfoResponse, IXrpBlock, IXrpBlockQueryResponse, IXrpLedgerCurrentResponse, IXrpServerInfoResponse } from "./interface"
+import type {
+  IXrpAccountInfoResponse, IXrpAccountTxResponse,
+  IXrpBlock, IXrpBlockQueryResponse,
+  IXrpLedgerCurrentResponse, IXrpServerInfoResponse,
+  IXrpTransaction,
+  IXrpWeirdAfTx
+} from "./interface"
 
 export class XrpClient {
 
@@ -28,6 +34,21 @@ export class XrpClient {
   async balanceOf(account: string): Promise<bigint> {
     const resp = await this.getAccountInfo(account)
     return BigInt(resp.result.account_data.Balance)
+  }
+
+  async accountTxs(account: string, startIndex: number, endIndex: number, limit: number): Promise<IXrpWeirdAfTx[]> {
+    const resp = await this.getAccountTxs(account, startIndex, endIndex, limit)
+    this.ensureSuccess(resp)
+    return resp.result.transactions
+  }
+
+  async getAccountTxs(account: string, startIndex: number, endIndex: number, limit: number): Promise<IXrpAccountTxResponse> {
+    return this.request('account_tx', [{
+      'account': account,
+      'ledger_index_min': startIndex,
+      'ledger_index_max': endIndex,
+      'limit': limit
+    }])
   }
 
   private async getAccountInfo(account: string): Promise<IXrpAccountInfoResponse> {

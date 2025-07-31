@@ -68,7 +68,9 @@ describe("FAsset evm events", () => {
   it("should store asset manager settings update", async () => {
     const assetManager = context.getContractAddress(ASSET_MANAGER_FXRP)
     const em = context.orm.em.fork()
-    let assetManagerSettings = new AssetManagerSettings(FAssetType.FXRP, BigInt(10))
+    let assetManagerSettings = em.create(AssetManagerSettings, {
+      fasset: FAssetType.FXRP, lotSizeAmg: BigInt(10)
+    })
     await em.persistAndFlush(assetManagerSettings)
     const assetManagerSettingsChanged = await fixture.generateEvent(EVENTS.ASSET_MANAGER.SETTING_CHANGED, assetManager, ['lotSizeAMG'])
     await storer.processEventUnsafe(em, assetManagerSettingsChanged)

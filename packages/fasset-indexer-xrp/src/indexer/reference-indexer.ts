@@ -1,6 +1,8 @@
 import { FAssetType } from "fasset-indexer-core"
-import { getVar, setVar, findOrCreateUnderlyingAddress, AddressType, type EntityManager, findOrCreateUnderlyingTransaction } from "fasset-indexer-core/orm"
-import { UnderlyingBlock, UnderlyingAddress, UnderlyingVoutReference, UnderlyingTransaction } from "fasset-indexer-core/entities"
+import { findOrCreateEntity, getVar, setVar, type EntityManager } from "fasset-indexer-core/orm"
+import {
+  UnderlyingBlock, UnderlyingAddress, UnderlyingVoutReference, UnderlyingTransaction
+} from "fasset-indexer-core/entities"
 import { PaymentReference } from "fasset-indexer-core/utils"
 import { IXrpMemo, IXrpBlock, IXrpTransaction } from "../client/interface"
 import { BLOCK_HEIGHT_OFFSET } from "../constants"
@@ -8,9 +10,17 @@ import { logger } from "fasset-indexer-core/logger"
 import type { XrpContext } from "../context"
 
 
-export class XrpIndexer {
+export class XrpReferenceIndexer {
 
-  constructor(public readonly context: XrpContext) { }
+  constructor(
+    public readonly context: XrpContext,
+    public readonly firstUnhandledBlockDbKey: string,
+    public readonly minBlockDbKey: string
+  ) { }
+
+  async run(startBlock?: number): Promise<void> {
+    return this.runHistoric(startBlock)
+  }
 
   async runHistoric(startBlock?: number, endBlock?: number): Promise<void> {
     const firstUnhandledBlock = await this.firstUnhandledBlock(startBlock)
@@ -30,7 +40,7 @@ export class XrpIndexer {
   }
 
   async firstUnhandledBlock(startBlock?: number): Promise<number> {
-    const block = await getVar(this.context.orm.em.fork(), this.context.firstUnhandledBlockDbKey)
+    const block = await getVar(this.context.orm.em.fork(), this.firstUnhandledBlockDbKey)
     return (block !== null ? Number(block.value!) : startBlock) ?? await this.minBlock()
   }
 
@@ -39,20 +49,20 @@ export class XrpIndexer {
   }
 
   async minBlock(): Promise<number> {
-    const fromDb = await getVar(this.context.orm.em.fork(), this.context.minBlockNumberDbKey)
+    const fromDb = await getVar(this.context.orm.em.fork(), this.minBlockDbKey)
     if (fromDb?.value != null) return Number(fromDb.value)
     throw new Error(`No min ${this.context.chainName} block number found for in the database`)
   }
 
   protected async setFirstUnhandledBlock(block: number): Promise<void> {
     const em = this.context.orm.em.fork()
-    await setVar(em, this.context.firstUnhandledBlockDbKey, block.toString())
+    await setVar(em, this.firstUnhandledBlockDbKey, block.toString())
   }
 
   protected async processBlock(block: IXrpBlock): Promise<void> {
     await this.context.orm.em.transactional(async em => {
-      let blockEnt = await em.findOne(UnderlyingBlock, { hash: block.ledger_hash })
-      if (blockEnt != null) return
+    let blockEnt = await em.findOne(UnderlyingBlock, { hash: block.ledger_hash })
+    if (blockEnt != null) return
       blockEnt = await this.storeXrpBlock(em, block)
       for (const tx of block.transactions) {
         await this.processTx(em, tx, blockEnt)
@@ -60,7 +70,11 @@ export class XrpIndexer {
     })
   }
 
-  protected async processTx(em: EntityManager, transaction: IXrpTransaction, block: UnderlyingBlock): Promise<void> {
+  protected async processTx(
+    em: EntityManager,
+    transaction: IXrpTransaction,
+    block: UnderlyingBlock
+  ): Promise<void> {
     if (transaction.Memos == null) return
     for (const memo of transaction.Memos) {
       const reference = this.extractReference(memo)
@@ -69,27 +83,30 @@ export class XrpIndexer {
         logger.error(`reference but no account present at index ${block.height}`)
         continue
       }
-      const source = await findOrCreateUnderlyingAddress(em, transaction.Account, AddressType.AGENT)
+      const source = await findOrCreateEntity(em, UnderlyingAddress, { text: transaction.Account })
       const target = transaction.Destination == null ? undefined :
-        await findOrCreateUnderlyingAddress(em, transaction.Destination, AddressType.USER)
-      const utransaction = await findOrCreateUnderlyingTransaction(em, transaction.hash, block, BigInt(transaction.Amount!), source, target)
+        await findOrCreateEntity(em, UnderlyingAddress, { text: transaction.Destination })
+      const utransaction = await findOrCreateEntity(em, UnderlyingTransaction, {
+         hash: transaction.hash, block, value: BigInt(transaction.Amount!), source, target})
       await this.storeReference(em, reference, utransaction, source, block)
       break
     }
   }
 
   private async storeXrpBlock(em: EntityManager, xrpBlock: IXrpBlock): Promise<UnderlyingBlock> {
-    const block = new UnderlyingBlock(xrpBlock.ledger_hash, xrpBlock.ledger_index, xrpBlock.close_time)
-    em.persist(block)
-    return block
+    return em.create(UnderlyingBlock, {
+      hash: xrpBlock.ledger_hash, height: xrpBlock.ledger_index, timestamp: xrpBlock.close_time
+    })
   }
 
   private async storeReference(
-    em: EntityManager, reference: string, transaction: UnderlyingTransaction, address: UnderlyingAddress, block: UnderlyingBlock
+    em: EntityManager, reference: string,
+    transaction: UnderlyingTransaction,
+    address: UnderlyingAddress, block: UnderlyingBlock
   ): Promise<UnderlyingVoutReference> {
-    const ref = new UnderlyingVoutReference(FAssetType.FDOGE, reference, transaction, address, block)
-    em.persist(ref)
-    return ref
+    return em.create(UnderlyingVoutReference, {
+      fasset: FAssetType.FXRP, reference, transaction, address, block
+    })
   }
 
   private extractReference(memo: IXrpMemo): string | null {

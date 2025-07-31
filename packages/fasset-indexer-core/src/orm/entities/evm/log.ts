@@ -12,31 +12,17 @@ export class EvmLog {
   id!: number
 
   @Property({ type: "number" })
-  index: number
+  index!: number
 
   @Property({ type: "text" })
-  name: string
+  name!: string
 
   @ManyToOne({ entity: () => EvmAddress })
-  address: EvmAddress
+  address!: EvmAddress
 
   @ManyToOne({ entity: () => EvmTransaction })
-  transaction: EvmTransaction
+  transaction!: EvmTransaction
 
   @ManyToOne({ entity: () => EvmBlock })
-  block: EvmBlock
-
-  constructor(
-    index: number,
-    name: string,
-    address: EvmAddress,
-    transaction: EvmTransaction,
-    block: EvmBlock
-  ) {
-    this.index = index
-    this.name = name
-    this.address = address
-    this.transaction = transaction
-    this.block = block
-  }
+  block!: EvmBlock
 }

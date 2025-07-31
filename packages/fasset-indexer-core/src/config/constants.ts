@@ -30,8 +30,10 @@ export const EVENTS = {
   ASSET_MANAGER: {
     // settings
     SETTING_CHANGED: "SettingChanged",
+    CONTRACT_CHANGED: "ContractChanged",
     // agent
     AGENT_VAULT_CREATED: "AgentVaultCreated",
+    AGENT_VAULT_DESTROYED: "AgentDestroyed",
     AGENT_SETTING_CHANGED: "AgentSettingChanged",
     AVAILABLE_AGENT_EXITED: "AvailableAgentExited",
     AGENT_ENTERED_AVAILABLE: "AgentAvailable",
@@ -39,8 +41,12 @@ export const EVENTS = {
     SELF_CLOSE: "SelfClose",
     VAULT_COLLATERAL_WITHDRAWAL_ANNOUNCED: "VaultCollateralWithdrawalAnnounced",
     POOL_TOKEN_REDEMPTION_ANNOUNCED: "PoolTokenRedemptionAnnounced",
+    // underlying tracking
     UNDERLYING_WITHDRAWAL_ANNOUNCED: "UnderlyingWithdrawalAnnounced",
     UNDERLYING_WITHDRAWAL_CONFIRMED: "UnderlyingWithdrawalConfirmed",
+    UNDERLYING_WITHDRAWAL_CANCELLED: "UnderlyingWithdrawalCancelled",
+    UNDERLYING_BALANCE_TOPPED_UP: "UnderlyingBalanceToppedUp",
+    UNDERLYING_BALANCE_CHANGED: "UnderlyingBalanceChanged",
     // minting
     COLLATERAL_RESERVED: "CollateralReserved",
     MINTING_EXECUTED: "MintingExecuted",
@@ -56,6 +62,7 @@ export const EVENTS = {
     REDEMPTION_REJECTED: "RedemptionRejected",
     REDEMPTION_REQUEST_INCOMPLETE: "RedemptionRequestIncomplete",
     REDEEMED_IN_COLLATERAL: "RedeemedInCollateral",
+    REDEMPTION_POOL_FEE_MINTED: "RedemptionPoolFeeMinted",
     // redemption tickets
     REDEMPTION_TICKET_CREATED: 'RedemptionTicketCreated',
     REDEMPTION_TICKET_UPDATED: 'RedemptionTicketUpdated',
@@ -78,6 +85,14 @@ export const EVENTS = {
     AGENT_PING_RESPONSE: "AgentPingResponse",
     // system
     CURRENT_UNDERLYING_BLOCK_UPDATED: 'CurrentUnderlyingBlockUpdated',
+    // low level state changes
+    DUST_CHANGED: "DustChanged",
+    COLLATERAL_RATIOS_CHANGED: "CollateralRatiosChanged",
+    // emergency pause
+    EMERGENCY_PAUSE_TRIGGERED: "EmergencyPauseTriggered",
+    EMERGENCY_PAUSE_CANCELLED: "EmergencyPauseCanceled",
+    EMERGENCY_PAUSE_TRANSFERS_TRIGGERED: "EmergencyPauseTransfersTriggered",
+    EMERGENCY_PAUSE_TRANSFERS_CANCELLED: "EmergencyPauseTransfersCanceled",
     // core vault
     TRANSFER_TO_CORE_VAULT_STARTED: 'TransferToCoreVaultStarted',
     TRANSFER_TO_CORE_VAULT_SUCCESSFUL: 'TransferToCoreVaultSuccessful',
@@ -90,7 +105,6 @@ export const EVENTS = {
   COLLATERAL_POOL: {
     ENTER: "Entered",
     EXIT: "Exited",
-    DONATED: "Donated",
     CLAIMED_REWARD: "ClaimedReward",
     PAID_OUT: "PaidOut",
     // v2 names for flare deploy

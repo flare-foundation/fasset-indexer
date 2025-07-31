@@ -21,6 +21,8 @@ export interface IXrpTransaction {
   hash: string
   TransactionResult: string
   Destination?: string
+  ledger_index: number
+  date: number
 }
 
 export interface IXrpMemo {
@@ -53,5 +55,25 @@ export interface IXrpAccountInfoResponse {
     account_data: {
       Balance: string
     }
+  }
+}
+
+export interface IXrpTxMeta {
+  AffectedNodes: {
+    ModifiedNode: {
+      LedgerIndex: string
+    }
+  }[]
+}
+
+export interface IXrpWeirdAfTx {
+  meta: IXrpTxMeta,
+  tx: IXrpTransaction
+}
+
+export interface IXrpAccountTxResponse {
+  result: {
+    transactions: IXrpWeirdAfTx[],
+    status: string
   }
 }

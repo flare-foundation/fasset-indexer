@@ -1,10 +1,11 @@
-import { AddressType } from "../../orm/interface"
+import { EvmAddress } from "../../orm/entities"
 import { AgentManager, AgentOwner, AgentVault } from "../../orm/entities/agent"
 import { AgentVaultSettings } from "../../orm/entities/state/agent"
 import { AgentVaultCreated } from "../../orm/entities/events/agent"
 import { UntrackedAgentVault } from "../../orm/entities/state/var"
 import { PricesPublished } from "../../orm/entities/events/price"
-import { updateAgentVaultInfo, findOrCreateEvmAddress } from "../utils"
+import { updateAgentVaultInfo } from "../utils"
+import { findOrCreateEntity } from "../../orm"
 import { EventStorer } from "./event-storer"
 import type { EntityManager } from "@mikro-orm/knex"
 import type { AgentVaultCreatedEvent } from "../../../chain/typechain/IAssetManager"
@@ -49,9 +50,8 @@ export class StateUpdater extends EventStorer {
     let agentWorker = await em.findOne(AgentOwner, { manager })
     if (agentWorker === null) {
       const address = await this.context.contracts.agentOwnerRegistryContract.getWorkAddress(manager.address.hex)
-      const evmAddress = await findOrCreateEvmAddress(em, address, AddressType.AGENT)
-      agentWorker = new AgentOwner(evmAddress, manager)
-      em.persist(agentWorker)
+      const evmAddress = await findOrCreateEntity(em, EvmAddress, { hex: address })
+      agentWorker = em.create(AgentOwner, { address: evmAddress, manager })
     }
     return agentWorker
   }
@@ -59,8 +59,8 @@ export class StateUpdater extends EventStorer {
   protected async findOrCreateAgentManager(em: EntityManager, manager: string, full: boolean): Promise<AgentManager> {
     let agentManager = await em.findOne(AgentManager, { address: { hex: manager }})
     if (agentManager === null) {
-      const managerEvmAddress = await findOrCreateEvmAddress(em, manager, AddressType.AGENT)
-      agentManager = new AgentManager(managerEvmAddress)
+      const managerEvmAddress = await findOrCreateEntity(em, EvmAddress, { hex: manager })
+      agentManager = em.create(AgentManager, { address: managerEvmAddress })
     }
     if (full && agentManager.name === undefined) {
       agentManager.name = await this.context.contracts.agentOwnerRegistryContract.getAgentName(manager)
@@ -78,7 +78,7 @@ export class StateUpdater extends EventStorer {
       if (e?.reason === 'InvalidAgentVaultAddress()') {
         return await em.transactional(async (em) => {
           const address = e.invocation.args[0]
-          const untrackedAgentVault = new UntrackedAgentVault(address)
+          const untrackedAgentVault = em.create(UntrackedAgentVault, { address })
           agentVault.destroyed = true
           em.persist(untrackedAgentVault)
         })

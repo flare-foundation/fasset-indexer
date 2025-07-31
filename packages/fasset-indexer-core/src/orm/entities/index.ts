@@ -3,7 +3,11 @@ export { EvmAddress } from "./evm/address"
 export { EvmBlock } from "./evm/block"
 export { EvmTransaction } from "./evm/transaction"
 export { EvmLog } from "./evm/log"
-export { AgentVaultCreated, AgentSettingChanged, SelfClose } from "./events/agent"
+export {
+  AgentVaultCreated, AgentSettingChanged, SelfClose,
+  VaultCollateralWithdrawalAnnounced, PoolTokenRedemptionAnnounced,
+  UnderlyingWithdrawalAnnounced, UnderlyingWithdrawalConfirmed,
+} from "./events/agent"
 export {
   CollateralReserved, MintingExecuted,
   MintingPaymentDefault, CollateralReservationDeleted,
@@ -16,6 +20,10 @@ export {
   RedeemedInCollateral
 } from "./events/redemption"
 export {
+  RedemptionTicketCreated, RedemptionTicketUpdated, RedemptionTicketDeleted
+} from "./events/redemption-ticket"
+export { RedemptionTicket } from "./state/redemption-ticket"
+export {
   FullLiquidationStarted, LiquidationEnded,
   LiquidationPerformed, LiquidationStarted
 } from "./events/liquidation"
@@ -24,7 +32,10 @@ export {
   UnderlyingBalanceTooLow
 } from "./events/challenge"
 export { CollateralTypeAdded, ERC20Transfer } from "./events/token"
-export { CollateralPoolEntered, CollateralPoolExited } from "./events/collateral-pool"
+export {
+  CollateralPoolEntered, CollateralPoolExited,
+  CollateralPoolPaidOut, CollateralPoolClaimedReward
+} from "./events/collateral-pool"
 export {
   CPEntered, CPExited, CPSelfCloseExited, CPClaimedReward,
   CPFeeDebtChanged, CPFeeDebtPaid, CPFeesWithdrawn, CPPaidOut
@@ -40,7 +51,15 @@ export { AgentVaultInfo, AgentVaultSettings } from "./state/agent"
 export { AgentManager, AgentOwner, AgentVault } from "./agent"
 export { FtsoPrice } from "./state/price"
 export { TokenBalance } from "./state/balance"
-export { AssetManagerSettings } from './state/settings'
+export { AssetManagerSettings, CoreVaultManagerSettings } from './state/settings'
+export {
+  CoreVaultManagerTransferRequested, CoreVaultManagerCustodianAddressUpdated,
+  CoreVaultManagerEscrowInstructions, CoreVaultManagerNotAllEscrowsProcessed,
+  CoreVaultManagerPaymentConfirmed, CoreVaultManagerPaymentInstructions,
+  CoreVaultManagerSettingsUpdated, CoreVaultManagerTransferRequestCanceled,
+  EscrowFinished
+} from './events/core-vault-manager'
+export { PricesPublished } from './events/price'
 // underlying data
 export { UnderlyingBlock } from "./underlying/block"
 export { UnderlyingAddress, UnderlyingBalance } from "./underlying/address"
