@@ -3,6 +3,7 @@ import { defineConfig, Options } from "@mikro-orm/knex"
 import { SqliteDriver } from "@mikro-orm/sqlite"
 import { PostgreSqlDriver } from "@mikro-orm/postgresql"
 import { getContractInfo } from "./contracts"
+import { SchemaUpdate } from "../orm/interface"
 import type { ContractInfo } from "./interface"
 
 
@@ -32,6 +33,17 @@ export class ConfigLoader {
     } else {
       throw new Error(`Unsupported database type: ${dbtype}`)
     }
+  }
+
+  get dbSchemaUpdateType(): SchemaUpdate {
+    let type = process.env.DB_SCHEMA_UPDATE_TYPE
+    if (this.isNull(type)) {
+      return 'safe'
+    }
+    if (type == 'none' || type == 'full' || type == 'recreate') {
+      return type
+    }
+    throw new Error(`invalid DB_SCHEMA_UPDATE_TYPE value ${type}`)
   }
 
   get chain(): string {

@@ -21,7 +21,7 @@ export class DogeContext {
       config.dogeRpcPassword,
       config.dogeRpcApiKey
     )
-    const orm = await createOrm(config.dbConfig, 'safe')
+    const orm = await createOrm(config.dbConfig, config.dbSchemaUpdateType)
     return new DogeContext(dogecoin, orm, FIRST_UNHANDLED_DOGE_BLOCK_DB_KEY, MIN_DOGE_BLOCK_NUMBER_DB_KEY, 'doge')
   }
 }

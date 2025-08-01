@@ -12,6 +12,7 @@ x-templates:
     DB_NAME: ${POSTGRES_DB}
     DB_USER: ${POSTGRES_USER}
     DB_PASSWORD: ${POSTGRES_PASSWORD}
+    DB_SCHEMA_UPDATE_TYPE: ${DB_SCHEMA_UPDATE_TYPE}
 
 services:
   core:

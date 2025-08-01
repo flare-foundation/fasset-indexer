@@ -21,7 +21,7 @@ export class BtcContext {
       config.btcRpcPassword,
       config.btcRpcApiKey
     )
-    const orm = await createOrm(config.dbConfig, 'safe')
+    const orm = await createOrm(config.dbConfig, config.dbSchemaUpdateType)
     return new BtcContext(btcClient, orm, FIRST_UNHANDLED_BTC_BLOCK_DB_KEY, MIN_BTC_BLOCK_NUMBER_DB_KEY, 'btc')
   }
 }

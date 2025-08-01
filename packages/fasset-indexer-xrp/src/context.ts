@@ -13,7 +13,7 @@ export class XrpContext {
 
   static async create(config: XrpConfigLoader) {
     const dogecoin = new XrpClient(config)
-    const orm = await createOrm(config.dbConfig, 'safe')
+    const orm = await createOrm(config.dbConfig, config.dbSchemaUpdateType)
     return new XrpContext(dogecoin, orm, 'xrp')
   }
 }

@@ -24,7 +24,7 @@ export class Context extends ContractLookup {
   }
 
   static async create(loader: ConfigLoader): Promise<Context> {
-    const orm = await createOrm(loader.dbConfig, "safe")
+    const orm = await createOrm(loader.dbConfig, loader.dbSchemaUpdateType)
     return new Context(loader, orm)
   }
 
