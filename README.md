@@ -42,7 +42,7 @@ Note that the repo also features a watchdog, which keeps track of prices and reg
 
 ## FAsset Indexer Xrp
 
-Needs the environment variables to establish database connection from [the previous section](#fasset-indexer-core) and the following API configuration:
+Needs the environment variables to establish database connection from the [core section](#fasset-indexer-core) and the following rpc configuration:
 
 - **XRP_RPC_URL**: needs to be set to the rpc of the indexed Ripple node;
 - **XRP_RPC_API_KEY**: should be set to the api key of the indexed Ripple node rpc (not yet implemented);
@@ -53,7 +53,7 @@ Run with `yarn run-xrp-indexer`.
 
 ## FAsset Indexer Api
 
-Needs the environment variables to establish database connection from [the previous section](#fasset-indexer-core) and the following API configuration:
+Needs the environment variables to establish database connection from the [core section](#fasset-indexer-core) and the following API configuration:
 
 - **API_PORT**: needs to be set to the served port;
 - **API_ROOT_PATH**: should be set to a chosen prefix path of the served api.
