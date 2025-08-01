@@ -1352,9 +1352,9 @@ export class EventStorer {
   ): Promise<Entities.CoreVaultManagerCustodianAddressUpdated> {
     const fasset = this.lookup.coreVaultManagerToFAssetType(evmLog.address.hex)
     const [ custodian ] = logArgs
-    const custodianAddress = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: custodian })
+    const _custodian = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: custodian })
     return em.create(Entities.CoreVaultManagerCustodianAddressUpdated, {
-      evmLog, fasset, custodian: custodianAddress
+      evmLog, fasset, custodian: _custodian
     })
   }
 
@@ -1375,11 +1375,11 @@ export class EventStorer {
   ): Promise<Entities.CoreVaultManagerEscrowInstructions> {
     const fasset = this.lookup.coreVaultManagerToFAssetType(evmLog.address.hex)
     const [ sequence, preimageHash, account, destination, amount, fee, cancelAfterTs ] = logArgs
-    const accountAddress = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: account })
-    const destinationAddress = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: destination })
+    const _account = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: account })
+    const _destination = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: destination })
     return em.create(Entities.CoreVaultManagerEscrowInstructions, {
-      evmLog, fasset, sequence, preimageHash, account: accountAddress,
-      destination: destinationAddress, amount, fee, cancelAfterTs
+      evmLog, fasset, sequence, preimageHash, account: _account,
+      destination: _destination, amount, fee, cancelAfterTs
     })
   }
 
@@ -1410,11 +1410,11 @@ export class EventStorer {
   {
     const fasset = this.lookup.coreVaultManagerToFAssetType(evmLog.address.hex)
     const [ sequence, account, destination, amount, fee, paymentReference ] = logArgs
-    const accountAddress = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: account })
-    const destinationAddress = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: destination })
+    const _account = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: account })
+    const _destination = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: destination })
     return em.create(Entities.CoreVaultManagerPaymentInstructions, {
-      evmLog, fasset, sequence, account: accountAddress,
-      destination: destinationAddress, amount, fee, paymentReference
+      evmLog, fasset, sequence, account: _account,
+      destination: _destination, amount, fee, paymentReference
     })
   }
 
@@ -1425,9 +1425,9 @@ export class EventStorer {
   ): Promise<Entities.CoreVaultManagerTransferRequested> {
     const fasset = this.lookup.coreVaultManagerToFAssetType(evmLog.address.hex)
     const [ destination, paymentReference, amount, cancelable ] = logArgs
-    const destinationAddress = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: destination })
+    const _destination = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: destination })
     return em.create(Entities.CoreVaultManagerTransferRequested, {
-      evmLog, fasset, destination: destinationAddress, paymentReference, amount, cancelable
+      evmLog, fasset, destination: _destination, paymentReference, amount, cancelable
     } )
   }
 
@@ -1438,9 +1438,9 @@ export class EventStorer {
   ): Promise<Entities.CoreVaultManagerTransferRequestCanceled> {
     const fasset = this.lookup.coreVaultManagerToFAssetType(evmLog.address.hex)
     const [ destination, paymentReference, amount ] = logArgs
-    const destinationAddress = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: destination })
+    const _destination = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: destination })
     return em.create(Entities.CoreVaultManagerTransferRequestCanceled, {
-      evmLog, fasset, paymentReference, destination: destinationAddress, amount
+      evmLog, fasset, paymentReference, destination: _destination, amount
     })
   }
 
@@ -1471,21 +1471,22 @@ export class EventStorer {
   //////////////////////////////////////////////////////////////////////////////////////////////////////
   // helpers
 
+  // will not persist new transactions, blocks, and events if the latter will not be successfully processed
+  // we do have to persist addresses as they can be refereced during event processing
   private async createLogEntity(em: EntityManager, log: Event): Promise<Entities.EvmLog> {
-    // do not persist anything here, only persist if the log was processed to not store unecessary data
-    const transactionSource = await findOrCreateEntity(em, Entities.EvmAddress,
-      { hex: log.transactionSource }, { persist: false })
+    const transactionSource = await findOrCreateEntity(em, Entities.EvmAddress, { hex: log.transactionSource })
     const transactionTarget = log.transactionTarget === null ? undefined
-      : await findOrCreateEntity(em, Entities.EvmAddress, { hex: log.transactionTarget }, { persist: false })
+      : await findOrCreateEntity(em, Entities.EvmAddress, { hex: log.transactionTarget })
     const block = await findOrCreateEntity(em, Entities.EvmBlock,
       { index: log.blockNumber }, { persist: false }, { timestamp: log.blockTimestamp })
     const transaction = await findOrCreateEntity(em, Entities.EvmTransaction,
       { hash: log.transactionHash }, { persist: false },
       { block, index: log.transactionIndex, source: transactionSource, target: transactionTarget }
     )
-    const eventSource = await findOrCreateEntity(em, Entities.EvmAddress, { hex: log.source }, { persist: false })
-    return em.create(Entities.EvmLog, { index: log.logIndex, name: log.name, address: eventSource, transaction, block },
-      { persist: false })
+    const eventSource = await findOrCreateEntity(em, Entities.EvmAddress, { hex: log.source })
+    return em.create(Entities.EvmLog, {
+      index: log.logIndex, name: log.name, address: eventSource, transaction, block
+    }, { persist: false })
   }
 
   private async increaseTokenBalance(
