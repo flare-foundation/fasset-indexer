@@ -39,7 +39,7 @@ async function runIndexer() {
   })
 
   logger.info("ensuring configuration integrity...")
-  await ensureConfigIntegrity(context)
+  await ensureConfigIntegrity(context, config.reindexing?.name)
   await ensureData(context)
 
   logger.info(`starting ${context.chain} event indexer...`)

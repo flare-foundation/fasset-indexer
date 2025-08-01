@@ -1,6 +1,7 @@
-import { OneToOne, Enum } from "@mikro-orm/core"
+import { OneToOne, Enum, ManyToOne } from "@mikro-orm/core"
 import { FAssetType } from "../../../shared"
 import { EvmLog } from "../evm/log"
+import { AgentVault } from "../agent"
 
 export class EventBound {
 
@@ -12,4 +13,10 @@ export class FAssetEventBound extends EventBound {
 
   @Enum(() => FAssetType)
   fasset!: FAssetType
+}
+
+export class AgentEventBound extends FAssetEventBound {
+
+  @ManyToOne({ entity: () => AgentVault })
+  agentVault!: AgentVault
 }

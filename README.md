@@ -64,7 +64,7 @@ To run the API, run `yarn run-api`.
 
 ## Docker Deployment
 
-The docker image can be either built from this project, or one from github can be used. The repository also features the `compose.yaml` file that features a local postgres deployment and requires the following `.env` config:
+A local docker image can be either built from this repository, or one from github can be utilised. The repository also includes the `compose.yaml` file that features a local postgres deployment and requires the following `.env` config:
 
 - **COMPOSE_PROJECT_NAME**: needs to be set to a unique name of your docker deployment;
 - **COMPOSE_PROFILES**: needs to be a list of options `core`, `api`, `ripple`, `watchdog`;

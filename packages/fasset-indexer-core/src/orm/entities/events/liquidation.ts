@@ -1,30 +1,25 @@
 import { Entity, ManyToOne, Property } from '@mikro-orm/core'
 import { uint256 } from '../../custom/uint'
-import { FAssetEventBound } from './_bound'
-import { AgentVault } from '../agent'
+import { AgentEventBound } from './_bound'
 import { EvmAddress } from '../evm/address'
 
 
-class LiquidationStartedBase extends FAssetEventBound {
-
-  @ManyToOne({ entity: () => AgentVault })
-  agentVault!: AgentVault
+@Entity()
+export class LiquidationStarted extends AgentEventBound {
 
   @Property({ type: 'number' })
   timestamp!: number
 }
 
 @Entity()
-export class LiquidationStarted extends LiquidationStartedBase { }
+export class FullLiquidationStarted extends AgentEventBound {
+
+  @Property({ type: 'number' })
+  timestamp!: number
+}
 
 @Entity()
-export class FullLiquidationStarted extends LiquidationStartedBase { }
-
-@Entity()
-export class LiquidationPerformed extends FAssetEventBound {
-
-  @ManyToOne({ entity: () => AgentVault })
-  agentVault!: AgentVault
+export class LiquidationPerformed extends AgentEventBound {
 
   @ManyToOne({ entity: () => EvmAddress })
   liquidator!: EvmAddress
@@ -40,8 +35,4 @@ export class LiquidationPerformed extends FAssetEventBound {
 }
 
 @Entity()
-export class LiquidationEnded extends FAssetEventBound {
-
-  @ManyToOne({ entity: () => AgentVault })
-  agentVault!: AgentVault
-}
+export class LiquidationEnded extends AgentEventBound {}

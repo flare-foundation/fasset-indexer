@@ -2,21 +2,17 @@ import { Entity, ManyToOne, Property, OneToOne, Unique } from "@mikro-orm/core"
 import { uint256 } from "../../custom/uint"
 import { EvmAddress } from "../evm/address"
 import { UnderlyingAddress } from "../underlying/address"
-import { AgentVault } from "../agent"
-import { FAssetEventBound } from "./_bound"
+import { AgentEventBound, FAssetEventBound } from "./_bound"
 import { BYTES32_LENGTH } from "../../../config/constants"
 
 
 @Entity()
 @Unique({ properties: ['fasset', 'requestId'] })
 @Unique({ properties: ['fasset', 'paymentReference'] })
-export class RedemptionRequested extends FAssetEventBound {
+export class RedemptionRequested extends AgentEventBound {
 
   @Property({ type: 'number' })
   requestId!: number
-
-  @ManyToOne({ entity: () => AgentVault })
-  agentVault!: AgentVault
 
   @ManyToOne({ entity: () => EvmAddress })
   redeemer!: EvmAddress
@@ -132,10 +128,7 @@ export class RedemptionPoolFeeMinted extends FAssetEventBound {
 }
 
 @Entity()
-export class RedeemedInCollateral extends FAssetEventBound {
-
-  @ManyToOne({ entity: () => AgentVault })
-  agentVault!: AgentVault
+export class RedeemedInCollateral extends AgentEventBound {
 
   @ManyToOne({ entity: () => EvmAddress })
   redeemer!: EvmAddress

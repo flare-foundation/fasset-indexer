@@ -1,9 +1,6 @@
 import { getVar, type ORM } from "fasset-indexer-core/orm"
-import {
-  FIRST_UNHANDLED_EVENT_BLOCK_DB_KEY,
-  backUpdateLastBlockName,
-  backUpdateFirstUnhandledBlockName
-} from "fasset-indexer-core/config"
+import { updateDistance } from "fasset-indexer-core/utils"
+import { FIRST_UNHANDLED_EVENT_BLOCK_DB_KEY } from "fasset-indexer-core/config"
 
 
 export class MetadataAnalytics {
@@ -14,16 +11,14 @@ export class MetadataAnalytics {
     return (v && v.value) ? parseInt(v.value) : null
   }
 
-  async blocksToBackSync(): Promise<number | null> {
-    const currentUpdate = await getVar(this.orm.em.fork(), 'current_update')
-    if (currentUpdate === null) {
-      return null
+  async blocksToBackSync(): Promise<[string | null, number | null]> {
+    const em = this.orm.em.fork()
+    const currentUpdate = await getVar(em, 'current_update')
+    if (currentUpdate == null) {
+      return [null, null]
     }
     const currentUpdateName = currentUpdate.value!
-    const start = await getVar(this.orm.em.fork(), backUpdateFirstUnhandledBlockName(currentUpdateName))
-    if (start === null || start.value === undefined) return null
-    const end = await getVar(this.orm.em.fork(), backUpdateLastBlockName(currentUpdateName))
-    if (end === null || end.value === undefined) return null
-    return parseInt(end.value) - parseInt(start.value) + 1
+    const currentUpdateDist = await updateDistance(em, currentUpdateName)
+    return [currentUpdateName, currentUpdateDist]
   }
 }

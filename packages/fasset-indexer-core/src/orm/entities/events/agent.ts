@@ -1,28 +1,16 @@
-import { Entity, ManyToOne, OneToOne, Property } from "@mikro-orm/core"
+import { Entity, OneToOne, Property } from "@mikro-orm/core"
 import { uint256, uint64 } from "../../custom/uint"
-import { FAssetEventBound } from "./_bound"
-import { AgentVault } from "../agent"
+import { AgentEventBound, FAssetEventBound } from "./_bound"
 
 
 @Entity()
-export class AgentVaultCreated extends FAssetEventBound {
-
-  @OneToOne({ entity: () => AgentVault, owner: true })
-  agentVault!: AgentVault
-}
+export class AgentVaultCreated extends AgentEventBound {}
 
 @Entity()
-export class AgentVaultDestroyed extends FAssetEventBound {
-
-  @OneToOne({ entity: () => AgentVault, owner: true })
-  agentVault!: AgentVault
-}
+export class AgentVaultDestroyed extends AgentEventBound {}
 
 @Entity()
-export class AgentSettingChanged extends FAssetEventBound {
-
-  @ManyToOne({ entity: () => AgentVault })
-  agentVault!: AgentVault
+export class AgentSettingChanged extends AgentEventBound {
 
   @Property({ type: 'text' })
   name!: string
@@ -32,20 +20,14 @@ export class AgentSettingChanged extends FAssetEventBound {
 }
 
 @Entity()
-export class SelfClose extends FAssetEventBound {
-
-  @ManyToOne({ entity: () => AgentVault })
-  agentVault!: AgentVault
+export class SelfClose extends AgentEventBound {
 
   @Property({ type: new uint256() })
   valueUBA!: bigint
 }
 
 @Entity()
-export class VaultCollateralWithdrawalAnnounced extends FAssetEventBound {
-
-  @ManyToOne({ entity: () => AgentVault })
-  agentVault!: AgentVault
+export class VaultCollateralWithdrawalAnnounced extends AgentEventBound {
 
   @Property({ type: new uint256() })
   amountWei!: bigint
@@ -55,10 +37,7 @@ export class VaultCollateralWithdrawalAnnounced extends FAssetEventBound {
 }
 
 @Entity()
-export class PoolTokenRedemptionAnnounced extends FAssetEventBound {
-
-  @ManyToOne({ entity: () => AgentVault })
-  agentVault!: AgentVault
+export class PoolTokenRedemptionAnnounced extends AgentEventBound {
 
   @Property({ type: new uint256() })
   amountWei!: bigint
@@ -68,10 +47,7 @@ export class PoolTokenRedemptionAnnounced extends FAssetEventBound {
 }
 
 @Entity()
-export class UnderlyingWithdrawalAnnounced extends FAssetEventBound {
-
-  @ManyToOne({ entity: () => AgentVault })
-  agentVault!: AgentVault
+export class UnderlyingWithdrawalAnnounced extends AgentEventBound {
 
   @Property({ type: new uint64() })
   announcementId!: bigint
@@ -101,10 +77,7 @@ export class UnderlyingWithdrawalCancelled extends FAssetEventBound {
 }
 
 @Entity()
-export class UnderlyingBalanceToppedUp extends FAssetEventBound {
-
-  @ManyToOne({ entity: () => AgentVault })
-  agentVault!: AgentVault
+export class UnderlyingBalanceToppedUp extends AgentEventBound {
 
   @Property({ type: 'text' })
   transactionHash!: string
@@ -114,20 +87,14 @@ export class UnderlyingBalanceToppedUp extends FAssetEventBound {
 }
 
 @Entity()
-export class UnderlyingBalanceChanged extends FAssetEventBound {
-
-  @ManyToOne({ entity: () => AgentVault })
-  agentVault!: AgentVault
+export class UnderlyingBalanceChanged extends AgentEventBound {
 
   @Property({ type: new uint256() })
   balanceUBA!: bigint
 }
 
 @Entity()
-export class DustChanged extends FAssetEventBound {
-
-  @ManyToOne({ entity: () => AgentVault })
-  agentVault!: AgentVault
+export class DustChanged extends AgentEventBound {
 
   @Property({ type: new uint256() })
   dustUBA!: bigint

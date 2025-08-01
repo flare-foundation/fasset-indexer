@@ -1,5 +1,5 @@
 import { getVar, setVar } from "../../orm/utils"
-import { backUpdateLastBlockName, backUpdateFirstUnhandledBlockName } from "../../config/constants"
+import { backUpdateLastBlockName, backUpdateFirstUnhandledBlockName } from "../../utils"
 import { EventIndexer } from "../indexer"
 import type { Context } from "../../context/context"
 
@@ -34,4 +34,3 @@ export class EventIndexerBackPopulation extends EventIndexer {
     await setVar(this.context.orm.em.fork(), this.firstUnhandledEventBlockForCurrentUpdateKey, blockNumber.toString())
   }
 }
-

@@ -1,6 +1,6 @@
 import { Entity, ManyToOne, OneToOne, Property, Unique } from "@mikro-orm/core"
 import { uint256, uint64 } from "../../custom/uint"
-import { FAssetEventBound } from "./_bound"
+import { AgentEventBound, FAssetEventBound } from "./_bound"
 import { EvmAddress } from "../evm/address"
 import { UnderlyingAddress } from "../underlying/address"
 import { AgentVault } from "../agent"
@@ -9,10 +9,7 @@ import { BYTES32_LENGTH } from "../../../config/constants"
 
 @Entity()
 @Unique({ properties: ['fasset', 'transferRedemptionRequestId'] })
-export class TransferToCoreVaultStarted extends FAssetEventBound {
-
-  @ManyToOne({ entity: () => AgentVault })
-  agentVault!: AgentVault
+export class TransferToCoreVaultStarted extends AgentEventBound {
 
   @Property({ type: 'number' })
   transferRedemptionRequestId!: number
@@ -43,10 +40,7 @@ export class TransferToCoreVaultSuccessful extends FAssetEventBound {
 
 @Entity()
 @Unique({ properties: ['fasset', 'requestId'] })
-export class ReturnFromCoreVaultRequested extends FAssetEventBound {
-
-  @ManyToOne({ entity: () => AgentVault })
-  agentVault!: AgentVault
+export class ReturnFromCoreVaultRequested extends AgentEventBound {
 
   @Property({ type: 'number' })
   requestId!: number

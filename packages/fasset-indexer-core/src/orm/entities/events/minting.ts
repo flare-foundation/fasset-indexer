@@ -1,22 +1,18 @@
 import { Entity, Property, ManyToOne, OneToOne, Unique } from '@mikro-orm/core'
 import { uint256 } from '../../custom/uint'
-import { AgentVault } from '../agent'
 import { EvmAddress } from '../evm/address'
 import { UnderlyingAddress } from '../underlying/address'
-import { FAssetEventBound } from './_bound'
+import { AgentEventBound, FAssetEventBound } from './_bound'
 import { BYTES32_LENGTH } from '../../../config/constants'
 
 
 @Entity()
 @Unique({ properties: ['fasset', 'paymentReference'] })
 @Unique({ properties: ['fasset', 'collateralReservationId'] })
-export class CollateralReserved extends FAssetEventBound {
+export class CollateralReserved extends AgentEventBound {
 
   @Property({ type: 'number' })
   collateralReservationId!: number
-
-  @ManyToOne({ entity: () => AgentVault })
-  agentVault!: AgentVault
 
   @ManyToOne({ entity: () => EvmAddress })
   minter!: EvmAddress
@@ -74,10 +70,7 @@ export class CollateralReservationDeleted extends FAssetEventBound {
 }
 
 @Entity()
-export class SelfMint extends FAssetEventBound {
-
-  @ManyToOne({ entity: () => AgentVault })
-  agentVault!: AgentVault
+export class SelfMint extends AgentEventBound {
 
   @Property({ type: 'boolean' })
   mintFromFreeUnderlying!: boolean

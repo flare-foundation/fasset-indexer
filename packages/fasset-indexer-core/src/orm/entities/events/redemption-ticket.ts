@@ -1,15 +1,11 @@
 import { Entity, ManyToOne, OneToOne, Property, Unique } from "@mikro-orm/core"
 import { uint256, uint64 } from "../../custom/uint"
-import { AgentVault } from "../agent"
-import { FAssetEventBound } from "./_bound"
+import { AgentEventBound, FAssetEventBound } from "./_bound"
 
 
 @Entity()
 @Unique({ properties: ['fasset', 'redemptionTicketId'] })
-export class RedemptionTicketCreated extends FAssetEventBound {
-
-  @ManyToOne(() => AgentVault)
-  agentVault!: AgentVault
+export class RedemptionTicketCreated extends AgentEventBound {
 
   @Property({ type: new uint64() })
   redemptionTicketId!: bigint

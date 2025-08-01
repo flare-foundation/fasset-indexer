@@ -1,4 +1,4 @@
-import { join } from "../../utils"
+import { join, raceIndexerSyncedFlagName, raceUpdateFirstUnhandledBlockName } from "../../utils"
 import { getVar, setVar } from "../../orm/utils"
 import { EventIndexer } from "../indexer"
 import type { Context } from "../../context/context"
@@ -20,9 +20,10 @@ export class EventIndexerParallelRacePopulation {
     frontInsertionEvents: string[]
   ) {
     this.frontIndexer = new EventIndexer(context, frontInsertionEvents)
-    this.backIndexer = new EventIndexer(context, backInsertionEvents, updateName)
+    const firstUnhandledEventBlockName = raceUpdateFirstUnhandledBlockName(updateName)
+    this.backIndexer = new EventIndexer(context, backInsertionEvents, firstUnhandledEventBlockName)
     this.indexer = new EventIndexer(context, join(frontInsertionEvents, backInsertionEvents))
-    this.updateSynced = `front_indexing_synced_${updateName}`
+    this.updateSynced = raceIndexerSyncedFlagName(updateName)
   }
 
   async run(): Promise<EventIndexer | void> {

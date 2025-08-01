@@ -1,25 +1,18 @@
-import { Entity, ManyToOne, Property } from '@mikro-orm/core'
+import { Entity, Property } from '@mikro-orm/core'
 import { uint256 } from '../../custom/uint'
-import { FAssetEventBound } from './_bound'
-import { AgentVault } from '../agent'
+import { AgentEventBound } from './_bound'
 import { BYTES32_LENGTH } from '../../../config/constants'
 
 
 @Entity()
-export class IllegalPaymentConfirmed extends FAssetEventBound {
-
-  @ManyToOne({ entity: () => AgentVault })
-  agentVault!: AgentVault
+export class IllegalPaymentConfirmed extends AgentEventBound {
 
   @Property({ type: "text", length: BYTES32_LENGTH, unique: true })
   transactionHash!: string
 }
 
 @Entity()
-export class DuplicatePaymentConfirmed extends FAssetEventBound {
-
-  @ManyToOne({ entity: () => AgentVault })
-  agentVault!: AgentVault
+export class DuplicatePaymentConfirmed extends AgentEventBound {
 
   @Property({ type: "text", length: BYTES32_LENGTH, unique: true })
   transactionHash1!: string
@@ -29,10 +22,7 @@ export class DuplicatePaymentConfirmed extends FAssetEventBound {
 }
 
 @Entity()
-export class UnderlyingBalanceTooLow extends FAssetEventBound {
-
-  @ManyToOne({ entity: () => AgentVault })
-  agentVault!: AgentVault
+export class UnderlyingBalanceTooLow extends AgentEventBound {
 
   @Property({ type: new uint256() })
   balance!: bigint

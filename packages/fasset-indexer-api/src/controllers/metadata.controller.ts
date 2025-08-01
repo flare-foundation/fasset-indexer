@@ -18,8 +18,8 @@ export class MetadataController {
     return apiResponse(this.service.currentBlock(), 200)
   }
 
-  @Get('/blocks-to-back-sync')
-  getBlocksToBackSync(): Promise<ApiResponse<number | null>> {
+  @Get('/blocks-for-current-update-sync')
+  getBlocksToBackSync(): Promise<ApiResponse<[string | null, number | null]>> {
     return apiResponse(this.service.blocksToBackSync(), 200)
   }
 

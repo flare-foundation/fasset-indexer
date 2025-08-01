@@ -16,14 +16,6 @@ export const MAX_DATABASE_ENTRIES_FETCH = 200
 export const FIRST_UNHANDLED_EVENT_BLOCK_DB_KEY = "firstUnhandledEventBlock"
 export const MIN_EVM_BLOCK_NUMBER_DB_KEY = "minEvmBlockNumber"
 
-// db back indexer names
-export function backUpdateFirstUnhandledBlockName(updateName: string): string {
-  return `firstUnhandledEventBlock_${updateName}`
-}
-export function backUpdateLastBlockName(updateName: string): string {
-  return `lastEventBlock_${updateName}`
-}
-
 // event names
 // agent
 export const EVENTS = {
