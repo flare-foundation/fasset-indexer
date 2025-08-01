@@ -2,9 +2,9 @@
 
 This is an implementation for indexing the FAsset protocol smart contract operations. The FAsset smart contracts operate in a way that most of the state can be collected from emmited events. This repo consists of multiple workspaces:
 
-1. FAsset Indexer Core: scrapes the chain (currently Coston) for events and stores them in a database, optimized for FAsset analytics.
-1. FAsset Indexer XRP: scrapes the Ripple chain (testnet or mainnet) for transactions relating to the FAsset system.
-1. FAsset Indexer Api: nestjs based API to query the indexed data.
+1. **FAsset Indexer Core**: scrapes the chain for events and stores them in a database, optimized for FAsset analytics.
+1. **FAsset Indexer XRP**: scrapes the Ripple chain (testnet or mainnet) for transactions relating to the FAsset system.
+1. **FAsset Indexer Api**: nestjs based API to query the indexed data.
 
 Initialize the project by running `yarn install`.
 
