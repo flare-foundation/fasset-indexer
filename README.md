@@ -6,7 +6,7 @@ This is an implementation for indexing the FAsset protocol smart contract operat
 1. **FAsset Indexer XRP**: scrapes the Ripple chain (testnet or mainnet) for transactions relating to the FAsset system.
 1. **FAsset Indexer Api**: nestjs based API to query the indexed data.
 
-Initialize the project by running `yarn install`.
+If running outside docker, initialize the project by running `yarn install`.
 
 ## FAsset Indexer Core
 
@@ -14,7 +14,7 @@ Needs the following environment variables:
 
 - **CHAIN**: needs to be set to either `coston`, `coston2`, `songbird`, or `flare`;
 - **RPC_URL**: needs be set to the rpc of the matching chain;
-- **RPC_API_KEY**: should be set to the `x-apikey` or `x-api-key` header value accepted by the rpc url;
+- **RPC_API_KEY**: should be set to the `x-apikey` or `x-api-key` header value accepted by the rpc;
 - **DB_TYPE**: needs to be set to either `sqlite` or `postgres`;
 - **DB_PORT**: needs to be set for non-sqlite database type;
 - **DB_HOST**: needs to be set for non-sqlite database type;
@@ -22,7 +22,7 @@ Needs the following environment variables:
 - **DB_PASSWORD**: needs to be set for non-sqlite database type.
 - **DB_SCHEMA_UPDATE_TYPE**: should be set to `full` after a major update, otherwise should be set to `safe`.
 
-If new event want to be added to tracking without stopping the indexer, you should set:
+If new events want to be added to tracking without stopping the indexer, you should set:
 
 - **REINDEX_TYPE**: should be set to either `back` or `race`:
     -  Back indexer spawns two indexers, one indexing missing events from the beginning to the block last indexed by the previous indexer instance. The second indexer indexes all (including new) events from the previous.
