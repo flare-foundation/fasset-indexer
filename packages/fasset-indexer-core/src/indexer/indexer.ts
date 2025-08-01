@@ -62,16 +62,10 @@ export class EventIndexer {
   }
 
   protected async storeLogs(logs: Log[]): Promise<void> {
-    let lastHandledBlock: number | null = null
     for (const log of logs) {
       const fullLog = await this.eventParser.logToEvent(log)
       if (fullLog !== null) {
         await this.stateUpdater.processEvent(fullLog)
-        // optimization: store only for processed logs
-        if (lastHandledBlock === null || lastHandledBlock < log.blockNumber) {
-          lastHandledBlock = log.blockNumber
-          await this.setFirstUnhandledBlock(lastHandledBlock)
-        }
       }
     }
   }

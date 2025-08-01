@@ -1,7 +1,3 @@
-import { CollateralPoolEventMigration } from "../indexer/eventlib/migrations/collateral-pool-migrations"
-import { CollateralPoolEntered, CollateralPoolExited } from "../orm/entities"
-import { CollateralPoolClaimedReward, CollateralPoolPaidOut } from "../orm/entities/events/collateral-pool"
-import { logger } from "../logger"
 import { Context } from "../context/context"
 import { EVENTS } from "../config"
 import { IAssetManager__factory, IAssetManagerPreUpgrade__factory } from "../../chain/typechain"

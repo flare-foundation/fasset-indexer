@@ -2,7 +2,6 @@ import { join } from "../../utils"
 import { getVar, setVar } from "../../orm/utils"
 import { EventIndexer } from "../indexer"
 import type { Context } from "../../context/context"
-import { logger } from "../../logger"
 
 
 const BLOCK_INDEX_BATCH_NUMBER = 92

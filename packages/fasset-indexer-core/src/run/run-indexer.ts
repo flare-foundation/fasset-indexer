@@ -22,12 +22,12 @@ async function runIndexer() {
     indexer = new EventIndexer(context, allEvents)
   } else if (config.reindexing.type == 'back') {
     indexer = new EventIndexerParallelBackPopulation(
-      context, allEvents, config.reindexing.name, allEvents)
+      context, config.reindexing.diff, config.reindexing.name, allEvents)
   } else if (config.reindexing.type == 'race') {
     const newEvents = new Set(config.reindexing.diff)
     const oldEvents = allEvents.filter(event => !newEvents.has(event))
     indexer = new EventIndexerParallelRacePopulation(
-      context, allEvents, config.reindexing.name, oldEvents)
+      context, config.reindexing.diff, config.reindexing.name, oldEvents)
   } else {
     throw new Error(`reindexing type "${config.reindexing.type}" not recognized`)
   }
