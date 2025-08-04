@@ -11,8 +11,8 @@ async function am(context: Context) {
   for (const iface of Object.keys(EVENTS)) {
     if (iface != 'ASSET_MANAGER') continue
     for (const event of Object.values(EVENTS[iface as keyof typeof EVENTS])) {
-      const resp1 = context.getEventTopic(event, [iface1])
-      const resp2 = context.getEventTopic(event, [iface2])
+      const resp1 = context.getEventTopics(event, [iface1])[0]
+      const resp2 = context.getEventTopics(event, [iface2])[0]
       if (resp1 != resp2) console.log(event)
     }
   }

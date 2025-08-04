@@ -65,22 +65,28 @@ export class EventInterface {
       const iface = this.contractToIface(contractname)
       for (const event of Object.values(EVENTS[cname])) {
         if (eventNames?.includes(event) !== false) {
-          const topic = this.getEventTopic(event, iface)
-          mp.set(topic, cname)
+          const topics = this.getEventTopics(event, iface)
+          for (const topic of topics) {
+            mp.set(topic, cname)
+          }
         }
       }
     }
     return mp
   }
 
-  getEventTopic(eventName: string, ifaces: Interface[]): string {
+  getEventTopics(eventName: string, ifaces: Interface[]): string[] {
+    const topics = new Set<string>()
     for (const iface of ifaces) {
       const parsed = iface.getEvent(eventName)
       if (parsed != null) {
-        return parsed.topicHash
+        topics.add(parsed.topicHash)
       }
     }
-    throw new Error(`Event ${eventName} not found in interface`)
+    if (topics.size == 0) {
+       new Error(`Event ${eventName} not found in interface`)
+    }
+    return Array.from(topics)
   }
 
   contractToIface(name: string): Interface[] {

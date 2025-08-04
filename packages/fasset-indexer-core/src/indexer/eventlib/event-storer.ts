@@ -22,8 +22,8 @@ export class EventStorer {
 
   constructor(readonly orm: ORM, public readonly lookup: ContractLookup) {
     const oldIface = this.lookup.interfaces.assetManagerInterface[0]
-    this.oldCollateralTypeAddedTopic = this.lookup.getEventTopic(EVENTS.ASSET_MANAGER.COLLATERAL_TYPE_ADDED, [oldIface])
-    this.oldAgentVaultCreatedTopic = this.lookup.getEventTopic(EVENTS.ASSET_MANAGER.AGENT_VAULT_CREATED, [oldIface])
+    this.oldCollateralTypeAddedTopic = this.lookup.getEventTopics(EVENTS.ASSET_MANAGER.COLLATERAL_TYPE_ADDED, [oldIface])[0]
+    this.oldAgentVaultCreatedTopic = this.lookup.getEventTopics(EVENTS.ASSET_MANAGER.AGENT_VAULT_CREATED, [oldIface])[0]
   }
 
   async processEvent(log: Event): Promise<void> {

@@ -63,8 +63,10 @@ export class EventIndexer {
 
   protected async storeLogs(logs: Log[]): Promise<void> {
     for (const log of logs) {
+      if (log.index > 0) break
+      console.log(log)
       const fullLog = await this.eventParser.logToEvent(log)
-      if (fullLog !== null) {
+      if (fullLog != null) {
         logger.info(`event indexer is processing event ${fullLog.name} (block: ${fullLog.blockNumber}, index: ${fullLog.logIndex})`)
         await this.stateUpdater.processEvent(fullLog)
       }
