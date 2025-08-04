@@ -1,14 +1,5 @@
 import { createOrm } from "fasset-indexer-core/orm"
-import {
-  EvmLog, AgentVaultInfo,
-  DuplicatePaymentConfirmed,
-  IllegalPaymentConfirmed,
-  UnderlyingBalanceTooLow,
-  RedemptionRequested,
-  RedemptionDefault,
-  RedemptionPerformed,
-  UnderlyingVoutReference
-} from "fasset-indexer-core/entities"
+import * as Entities from "fasset-indexer-core/entities"
 import { ConfigLoader, FAssetType } from "fasset-indexer-core"
 import { unixnow } from "../shared/utils"
 import { UNFINALIZED_DOGE_REDEMPTIONS } from "./utils/raw-sql"
@@ -29,12 +20,16 @@ export class NotificationAnalytics {
 
   async getRedemptionPaymentStatus(redemptionId: number, fasset: FAssetType): Promise<any> {
     const em = this.orm.em.fork()
-    const redemption = await em.findOneOrFail(RedemptionRequested, { requestId: redemptionId, fasset })
-    const succeeded = await em.findOne(RedemptionPerformed, { redemptionRequested: redemption }, { populate: ['evmLog.block'] })
+    const redemption = await em.findOneOrFail(Entities.RedemptionRequested,
+      { requestId: redemptionId, fasset })
+    const succeeded = await em.findOne(Entities.RedemptionPerformed,
+      { redemptionRequested: redemption }, { populate: ['evmLog.block'] })
     if (succeeded != null) return succeeded
-    const defaulted = await em.findOne(RedemptionDefault, { redemptionRequested: redemption }, { populate: ['evmLog.block'] })
+    const defaulted = await em.findOne(Entities.RedemptionDefault,
+      { redemptionRequested: redemption }, { populate: ['evmLog.block'] })
     if (defaulted != null) return defaulted
-    const underlying = await em.findOne(UnderlyingVoutReference, { reference: redemption.paymentReference, fasset }, { populate: ['block'] })
+    const underlying = await em.findOne(Entities.UnderlyingVoutReference,
+      { reference: redemption.paymentReference, fasset }, { populate: ['block'] })
     if (underlying != null) return underlying
     return null
   }
@@ -77,33 +72,41 @@ export class NotificationAnalytics {
   }
 
   async agentsInLiquidation(): Promise<[number, number]> {
-    const nAgentsInLiquidation = await this.orm.em.fork().count(AgentVaultInfo, { status: 2 })
-    const nAgents = await this.orm.em.fork().count(AgentVaultInfo)
+    const nAgentsInLiquidation = await this.orm.em.fork().count(Entities.AgentVaultInfo, { status: 2 })
+    const nAgents = await this.orm.em.fork().count(Entities.AgentVaultInfo)
     return [nAgentsInLiquidation, nAgents]
   }
 
   async eventsPerInterval(seconds: number = 60): Promise<number> {
-    return this.orm.em.fork().count(EvmLog, { block: { timestamp: { $gt: Date.now() / 1000 - seconds }}})
+    return this.orm.em.fork().count(Entities.EvmLog, { block: { timestamp: { $gt: Date.now() / 1000 - seconds }}})
   }
 
-  async fullLiquidationReason(agent: string): Promise<IllegalPaymentConfirmed | DuplicatePaymentConfirmed | UnderlyingBalanceTooLow | null> {
+  async fullLiquidationReason(agent: string): Promise<
+    Entities.IllegalPaymentConfirmed |
+    Entities.DuplicatePaymentConfirmed |
+    Entities.UnderlyingBalanceTooLow |
+    null
+  > {
     const em = this.orm.em.fork()
-    const illegal = await em.findOne(IllegalPaymentConfirmed, { agentVault: { address: { hex: agent }}},
+    const illegal = await em.findOne(Entities.IllegalPaymentConfirmed,
+      { agentVault: { address: { hex: agent }}},
       { populate: ['evmLog.block', 'agentVault.address', 'agentVault.underlyingAddress'] }
     )
     if (illegal) return illegal
-    const duplicate = await em.findOne(DuplicatePaymentConfirmed, { agentVault: { address: { hex: agent }}},
+    const duplicate = await em.findOne(Entities.DuplicatePaymentConfirmed,
+      { agentVault: { address: { hex: agent }}},
       { populate: ['evmLog.block', 'agentVault.address', 'agentVault.underlyingAddress'] }
     )
     if (duplicate) return duplicate
-    const balance = await em.findOne(UnderlyingBalanceTooLow, { agentVault: { address: { hex: agent }}},
+    const balance = await em.findOne(Entities.UnderlyingBalanceTooLow,
+      { agentVault: { address: { hex: agent }}},
       { populate: ['evmLog.block', 'agentVault.address', 'agentVault.underlyingAddress'] }
     )
     return balance
   }
 
   async lastCollateralPoolClaim(pool: string): Promise<number> {
-    const last = await this.orm.em.fork().find(EvmLog,
+    const last = await this.orm.em.fork().find(Entities.EvmLog,
       { name: EVENTS.COLLATERAL_POOL.EXIT, address: { hex: pool }},
       { orderBy: { block: 'desc' }, populate: ['block'], limit: 1 }
     )

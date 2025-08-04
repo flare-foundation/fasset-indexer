@@ -5,7 +5,12 @@ import { FAssetType } from 'fasset-indexer-core'
 import { unixnow } from 'src/shared/utils'
 import { DashboardService } from '../services/dashboard.service'
 import { apiResponse, type ApiResponse } from '../shared/api-response'
-import { CP_SCORE_MIN_POOL_COLLATERAL_WEI, MAX_RETURNED_OBJECTS, MAX_TIMESERIES_PTS, MAX_TIMESPAN_PTS } from '../config/constants'
+import {
+  CP_SCORE_MIN_POOL_COLLATERAL_WEI,
+  MAX_RETURNED_OBJECTS,
+  MAX_TIMESERIES_PTS,
+  MAX_TIMESPAN_PTS
+} from '../config/constants'
 import type { RedemptionDefault } from 'fasset-indexer-core/entities'
 import type {
   AmountResult, TimeSeries, Timespan, TokenPortfolio,

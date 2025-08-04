@@ -1,19 +1,6 @@
-import { EntityManager, SelectQueryBuilder, raw, type ORM, ZeroAddress } from "fasset-indexer-core/orm"
 import { ContractLookup, FAsset, FAssetType, FASSETS } from "fasset-indexer-core"
-import {
-  EvmAddress, EvmBlock, EvmLog, ERC20Transfer, MintingExecuted,
-  RedemptionDefault, RedemptionPerformed, RedemptionRequested,
-  LiquidationPerformed, TokenBalance, AgentVaultInfo,
-  FAssetEventBound, CoreVaultRedemptionRequested,
-  ReturnFromCoreVaultConfirmed, TransferToCoreVaultSuccessful,
-  AssetManagerSettings,
-  TransferToCoreVaultStarted,
-  CPClaimedReward,
-  CPEntered,
-  CPExited,
-  CPSelfCloseExited,
-  CPFeesWithdrawn
-} from "fasset-indexer-core/entities"
+import { EntityManager, SelectQueryBuilder, raw, type ORM, ZeroAddress } from "fasset-indexer-core/orm"
+import * as Entities from "fasset-indexer-core/entities"
 import { EVENTS } from "fasset-indexer-core/config"
 import { fassetToUsdPrice } from "./utils/prices"
 import { SharedAnalytics } from "./shared"
@@ -49,7 +36,7 @@ export class DashboardAnalytics extends SharedAnalytics {
   // system
 
   async transactionCount(): Promise<AmountResult> {
-    const qb = this.orm.em.qb(EvmLog)
+    const qb = this.orm.em.qb(Entities.EvmLog)
     const result = await qb.count().where({
       name: {
         $in: [
@@ -64,7 +51,7 @@ export class DashboardAnalytics extends SharedAnalytics {
   }
 
   async fAssetholderCount(): Promise<FAssetAmountResult> {
-    const res = await this.orm.em.fork().createQueryBuilder(TokenBalance, 'tb')
+    const res = await this.orm.em.fork().createQueryBuilder(Entities.TokenBalance, 'tb')
       .select(['tk.hex as token_address', raw('count(distinct tb.holder_id) as n_token_holders')])
       .join('tb.token', 'tk')
       .where({ 'tb.amount': { $gt: 0 }, 'tk.hex': { $in: this.lookup.fassetTokens } })
@@ -78,22 +65,22 @@ export class DashboardAnalytics extends SharedAnalytics {
   }
 
   async liquidationCount(): Promise<AmountResult> {
-    const amount = await this.orm.em.fork().count(LiquidationPerformed, { valueUBA: { $gt: 0 } })
+    const amount = await this.orm.em.fork().count(Entities.LiquidationPerformed, { valueUBA: { $gt: 0 } })
     return { amount }
   }
 
   async mintingExecutedCount(): Promise<AmountResult> {
-    const amount = await this.orm.em.fork().count(MintingExecuted)
+    const amount = await this.orm.em.fork().count(Entities.MintingExecuted)
     return { amount }
   }
 
   async totalRedeemed(): Promise<FAssetValueResult> {
     const em = this.orm.em.fork()
-    const rr = await em.createQueryBuilder(RedemptionRequested, 'rr')
+    const rr = await em.createQueryBuilder(Entities.RedemptionRequested, 'rr')
       .select(['rr.fasset', raw('sum(rr.value_uba) as value')])
       .groupBy('fasset')
       .execute() as { fasset: number, value: string }[]
-    const tc = await em.createQueryBuilder(TransferToCoreVaultStarted, 'tc')
+    const tc = await em.createQueryBuilder(Entities.TransferToCoreVaultStarted, 'tc')
       .select(['tc.fasset', raw('sum(tc.value_uba) as value')])
       .groupBy('fasset')
       .execute() as { fasset: number, value: string }[]
@@ -108,15 +95,15 @@ export class DashboardAnalytics extends SharedAnalytics {
     const tr = await this.totalRedeemed()
     for (const [fasset, { value }] of Object.entries(tr)) {
       const fassetType = FAssetType[fasset]
-      const settings = await em.findOneOrFail(AssetManagerSettings, { fasset: fassetType })
+      const settings = await em.findOneOrFail(Entities.AssetManagerSettings, { fasset: fassetType })
       ret[fasset] = { amount: Number(value / settings.lotSizeAmg) }
     }
     return ret
   }
 
-  async redemptionDefault(id: number, fasset: FAssetType): Promise<RedemptionDefault | null> {
+  async redemptionDefault(id: number, fasset: FAssetType): Promise<Entities.RedemptionDefault | null> {
     const em = this.orm.em.fork()
-    const redemptionDefault = await em.findOne(RedemptionDefault,
+    const redemptionDefault = await em.findOne(Entities.RedemptionDefault,
       { fasset: fasset, redemptionRequested: { requestId: id } },
       {
         populate: [
@@ -142,31 +129,31 @@ export class DashboardAnalytics extends SharedAnalytics {
   }
 
   async agentMintingExecutedCount(agentAddress: string): Promise<AmountResult> {
-    const qb = this.orm.em.fork().qb(MintingExecuted)
+    const qb = this.orm.em.fork().qb(Entities.MintingExecuted)
     qb.count().where({ collateralReserved: { agentVault: { address: { hex: agentAddress } } } })
     const result = await qb.execute()
     return { amount: Number(result[0].count || 0) }
   }
 
   async agentRedemptionRequestCount(agentAddress: string): Promise<AmountResult> {
-    const qbr = this.orm.em.fork().qb(RedemptionRequested)
+    const qbr = this.orm.em.fork().qb(Entities.RedemptionRequested)
     qbr.count().where({ agentVault: { address: { hex: agentAddress } } })
     const redemptions = await qbr.execute()
-    const qbc = this.orm.em.fork().qb(TransferToCoreVaultStarted)
+    const qbc = this.orm.em.fork().qb(Entities.TransferToCoreVaultStarted)
     qbc.count().where({ agentVault: { address: { hex: agentAddress } } })
     const coreVaultTransfers = await qbc.execute()
     return { amount: Number(redemptions[0].count || 0) - Number(coreVaultTransfers[0].count || 0) }
   }
 
   async agentRedemptionPerformedCount(agentAddress: string): Promise<AmountResult> {
-    const qb = this.orm.em.fork().qb(RedemptionPerformed)
+    const qb = this.orm.em.fork().qb(Entities.RedemptionPerformed)
     qb.count().where({ redemptionRequested: { agentVault: { address: { hex: agentAddress } } } })
     const result = await qb.execute()
     return { amount: Number(result[0].count || 0) }
   }
 
   async agentLiquidationCount(agentAddress: string): Promise<AmountResult> {
-    const qb = this.orm.em.fork().qb(LiquidationPerformed)
+    const qb = this.orm.em.fork().qb(Entities.LiquidationPerformed)
     qb.count().where({ agentVault: { address: { hex: agentAddress } }, valueUBA: { $gt: 0 } })
     const result = await qb.execute()
     return { amount: Number(result[0].count || 0) }
@@ -177,15 +164,15 @@ export class DashboardAnalytics extends SharedAnalytics {
 
   async poolTransactionsCount(): Promise<AmountResult> {
     const em = this.orm.em.fork()
-    const entered = await em.count(CPEntered)
-    const exited = await em.count(CPExited)
-    const claimed = await em.count(CPClaimedReward)
-    const selfCloseExited = await em.count(CPSelfCloseExited)
+    const entered = await em.count(Entities.CPEntered)
+    const exited = await em.count(Entities.CPExited)
+    const claimed = await em.count(Entities.CPClaimedReward)
+    const selfCloseExited = await em.count(Entities.CPSelfCloseExited)
     return { amount: entered + exited + claimed + selfCloseExited }
   }
 
   async bestCollateralPools(n: number, minTotalPoolNatWei: bigint, now: number, delta: number, lim: number): Promise<FAssetCollateralPoolScore> {
-    const vaults = await this.orm.em.fork().find(AgentVaultInfo,
+    const vaults = await this.orm.em.fork().find(Entities.AgentVaultInfo,
       { totalPoolCollateralNATWei: { $gte: minTotalPoolNatWei }, status: 0, publiclyAvailable: true },
       { populate: ['agentVault.collateralPool'] })
     const scores = []
@@ -231,7 +218,7 @@ export class DashboardAnalytics extends SharedAnalytics {
     const em = this.orm.em.fork()
     for (const fasset of this.supportedFAssets) {
       const fAssetAddress = this.lookup.fAssetTypeToFAssetAddress(FAssetType[fasset])
-      const fAssetEvmAddress = await em.findOne(EvmAddress, { hex: fAssetAddress })
+      const fAssetEvmAddress = await em.findOne(Entities.EvmAddress, { hex: fAssetAddress })
       if (fAssetEvmAddress === null) continue
       ret[fasset] = []
       for (const timestamp of timestamps) {
@@ -335,7 +322,7 @@ export class DashboardAnalytics extends SharedAnalytics {
   async mintedTimeSeries(end: number, npoints: number, start?: number): Promise<FAssetTimeSeries<bigint>> {
     const em = this.orm.em.fork()
     return this.getTimeSeries(
-      ($gt, $lt) => em.createQueryBuilder(MintingExecuted, 'me')
+      ($gt, $lt) => em.createQueryBuilder(Entities.MintingExecuted, 'me')
         .select(['me.fasset', raw('sum(cr.value_uba) as value')])
         .join('me.collateralReserved', 'cr')
         .join('me.evmLog', 'el')
@@ -349,7 +336,7 @@ export class DashboardAnalytics extends SharedAnalytics {
   async redeemedTimeSeries(end: number, npoints: number, start?: number): Promise<FAssetTimeSeries<bigint>> {
     const em = this.orm.em.fork()
     return this.getTimeSeries(
-      ($gt, $lt) => em.createQueryBuilder(RedemptionRequested, 'rr')
+      ($gt, $lt) => em.createQueryBuilder(Entities.RedemptionRequested, 'rr')
         .select(['rr.fasset', raw('sum(rr.value_uba) as value')])
         .join('rr.evmLog', 'log')
         .join('log.block', 'block')
@@ -362,7 +349,7 @@ export class DashboardAnalytics extends SharedAnalytics {
   async coreVaultTransferredTimeSeries(end: number, npoints: number, start?: number): Promise<FAssetTimeSeries<bigint>> {
     const em = this.orm.em.fork()
     return this.getTimeSeries(
-      ($gt, $lt) => em.createQueryBuilder(TransferToCoreVaultStarted, 'ts')
+      ($gt, $lt) => em.createQueryBuilder(Entities.TransferToCoreVaultStarted, 'ts')
         .select(['ts.fasset', raw('sum(ts.value_uba) as value')])
         .join('ts.evmLog', 'log')
         .join('log.block', 'block')
@@ -375,7 +362,7 @@ export class DashboardAnalytics extends SharedAnalytics {
   async coreVaultInflowTimeSeries(end: number, npoints: number, start?: number): Promise<FAssetTimeSeries<bigint>> {
     const em = this.orm.em.fork()
     return this.getTimeSeries(
-      ($gt, $lt) => em.createQueryBuilder(TransferToCoreVaultSuccessful, 'ts')
+      ($gt, $lt) => em.createQueryBuilder(Entities.TransferToCoreVaultSuccessful, 'ts')
         .select(['ts.fasset', raw('sum(ts.value_uba) as value')])
         .join('ts.evmLog', 'log')
         .join('log.block', 'block')
@@ -388,7 +375,7 @@ export class DashboardAnalytics extends SharedAnalytics {
   async coreVaultReturnOutflowTimeSeries(end: number, npoints: number, start?: number): Promise<FAssetTimeSeries<bigint>> {
     const em = this.orm.em.fork()
     return this.getTimeSeries(
-      ($gt, $lt) => em.createQueryBuilder(ReturnFromCoreVaultConfirmed, 'rc')
+      ($gt, $lt) => em.createQueryBuilder(Entities.ReturnFromCoreVaultConfirmed, 'rc')
         .select(['rc.fasset', raw('sum(rc.received_underlying_uba) as value')])
         .join('rc.evmLog', 'log')
         .join('log.block', 'block')
@@ -401,7 +388,7 @@ export class DashboardAnalytics extends SharedAnalytics {
   async coreVaultRedeemOutflowTimeSeries(end: number, npoints: number, start?: number): Promise<FAssetTimeSeries<bigint>> {
     const em = this.orm.em.fork()
     return this.getTimeSeries(
-      ($gt, $lt) => em.createQueryBuilder(CoreVaultRedemptionRequested, 'rc')
+      ($gt, $lt) => em.createQueryBuilder(Entities.CoreVaultRedemptionRequested, 'rc')
         .select(['rc.fasset', raw('sum(rc.value_uba) as value')])
         .join('rc.evmLog', 'log')
         .join('log.block', 'block')
@@ -416,7 +403,7 @@ export class DashboardAnalytics extends SharedAnalytics {
 
   private async totalClaimedPoolFeesAt(pool?: string, user?: string, timestamp?: number): Promise<FAssetValueResult> {
     const enteredFees = await this.filterEnterOrExitQueryBy(
-      this.orm.em.fork().createQueryBuilder(CPFeesWithdrawn, 'cpfw')
+      this.orm.em.fork().createQueryBuilder(Entities.CPFeesWithdrawn, 'cpfw')
         .select(['cpfw.fasset', raw('sum(cpfw.withdrawn_fees_uba) as fees')])
         .groupBy('cpfw.fasset'),
       'cpfw', pool, user, timestamp
@@ -426,7 +413,7 @@ export class DashboardAnalytics extends SharedAnalytics {
 
   private async tokenSupplyAt(tokenId: number, timestamp: number, zeroAddressId: number): Promise<bigint> {
     if (zeroAddressId === null) return BigInt(0)
-    const minted = await this.orm.em.fork().createQueryBuilder(ERC20Transfer, 't')
+    const minted = await this.orm.em.fork().createQueryBuilder(Entities.ERC20Transfer, 't')
       .select([raw('sum(t.value) as minted')])
       .join('evmLog', 'el')
       .join('el.block', 'block')
@@ -434,7 +421,7 @@ export class DashboardAnalytics extends SharedAnalytics {
       .execute() as { minted: bigint }[]
     const mintedValue = BigInt(minted[0]?.minted || 0)
     if (mintedValue == BigInt(0)) return BigInt(0)
-    const burned = await this.orm.em.fork().createQueryBuilder(ERC20Transfer, 't')
+    const burned = await this.orm.em.fork().createQueryBuilder(Entities.ERC20Transfer, 't')
       .select([raw('sum(t.value) as burned')])
       .where({ 't.to_id': zeroAddressId, 'el.address': tokenId, 'block.timestamp': { $lte: timestamp } })
       .join('evmLog', 'el')
@@ -445,7 +432,7 @@ export class DashboardAnalytics extends SharedAnalytics {
   }
 
   private async coreVaultInflowAt(timestamp: number): Promise<FAssetValueResult> {
-    const res = await this.orm.em.fork().createQueryBuilder(TransferToCoreVaultSuccessful, 'succ')
+    const res = await this.orm.em.fork().createQueryBuilder(Entities.TransferToCoreVaultSuccessful, 'succ')
       .select(['succ.fasset', raw('sum(succ.value_uba) as value')])
       .where({ 'block.timestamp': { $lte: timestamp } })
       .join('evmLog', 'el')
@@ -457,14 +444,14 @@ export class DashboardAnalytics extends SharedAnalytics {
 
   private async coreVaultOutflowAt(timestamp: number): Promise<FAssetValueResult> {
     const em = this.orm.em.fork()
-    const redemptionOutflow = await em.createQueryBuilder(CoreVaultRedemptionRequested, 'red')
+    const redemptionOutflow = await em.createQueryBuilder(Entities.CoreVaultRedemptionRequested, 'red')
       .select(['red.fasset', raw('sum(red.value_uba) as value')])
       .where({ 'block.timestamp': { $lte: timestamp } })
       .join('evmLog', 'el')
       .join('el.block', 'block')
       .groupBy('red.fasset')
       .execute() as { fasset: FAssetType, value: string }[]
-    const returnOutflow = await em.createQueryBuilder(ReturnFromCoreVaultConfirmed, 'ret')
+    const returnOutflow = await em.createQueryBuilder(Entities.ReturnFromCoreVaultConfirmed, 'ret')
       .select(['ret.fasset', raw('sum(ret.received_underlying_uba) as value')])
       .where({ 'block.timestamp': { $lte: timestamp } })
       .join('evmLog', 'el')
@@ -485,7 +472,7 @@ export class DashboardAnalytics extends SharedAnalytics {
   //////////////////////////////////////////////////////////////////////
   // helpers
 
-  protected async getTimeSeries<T extends FAssetEventBound>(
+  protected async getTimeSeries<T extends Entities.FAssetEventBound>(
     query: (si: number, ei: number) => SelectQueryBuilder<T>,
     end: number, npoints: number, start: number
   ): Promise<FAssetTimeSeries<bigint>> {
@@ -560,13 +547,13 @@ export class DashboardAnalytics extends SharedAnalytics {
   }
 
   protected async getMinTimestamp(em: EntityManager): Promise<number> {
-    const minBlockVar = await em.find(EvmBlock, {}, { orderBy: { index: 'asc' }, limit: 1 })
+    const minBlockVar = await em.find(Entities.EvmBlock, {}, { orderBy: { index: 'asc' }, limit: 1 })
     return minBlockVar[0]?.timestamp ?? 0
   }
 
   protected async ensureZeroAddressId(): Promise<void> {
     if (this.zeroAddressId !== null) return
-    this.zeroAddressId = await this.orm.em.fork().findOne(EvmAddress, { hex: ZeroAddress })
+    this.zeroAddressId = await this.orm.em.fork().findOne(Entities.EvmAddress, { hex: ZeroAddress })
       .then(zeroAddress => this.zeroAddressId = zeroAddress?.id ?? null)
   }
 
