@@ -1,24 +1,26 @@
 import { Type } from '@mikro-orm/core'
 
 
-export class uint256 extends Type<bigint | null | undefined, string | null | undefined> {
+type Nullable<T> = T | null | undefined
 
-  convertToDatabaseValue(value: bigint | null | undefined): string | null {
+export class uint256 extends Type<Nullable<bigint>, Nullable<string>> {
+
+  convertToDatabaseValue(value: Nullable<bigint>): string | null {
     if (value === null || value === undefined) {
-      return null;
+      return null
     }
-    return value.toString();
+    return value.toString()
   }
 
-  convertToJSValue(value: string | null | undefined): bigint | null {
+  convertToJSValue(value: Nullable<string>): bigint | null {
     if (value === null || value === undefined) {
-      return null;
+      return null
     }
-    return BigInt(value);
+    return BigInt(value)
   }
 
   getColumnType() {
-    return `NUMERIC(78)`; // or DECIMAL(78), depending on your DB
+    return `NUMERIC(78)`
   }
 }
 
