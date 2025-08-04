@@ -1,7 +1,7 @@
 import { AgentVault } from "../../orm/entities/agent"
 import { Context } from "../../context/context"
 import type { EntityManager } from "@mikro-orm/knex"
-import type { Log, LogDescription } from "ethers"
+import type { Log } from "ethers"
 import type { Event } from "./event-scraper"
 import type { FAssetIface } from "../../shared"
 
@@ -27,10 +27,12 @@ export class EventParser {
   }
 
   async logToEvent(log: Log): Promise<Event | null> {
-    const valid = await this.validLogSource(log)
+    const iface = this.topicToIface.get(log.topics[0])
+    if (iface == null) return null
+    const valid = await this.validLogSource(iface, log.address)
     if (!valid) return null
-    const parsed = this.parseLog(log)
-    if (parsed === null) return null
+    const parsed = this.context.parseLog(iface, log)
+    if (parsed == null) return null
     const block = await this.getBlock(log.blockNumber)
     const transaction = await this.getTransaction(log.transactionHash)
     return {
@@ -48,36 +50,29 @@ export class EventParser {
     }
   }
 
-  parseLog(log: Log): LogDescription | null {
-    const iface = this.topicToIface.get(log.topics[0])
-    if (iface == null) return null
-    return this.context.parseLog(iface, log)
-  }
-
-  async validLogSource(log: Log): Promise<boolean> {
-    const iface = this.topicToIface.get(log.topics[0])
+  async validLogSource(iface: FAssetIface, source: string): Promise<boolean> {
     if (iface === 'ASSET_MANAGER') {
-      if (this.context.isAssetManager(log.address)) {
+      if (this.context.isAssetManager(source)) {
         return true
       }
     } else if (iface === 'ERC20') {
       const em = this.context.orm.em.fork()
-      if (this.context.isFAssetToken(log.address)) {
+      if (this.context.isFAssetToken(source)) {
         return true
-      } else if (await this.isCollateralPoolToken(em, log.address)) {
+      } else if (await this.isCollateralPoolToken(em, source)) {
         return true
       }
     } else if (iface === 'COLLATERAL_POOL') {
       const em = this.context.orm.em.fork()
-      if (await this.isCollateralPool(em, log.address)) {
+      if (await this.isCollateralPool(em, source)) {
         return true
       }
     } else if (iface === 'PRICE_READER') {
-      if (await this.isPriceReader(log.address)) {
+      if (await this.isPriceReader(source)) {
         return true
       }
     } else if (iface === 'CORE_VAULT_MANAGER') {
-      if (this.context.isCoreVaultManager(log.address)) {
+      if (this.context.isCoreVaultManager(source)) {
         return true
       }
     } else {

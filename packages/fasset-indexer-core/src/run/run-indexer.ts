@@ -3,12 +3,12 @@ import { ensureConfigIntegrity } from "./integrity"
 import { ensureData } from "./ensure-data"
 import { ConfigLoader } from "../config/config"
 import { Context } from "../context/context"
-import { logger } from "../logger"
 import { IndexerRunner } from "../indexer/runner"
-import { migrateCollateralPoolEvents } from "../scripts/migrate-collateral-pool-events"
 import { EventIndexerParallelBackPopulation } from "../indexer/reindexing/indexer-parallel-back-population"
-import { EVENT_NAMES } from "../config/constants"
 import { EventIndexerParallelRacePopulation } from "../indexer/reindexing/indexer-parallel-race-population"
+import { migrateCollateralPoolEvents } from "../scripts/migrate-collateral-pool-events"
+import { EVENT_NAMES } from "../config/constants"
+import { logger } from "../logger"
 
 
 async function runIndexer() {
