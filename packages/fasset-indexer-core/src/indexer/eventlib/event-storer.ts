@@ -504,6 +504,12 @@ export class EventStorer {
       } case "redemptionPoolFeeShareBIPS": {
         agentSettings.redemptionPoolFeeShareBIPS = BigInt(value)
         break
+      } case "poolTopupCollateralRatioBIPS": { // legacy
+        agentSettings.poolTopupCollateralRatioBIPS = BigInt(value)
+        break
+      } case "poolTopupTokenPriceFactorBIPS": { // legacy
+        agentSettings.poolTopupTokenPriceFactorBIPS = BigInt(value)
+        break
       } default: {
         throw new Error(`agent has no setting ${name}`)
       }

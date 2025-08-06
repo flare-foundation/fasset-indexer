@@ -2,7 +2,7 @@ import { Controller, Get, ParseBoolPipe, ParseIntPipe, Query, UseInterceptors } 
 import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager'
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { FAssetType } from 'fasset-indexer-core'
-import { unixnow } from 'src/shared/utils'
+import { unixnow } from '../shared/utils'
 import { DashboardService } from '../services/dashboard.service'
 import { apiResponse, type ApiResponse } from '../shared/api-response'
 import {
@@ -15,7 +15,7 @@ import type { RedemptionDefault } from 'fasset-indexer-core/entities'
 import type {
   AmountResult, TimeSeries, Timespan, TokenPortfolio,
   FAssetCollateralPoolScore, FAssetValueResult,
-  FAssetAmountResult, FAssetTimespan
+  FAssetAmountResult, FAssetTimespan, FAssetTimeSeries
 } from '../analytics/interface'
 
 
@@ -236,6 +236,18 @@ export class DashboardController {
       return apiResponse(this.service.coreVaultBalanceAggregateTimespan(ts), 200)
   }
 
+  @Get('/timespan/tracked-underlying-backing-ratio?')
+  @ApiOperation({ summary: 'Timespan of the ratio between issued FAssets and backed Assets' })
+  @ApiQuery({ name: "timestamps", type: Number, isArray: true })
+  getUTrackedUnderlyingBackingRatioTimespan(
+    @Query('timestamps') timestamps: string | string[]
+  ): Promise<ApiResponse<FAssetTimespan<number>>>{
+    const ts = this.parseTimestamps(timestamps)
+    const er = this.restrictTimespan(ts)
+    if (er !== null) return apiResponse(Promise.reject(er), 400)
+      return apiResponse(this.service.trackedUnderlyingBackingRatioTimeSeries(ts), 200)
+  }
+
   ///////////////////////////////////////////////////////////////
   // timeseries
 
@@ -302,6 +314,19 @@ export class DashboardController {
     const err = this.restrictPoints(end, npoints, start)
     if (err !== null) return apiResponse(Promise.reject(err), 400)
     return apiResponse(this.service.coreVaultBalanceAggregateTimeSeries(end, npoints, start), 200)
+  }
+
+  @Get('/timeseries/tracked-agent-backing?')
+  @ApiOperation({ summary: 'Time series of the contract-tracked underlying backing across all agents' })
+  @ApiQuery({ name: "startTime", type: Number, required: false })
+  getTimeSeriesTrackedAgentBacking(
+    @Query('endtime', ParseIntPipe) end: number,
+    @Query('npoints', ParseIntPipe) npoints: number,
+    @Query('startTime', new ParseIntPipe({ optional: true })) start?: number
+  ): Promise<ApiResponse<FAssetTimeSeries<bigint>>> {
+    const err = this.restrictPoints(end, npoints, start)
+    if (err !== null) return apiResponse(Promise.reject(err), 400)
+    return apiResponse(this.service.trackedAgentBackingTimeSeries(end, npoints, start), 200)
   }
 
   //////////////////////////////////////////////////////////////////////

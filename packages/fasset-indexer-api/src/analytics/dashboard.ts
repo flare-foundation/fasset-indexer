@@ -1,7 +1,8 @@
 import { ContractLookup, FAsset, FAssetType, FASSETS } from "fasset-indexer-core"
-import { EntityManager, SelectQueryBuilder, raw, type ORM, ZeroAddress } from "fasset-indexer-core/orm"
+import { EntityManager, raw, type ORM, ZeroAddress } from "fasset-indexer-core/orm"
 import * as Entities from "fasset-indexer-core/entities"
 import { EVENTS } from "fasset-indexer-core/config"
+import { unixnow } from "../shared/utils"
 import { fassetToUsdPrice } from "./utils/prices"
 import { SharedAnalytics } from "./shared"
 import { AgentStatistics } from "./statistics"
@@ -75,18 +76,7 @@ export class DashboardAnalytics extends SharedAnalytics {
   }
 
   async totalRedeemed(): Promise<FAssetValueResult> {
-    const em = this.orm.em.fork()
-    const rr = await em.createQueryBuilder(Entities.RedemptionRequested, 'rr')
-      .select(['rr.fasset', raw('sum(rr.value_uba) as value')])
-      .groupBy('fasset')
-      .execute() as { fasset: number, value: string }[]
-    const tc = await em.createQueryBuilder(Entities.TransferToCoreVaultStarted, 'tc')
-      .select(['tc.fasset', raw('sum(tc.value_uba) as value')])
-      .groupBy('fasset')
-      .execute() as { fasset: number, value: string }[]
-    const fvrrr = this.convertOrmResultToFAssetValueResult(rr, 'value')
-    const fvrtc = this.convertOrmResultToFAssetValueResult(tc, 'value')
-    return this.transformFAssetValueResults(fvrrr, fvrtc, (x, y) => x - y)
+    return this.redeemedDuring(this.orm.em.fork(), 0, unixnow())
   }
 
   async totalRedeemedLots(): Promise<FAssetAmountResult> {
@@ -171,8 +161,11 @@ export class DashboardAnalytics extends SharedAnalytics {
     return { amount: entered + exited + claimed + selfCloseExited }
   }
 
-  async bestCollateralPools(n: number, minTotalPoolNatWei: bigint, now: number, delta: number, lim: number): Promise<FAssetCollateralPoolScore> {
-    const vaults = await this.orm.em.fork().find(Entities.AgentVaultInfo,
+  async bestCollateralPools(
+    n: number, minTotalPoolNatWei: bigint, now: number, delta: number, lim: number
+  ): Promise<FAssetCollateralPoolScore> {
+    const em = this.orm.em.fork()
+    const vaults = await em.find(Entities.AgentVaultInfo,
       { totalPoolCollateralNATWei: { $gte: minTotalPoolNatWei }, status: 0, publiclyAvailable: true },
       { populate: ['agentVault.collateralPool'] })
     const scores = []
@@ -185,7 +178,7 @@ export class DashboardAnalytics extends SharedAnalytics {
     scores.sort((a, b) => a > b ? -1 : a < b ? 1 : 0).splice(n)
     const ret = {} as FAssetCollateralPoolScore
     for (const { pool, score, fasset } of scores) {
-      const res = await this.totalClaimedPoolFees(pool)
+      const res = await this.totalClaimedPoolFeesAt(em, pool)
       const fas = FAssetType[fasset] as FAsset
       const claimed = res[fas]?.value || BigInt(0)
       ret[fas] ??= []
@@ -205,7 +198,7 @@ export class DashboardAnalytics extends SharedAnalytics {
   }
 
   async totalClaimedPoolFees(pool?: string, user?: string): Promise<FAssetValueResult> {
-    return this.totalClaimedPoolFeesAt(pool, user)
+    return this.totalClaimedPoolFeesAt(this.orm.em.fork(), pool, user)
   }
 
   ///////////////////////////////////////////////////////////////
@@ -222,7 +215,7 @@ export class DashboardAnalytics extends SharedAnalytics {
       if (fAssetEvmAddress === null) continue
       ret[fasset] = []
       for (const timestamp of timestamps) {
-        const value = await this.tokenSupplyAt(fAssetEvmAddress.id, timestamp, this.zeroAddressId)
+        const value = await this.tokenSupplyAt(em, fAssetEvmAddress.id, timestamp, this.zeroAddressId)
         ret[fasset].push({ timestamp, value })
       }
     }
@@ -239,7 +232,24 @@ export class DashboardAnalytics extends SharedAnalytics {
   }
 
   async claimedPoolFeesTimespan(timestamps: number[], pool?: string, user?: string): Promise<FAssetTimespan<bigint>> {
-    return this.getTimespan(timestamps, (timestamp: number) => this.totalClaimedPoolFeesAt(pool, user, timestamp))
+    const fun = (em: EntityManager, timestamp: number) => this.totalClaimedPoolFeesAt(em, pool, user, timestamp)
+    return this.prepareTimespan(fun.bind(this), timestamps)
+  }
+
+  async coreVaultOutflowTimespan(timestamps: number[]): Promise<FAssetTimespan<bigint>> {
+   return this.prepareTimespan(this.coreVaultOutflowAt.bind(this), timestamps)
+  }
+
+  async coreVaultInflowTimespan(timestamps: number[]): Promise<FAssetTimespan<bigint>> {
+    return this.prepareTimespan(this.coreVaultInflowDuring.bind(this), timestamps)
+  }
+
+  async coreVaultBalanceTimespan(timestamps: number[]): Promise<FAssetTimespan<bigint>> {
+    return this.prepareTimespan(this.coreVaultBalanceAt.bind(this), timestamps)
+  }
+
+  async trackedAgentUnderlyingBackingTimespan(timestamps: number[]): Promise<FAssetTimespan<bigint>> {
+    return this.prepareTimespan(this.trackedAgentBackingAt.bind(this), timestamps)
   }
 
   async claimedPoolFeesAggregateTimespan(timestamps: number[]): Promise<Timespan<bigint>> {
@@ -247,17 +257,9 @@ export class DashboardAnalytics extends SharedAnalytics {
     return this.aggregateFAssetTimespans(timespans)
   }
 
-  async coreVaultOutflowTimespan(timestamps: number[]): Promise<FAssetTimespan<bigint>> {
-    return this.getTimespan(timestamps, timestamp => this.coreVaultOutflowAt(timestamp))
-  }
-
   async coreVaultOutflowAggregateTimespan(timestamps: number[]): Promise<Timespan<bigint>> {
     const timespans = await this.coreVaultOutflowTimespan(timestamps)
     return this.aggregateFAssetTimespans(timespans)
-  }
-
-  async coreVaultInflowTimespan(timestamps: number[]): Promise<FAssetTimespan<bigint>> {
-    return this.getTimespan(timestamps, timestamp => this.coreVaultInflowAt(timestamp))
   }
 
   async coreVaultInflowAggregateTimespan(timestamps: number[]): Promise<Timespan<bigint>> {
@@ -265,13 +267,23 @@ export class DashboardAnalytics extends SharedAnalytics {
     return this.aggregateFAssetTimespans(timespans)
   }
 
-  async coreVaultBalanceTimespan(timestamps: number[]): Promise<FAssetTimespan<bigint>> {
-    return this.getTimespan(timestamps, timestamp => this.coreVaultBalanceAt(timestamp))
-  }
-
   async coreVaultBalanceAggregateTimespan(timestamps: number[]): Promise<Timespan<bigint>> {
     const timespans = await this.coreVaultBalanceTimespan(timestamps)
     return this.aggregateFAssetTimespans(timespans)
+  }
+
+  async trackedAgentBackingTimespan(timestamps: number[]): Promise<FAssetTimespan<bigint>> {
+    return this.prepareTimespan(this.trackedAgentBackingAt.bind(this), timestamps)
+  }
+
+  async trackedUnderlyingBackingRatioTimeSeries(timestamps: number[]): Promise<FAssetTimespan<number>> {
+    const trackedAgentBalance = await this.trackedAgentBackingTimespan(timestamps)
+    const coreVaultBalance = await this.coreVaultBalanceTimespan(timestamps)
+    const fassetSupply = await this.fAssetSupplyTimespan(timestamps)
+    const underlyingBacking = this.transformFAssetTimespan
+    (trackedAgentBalance, coreVaultBalance, (x, y) => x + y)
+    const transformer = (x, y) => Number(PRICE_FACTOR * x / y) / Number(PRICE_FACTOR)
+    return this.transformFAssetTimespan(underlyingBacking, fassetSupply, transformer)
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -320,90 +332,41 @@ export class DashboardAnalytics extends SharedAnalytics {
   }
 
   async mintedTimeSeries(end: number, npoints: number, start?: number): Promise<FAssetTimeSeries<bigint>> {
-    const em = this.orm.em.fork()
-    return this.getTimeSeries(
-      ($gt, $lt) => em.createQueryBuilder(Entities.MintingExecuted, 'me')
-        .select(['me.fasset', raw('sum(cr.value_uba) as value')])
-        .join('me.collateralReserved', 'cr')
-        .join('me.evmLog', 'el')
-        .join('el.block', 'block')
-        .where({ 'block.timestamp': { $gt, $lt } })
-        .groupBy('fasset'),
-      end, npoints, start ?? await this.getMinTimestamp(em)
-    )
+    return this.prepareTimeSeries(this.mintedDuring.bind(this), npoints, end, start)
   }
 
   async redeemedTimeSeries(end: number, npoints: number, start?: number): Promise<FAssetTimeSeries<bigint>> {
-    const em = this.orm.em.fork()
-    return this.getTimeSeries(
-      ($gt, $lt) => em.createQueryBuilder(Entities.RedemptionRequested, 'rr')
-        .select(['rr.fasset', raw('sum(rr.value_uba) as value')])
-        .join('rr.evmLog', 'log')
-        .join('log.block', 'block')
-        .where({ 'block.timestamp': { $gt, $lt } })
-        .groupBy('fasset'),
-      end, npoints, start ?? await this.getMinTimestamp(em)
-    )
+    return this.prepareTimeSeries(this.redeemedDuring.bind(this), npoints, end, start)
   }
 
   async coreVaultTransferredTimeSeries(end: number, npoints: number, start?: number): Promise<FAssetTimeSeries<bigint>> {
-    const em = this.orm.em.fork()
-    return this.getTimeSeries(
-      ($gt, $lt) => em.createQueryBuilder(Entities.TransferToCoreVaultStarted, 'ts')
-        .select(['ts.fasset', raw('sum(ts.value_uba) as value')])
-        .join('ts.evmLog', 'log')
-        .join('log.block', 'block')
-        .where({ 'block.timestamp': { $gt, $lt } })
-        .groupBy('fasset'),
-      end, npoints, start ?? await this.getMinTimestamp(em)
-    )
+    return this.prepareTimeSeries(this.coreVaultTransferredDuring.bind(this), npoints, end, start)
   }
 
   async coreVaultInflowTimeSeries(end: number, npoints: number, start?: number): Promise<FAssetTimeSeries<bigint>> {
-    const em = this.orm.em.fork()
-    return this.getTimeSeries(
-      ($gt, $lt) => em.createQueryBuilder(Entities.TransferToCoreVaultSuccessful, 'ts')
-        .select(['ts.fasset', raw('sum(ts.value_uba) as value')])
-        .join('ts.evmLog', 'log')
-        .join('log.block', 'block')
-        .where({ 'block.timestamp': { $gt, $lt } })
-        .groupBy('fasset'),
-      end, npoints, start ?? await this.getMinTimestamp(em)
-    )
+    return this.prepareTimeSeries(this.coreVaultInflowDuring.bind(this), npoints, end, start)
   }
 
   async coreVaultReturnOutflowTimeSeries(end: number, npoints: number, start?: number): Promise<FAssetTimeSeries<bigint>> {
-    const em = this.orm.em.fork()
-    return this.getTimeSeries(
-      ($gt, $lt) => em.createQueryBuilder(Entities.ReturnFromCoreVaultConfirmed, 'rc')
-        .select(['rc.fasset', raw('sum(rc.received_underlying_uba) as value')])
-        .join('rc.evmLog', 'log')
-        .join('log.block', 'block')
-        .where({ 'block.timestamp': { $gt, $lt } })
-        .groupBy('fasset'),
-      end, npoints, start ?? await this.getMinTimestamp(em)
-    )
+    return this.prepareTimeSeries(this.coreVaultReturnOutflowDuring.bind(this), npoints, end, start)
   }
 
   async coreVaultRedeemOutflowTimeSeries(end: number, npoints: number, start?: number): Promise<FAssetTimeSeries<bigint>> {
-    const em = this.orm.em.fork()
-    return this.getTimeSeries(
-      ($gt, $lt) => em.createQueryBuilder(Entities.CoreVaultRedemptionRequested, 'rc')
-        .select(['rc.fasset', raw('sum(rc.value_uba) as value')])
-        .join('rc.evmLog', 'log')
-        .join('log.block', 'block')
-        .where({ 'block.timestamp': { $gt, $lt } })
-        .groupBy('fasset'),
-      end, npoints, start ?? await this.getMinTimestamp(em)
-    )
+    return this.prepareTimeSeries(this.coreVaultRedeemOutflowDuring.bind(this), npoints, end, start)
+  }
+
+  async trackedAgentBackingTimeSeries(end: number, npoints: number, start?: number): Promise<FAssetTimeSeries<bigint>> {
+    return this.prepareTimeSeries(this.trackedAgentBackingDuring.bind(this), npoints, end, start)
   }
 
   //////////////////////////////////////////////////////////////////////
-  // timemapped generic metrics (no idea how to name this better)
+  // generic query definitions
 
-  private async totalClaimedPoolFeesAt(pool?: string, user?: string, timestamp?: number): Promise<FAssetValueResult> {
+  protected async totalClaimedPoolFeesAt(
+    em: EntityManager, pool?: string, user?: string, timestamp?: number
+  ): Promise<FAssetValueResult> {
     const enteredFees = await this.filterEnterOrExitQueryBy(
-      this.orm.em.fork().createQueryBuilder(Entities.CPFeesWithdrawn, 'cpfw')
+      em.createQueryBuilder(Entities.CPFeesWithdrawn, 'cpfw')
         .select(['cpfw.fasset', raw('sum(cpfw.withdrawn_fees_uba) as fees')])
         .groupBy('cpfw.fasset'),
       'cpfw', pool, user, timestamp
@@ -411,9 +374,11 @@ export class DashboardAnalytics extends SharedAnalytics {
     return this.convertOrmResultToFAssetValueResult(enteredFees, 'fees')
   }
 
-  private async tokenSupplyAt(tokenId: number, timestamp: number, zeroAddressId: number): Promise<bigint> {
+  protected async tokenSupplyAt(
+    em: EntityManager, tokenId: number, timestamp: number, zeroAddressId: number
+  ): Promise<bigint> {
     if (zeroAddressId === null) return BigInt(0)
-    const minted = await this.orm.em.fork().createQueryBuilder(Entities.ERC20Transfer, 't')
+    const minted = await em.createQueryBuilder(Entities.ERC20Transfer, 't')
       .select([raw('sum(t.value) as minted')])
       .join('evmLog', 'el')
       .join('el.block', 'block')
@@ -421,7 +386,7 @@ export class DashboardAnalytics extends SharedAnalytics {
       .execute() as { minted: bigint }[]
     const mintedValue = BigInt(minted[0]?.minted || 0)
     if (mintedValue == BigInt(0)) return BigInt(0)
-    const burned = await this.orm.em.fork().createQueryBuilder(Entities.ERC20Transfer, 't')
+    const burned = await em.createQueryBuilder(Entities.ERC20Transfer, 't')
       .select([raw('sum(t.value) as burned')])
       .where({ 't.to_id': zeroAddressId, 'el.address': tokenId, 'block.timestamp': { $lte: timestamp } })
       .join('evmLog', 'el')
@@ -431,65 +396,155 @@ export class DashboardAnalytics extends SharedAnalytics {
     return mintedValue - burnedValue
   }
 
-  private async coreVaultInflowAt(timestamp: number): Promise<FAssetValueResult> {
-    const res = await this.orm.em.fork().createQueryBuilder(Entities.TransferToCoreVaultSuccessful, 'succ')
-      .select(['succ.fasset', raw('sum(succ.value_uba) as value')])
-      .where({ 'block.timestamp': { $lte: timestamp } })
-      .join('evmLog', 'el')
+  protected async mintedDuring(em: EntityManager, from: number, to: number): Promise<FAssetValueResult> {
+    const minted = await em.createQueryBuilder(Entities.MintingExecuted, 'me')
+      .select(['me.fasset', raw('sum(cr.value_uba) as value')])
+      .join('me.collateralReserved', 'cr')
+      .join('me.evmLog', 'el')
       .join('el.block', 'block')
-      .groupBy('succ.fasset')
-      .execute() as { fasset: number, value: 'string' }[]
-    return this.convertOrmResultToFAssetValueResult(res, 'value')
+      .where({ 'block.timestamp': { $gte: from, $lt: to } })
+      .groupBy('fasset')
+      .execute() as { fasset: FAssetType, value: string }[]
+    return this.convertOrmResultToFAssetValueResult(minted, 'value')
   }
 
-  private async coreVaultOutflowAt(timestamp: number): Promise<FAssetValueResult> {
-    const em = this.orm.em.fork()
-    const redemptionOutflow = await em.createQueryBuilder(Entities.CoreVaultRedemptionRequested, 'red')
-      .select(['red.fasset', raw('sum(red.value_uba) as value')])
-      .where({ 'block.timestamp': { $lte: timestamp } })
-      .join('evmLog', 'el')
-      .join('el.block', 'block')
-      .groupBy('red.fasset')
+  protected async redeemedDuring(em: EntityManager, from: number, to: number): Promise<FAssetValueResult> {
+    const redeemed = await em.createQueryBuilder(Entities.RedemptionRequested, 'rr')
+      .select(['rr.fasset', raw('sum(rr.value_uba) as value')])
+      .join('rr.evmLog', 'log')
+      .join('log.block', 'block')
+      .where({ 'block.timestamp': { $gte: from, $lt: to } })
+      .groupBy('fasset')
       .execute() as { fasset: FAssetType, value: string }[]
-    const returnOutflow = await em.createQueryBuilder(Entities.ReturnFromCoreVaultConfirmed, 'ret')
-      .select(['ret.fasset', raw('sum(ret.received_underlying_uba) as value')])
-      .where({ 'block.timestamp': { $lte: timestamp } })
-      .join('evmLog', 'el')
-      .join('el.block', 'block')
-      .groupBy('ret.fasset')
-      .execute() as { fasset: FAssetType, value: string }[]
-    const redemptionOutflowFAssetValueResult = this.convertOrmResultToFAssetValueResult(redemptionOutflow, 'value')
-    const returnOutflowFAssetValueResult = this.convertOrmResultToFAssetValueResult(returnOutflow, 'value')
-    return this.transformFAssetValueResults(redemptionOutflowFAssetValueResult, returnOutflowFAssetValueResult, (x, y) => x + y)
+    const transferred = await em.createQueryBuilder(Entities.TransferToCoreVaultStarted, 'tc')
+      .select(['tc.fasset', raw('sum(tc.value_uba) as value')])
+      .join('tc.evmLog', 'log')
+      .join('log.block', 'block')
+      .where({ 'block.timestamp': { $gte: from, $lt: to } })
+      .groupBy('fasset')
+      .execute() as { fasset: number, value: string }[]
+    return this.transformFAssetValueResults(
+      this.convertOrmResultToFAssetValueResult(redeemed, 'value'),
+      this.convertOrmResultToFAssetValueResult(transferred, 'value'),
+      (x, y) => x - y)
   }
 
-  private async coreVaultBalanceAt(timestamp: number): Promise<FAssetValueResult> {
-    const inflow = await this.coreVaultInflowAt(timestamp)
-    const outflow = await this.coreVaultOutflowAt(timestamp)
+  protected async coreVaultTransferredDuring(em: EntityManager, from: number, to: number): Promise<FAssetValueResult> {
+    const transferred = await em.createQueryBuilder(Entities.TransferToCoreVaultStarted, 'ts')
+      .select(['ts.fasset', raw('sum(ts.value_uba) as value')])
+      .join('ts.evmLog', 'log')
+      .join('log.block', 'block')
+      .where({ 'block.timestamp': { $gte: from, $lt: to } })
+      .groupBy('fasset')
+      .execute() as { fasset: FAssetType, value: string }[]
+    return this.convertOrmResultToFAssetValueResult(transferred, 'value')
+  }
+
+  protected async coreVaultInflowDuring(em: EntityManager, from: number, to: number): Promise<FAssetValueResult> {
+    const inflow = await em.createQueryBuilder(Entities.TransferToCoreVaultSuccessful, 'ts')
+      .select(['ts.fasset', raw('sum(ts.value_uba) as value')])
+      .join('ts.evmLog', 'log')
+      .join('log.block', 'block')
+      .where({ 'block.timestamp': { $gte: from, $lt: to } })
+      .groupBy('fasset')
+      .execute() as { fasset: FAssetType, value: string }[]
+    return this.convertOrmResultToFAssetValueResult(inflow, 'value')
+  }
+
+  protected async coreVaultReturnOutflowDuring(em: EntityManager, from: number, to: number): Promise<FAssetValueResult> {
+    const outflow = await em.createQueryBuilder(Entities.ReturnFromCoreVaultConfirmed, 'rc')
+      .select(['rc.fasset', raw('sum(rc.received_underlying_uba) as value')])
+      .join('rc.evmLog', 'log')
+      .join('log.block', 'block')
+      .where({ 'block.timestamp': { $gte: from, $lt: to } })
+      .groupBy('fasset')
+      .execute() as { fasset: FAssetType, value: string }[]
+    return this.convertOrmResultToFAssetValueResult(outflow, 'value')
+  }
+
+  protected async coreVaultRedeemOutflowDuring(em: EntityManager, from: number, to: number): Promise<FAssetValueResult> {
+    const outflow = await em.createQueryBuilder(Entities.CoreVaultRedemptionRequested, 'rc')
+      .select(['rc.fasset', raw('sum(rc.value_uba) as value')])
+      .join('rc.evmLog', 'log')
+      .join('log.block', 'block')
+      .where({ 'block.timestamp': { $gte: from, $lt: to } })
+      .groupBy('fasset')
+      .execute() as { fasset: FAssetType, value: string }[]
+    return this.convertOrmResultToFAssetValueResult(outflow, 'value')
+  }
+
+  protected async coreVaultOutflowDuring(em: EntityManager, from: number, to: number): Promise<FAssetValueResult> {
+    const returns = await this.coreVaultReturnOutflowDuring(em, from, to)
+    const redeems = await this.coreVaultRedeemOutflowDuring(em, from, to)
+    return this.transformFAssetValueResults(returns, redeems, (x, y) => x + y)
+  }
+
+  protected async coreVaultBalanceDuring(em: EntityManager, from: number, to: number): Promise<FAssetValueResult> {
+    const inflow = await this.coreVaultInflowDuring(em, from, to)
+    const outflow = await this.coreVaultOutflowDuring(em, from, to)
     return this.transformFAssetValueResults(inflow, outflow, (x, y) => x - y)
+  }
+
+  protected async trackedAgentBackingDuring(em: EntityManager, from: number, to: number): Promise<FAssetValueResult> {
+    const knex = em.getKnex()
+    const subquery = em.createQueryBuilder(Entities.UnderlyingBalanceChanged, 'ubc')
+      .select(['ubc.fasset', 'ubc.agentVault', raw('max(ubc.balance_uba) as agent_balance')])
+      .join('ubc.evmLog', 'el')
+      .join('el.block', 'bl')
+      .where({ 'bl.timestamp': { $gte: from, $lt: to } })
+      .groupBy(['ubc.fasset', 'ubc.agentVault'])
+      .getKnexQuery()
+    const mainQuery = knex
+      .from(knex.raw('(?) as sub', [subquery]))
+      .select(['sub.fasset', knex.raw('sum(sub.agent_balance) as total_agent_balance')])
+      .groupBy('sub.fasset')
+    const { sql, bindings } = mainQuery.toSQL()
+    const result = await em.getConnection().execute(sql, bindings as any) as {
+      fasset: FAssetType, total_agent_balance: string }[]
+    return this.convertOrmResultToFAssetValueResult(result, 'total_agent_balance')
+  }
+
+  protected async trackedAgentBackingAt(em: EntityManager, timestamp: number): Promise<FAssetValueResult> {
+    return this.trackedAgentBackingDuring(em, 0, timestamp)
+  }
+
+  protected async coreVaultOutflowAt(em: EntityManager, timestamp: number): Promise<FAssetValueResult> {
+    return this.coreVaultOutflowDuring(em, 0, timestamp)
+  }
+
+  protected async coreVaultBalanceAt(em: EntityManager, timestamp: number): Promise<FAssetValueResult> {
+    return this.coreVaultBalanceDuring(em, 0, timestamp)
   }
 
   //////////////////////////////////////////////////////////////////////
   // helpers
 
-  protected async getTimeSeries<T extends Entities.FAssetEventBound>(
-    query: (si: number, ei: number) => SelectQueryBuilder<T>,
-    end: number, npoints: number, start: number
+  protected async prepareTimeSeries(
+    query: (em: EntityManager, from: number, to: number) => Promise<FAssetValueResult>,
+    npoints: number, end: number, start?: number
+  ): Promise<FAssetTimeSeries<bigint>> {
+    const em = this.orm.em.fork()
+    const queryWithEm = (f: number, t: number) => query(em, f, t)
+    const startWithDefault = start ?? await this.getMinTimestamp(em)
+    return this.getTimeSeries(queryWithEm.bind(this), npoints, startWithDefault, end)
+  }
+
+  protected async getTimeSeries(
+    query: (si: number, ei: number) => Promise<FAssetValueResult>,
+    npoints: number, start: number, end: number
   ): Promise<FAssetTimeSeries<bigint>> {
     const ret = {} as FAssetTimeSeries<bigint>
     const interval = (end - start) / npoints
     for (let i = 0; i < npoints; i++) {
       const si = start + i * interval
       const ei = start + (i + 1) * interval
-      const results = await query(si, ei).execute() as { fasset: number, value: bigint }[]
       for (const fasset of this.supportedFAssets) {
         if (i === 0) ret[fasset] = []
         ret[fasset].push({ index: i, start: si, end: ei, value: BigInt(0) })
       }
-      for (const result of results) {
-        const value = BigInt(result.value)
-        const fasset = FAssetType[result.fasset] as FAsset
-        ret[fasset][i].value += value
+      const results = await query(si, ei)
+      for (const [fasset, { value }] of Object.entries(results)) {
+        ret[fasset as FAsset][i].value += value
       }
     }
     return ret
@@ -510,6 +565,14 @@ export class DashboardAnalytics extends SharedAnalytics {
       }
     }
     return Object.entries(acc).map(([index, data]) => ({ index: parseInt(index), ...data }))
+  }
+
+  protected async prepareTimespan(
+    fun: (em: EntityManager, timespan: number) => Promise<FAssetValueResult>,
+    timestamps: number[]
+  ): Promise<FAssetTimespan<bigint>> {
+    const em = this.orm.em.fork()
+    return this.getTimespan(timestamps, ((t: number) => fun(em, t)).bind(this))
   }
 
   protected async getTimespan(timestamps: number[], fun: (timespan: number) => Promise<FAssetValueResult>):
@@ -557,16 +620,63 @@ export class DashboardAnalytics extends SharedAnalytics {
       .then(zeroAddress => this.zeroAddressId = zeroAddress?.id ?? null)
   }
 
-  protected transformTimeSeries(
-    ts1: TimeSeries<bigint>,
-    ts2: TimeSeries<bigint>,
-    transformer: (x: bigint, y: bigint) => bigint
-  ): TimeSeries<bigint> {
-    const res = [] as TimeSeries<bigint>
+  protected transformFAssetTimeSeries<T>(
+    ts1: FAssetTimeSeries<T>,
+    ts2: FAssetTimeSeries<T>,
+    transformer: (x: T, y: T) => T
+  ): FAssetTimeSeries<T> {
+    const res = {} as FAssetTimeSeries<T>
+    for (const key of Object.keys(ts1)) {
+      const val2 = ts2[key]
+      if (val2 == null) continue
+      res[key] = this.transformTimeSeries(
+        ts1[key], ts2[key], transformer)
+    }
+    return res
+  }
+
+  protected transformTimeSeries<T>(
+    ts1: TimeSeries<T>,
+    ts2: TimeSeries<T>,
+    transformer: (x: T, y: T) => T
+  ): TimeSeries<T> {
+    const res = [] as TimeSeries<T>
     for (const elt of ts1) {
       const x = elt.value
       const y = ts2[elt.index].value
       res.push({ ...elt, value: transformer(x, y) })
+    }
+    return res
+  }
+
+  protected transformFAssetTimespan<T,U>(
+    ts1: FAssetTimespan<T>,
+    ts2: FAssetTimespan<T>,
+    transformer: (x: T, y: T) => U
+  ): FAssetTimespan<U> {
+    const res = {} as FAssetTimespan<U>
+    for (const key of Object.keys(ts1)) {
+      const val2 = ts2[key]
+      if (val2 == null) continue
+      res[key] = this.transformTimespan(
+        ts1[key], ts2[key], transformer)
+    }
+    return res
+  }
+
+  protected transformTimespan<T,U>(
+    ts1: Timespan<T>,
+    ts2: Timespan<T>,
+    transformer: (x: T, y: T) => U
+  ): Timespan<U> {
+    const res = [] as Timespan<U>
+    for (let i = 0; i < ts1.length; i++) {
+      const x = ts1[i].value
+      const y = ts2[i].value
+      res.push({
+        timestamp: ts1[i].timestamp,
+        value: transformer(x, y)
+      })
     }
     return res
   }
@@ -605,20 +715,20 @@ export class DashboardAnalytics extends SharedAnalytics {
     return ret
   }
 
-  private convertTimespanToTimeSeries(timespan: Timespan<bigint>): TimeSeries<bigint> {
-    const timeseries: TimeSeries<bigint> = []
-    let { timestamp: prevtsp, value: accval } = timespan[0]
-    for (let i = 1; i < timeseries.length; i++) {
-      const { timestamp, value } = timespan[i]
-      timeseries.push({
-        index: i - 1,
-        start: prevtsp,
-        end: timestamp,
-        value: value - accval
-      })
-      prevtsp = timestamp
-      accval = value
-    }
-    return timeseries
+  private convertFAssetTimeSeriesToFAssetTimespan(timeseries: FAssetTimeSeries<bigint>): FAssetTimespan<bigint> {
+    return Object.fromEntries(Object.entries(timeseries).map(
+      ([fasset, ts]) => [fasset, this.convertTimeSeriesToTimespan(ts)])
+    ) as FAssetTimespan<bigint>
   }
+
+  private convertTimeSeriesToTimespan(timeseries: TimeSeries<bigint>): Timespan<bigint> {
+    const timespan: Timespan<bigint> = []
+    let pval = BigInt(0)
+    for (const { end, value } of timeseries) {
+      pval += value
+      timespan.push({ timestamp: end, value: pval })
+    }
+    return timespan
+  }
+
 }
