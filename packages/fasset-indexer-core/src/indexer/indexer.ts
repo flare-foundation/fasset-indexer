@@ -67,7 +67,7 @@ export class EventIndexer {
       if (fullLog != null) {
         logger.info(`event indexer is processing event ${fullLog.name} (block: ${fullLog.blockNumber}, log: ${fullLog.logIndex})`)
         const processed = await this.stateUpdater.processEvent(fullLog)
-        logger.info(`event indexer ${processed ? 'processed' : 'did not process'} event (${fullLog.blockNumber}, ${fullLog.logIndex})`)
+        logger.info(`event indexer ${processed ? 'stored' : 'skipped storing'} event (${fullLog.blockNumber}, ${fullLog.logIndex})`)
       }
     }
   }
