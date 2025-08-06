@@ -65,8 +65,9 @@ export class EventIndexer {
     for (const log of logs) {
       const fullLog = await this.eventParser.logToEvent(log)
       if (fullLog != null) {
-        logger.info(`event indexer is processing event ${fullLog.name} (block: ${fullLog.blockNumber}, index: ${fullLog.logIndex})`)
-        await this.stateUpdater.processEvent(fullLog)
+        logger.info(`event indexer is processing event ${fullLog.name} (block: ${fullLog.blockNumber}, log: ${fullLog.logIndex})`)
+        const processed = await this.stateUpdater.processEvent(fullLog)
+        logger.info(`event indexer ${processed ? 'processed' : 'did not process'} event ${fullLog.name}`)
       }
     }
   }

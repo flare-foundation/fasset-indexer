@@ -26,18 +26,20 @@ export class EventStorer {
     this.oldAgentVaultCreatedTopic = this.lookup.getEventTopics(EVENTS.ASSET_MANAGER.AGENT_VAULT_CREATED, [oldIface])[0]
   }
 
-  async processEvent(log: Event): Promise<void> {
-    await this.orm.em.fork().transactional(async (em) => {
-      await this.processEventUnsafe(em, log)
+  async processEvent(log: Event): Promise<boolean> {
+    return this.orm.em.fork().transactional(async (em) => {
+      return this.processEventUnsafe(em, log)
     })
   }
 
-  async processEventUnsafe(em: EntityManager, log: Event): Promise<void> {
+  async processEventUnsafe(em: EntityManager, log: Event): Promise<boolean> {
+    let processed = false
     if (!await this.logExists(em, log)) {
       const evmLog = await this.createLogEntity(em, log)
-      const processed = await this._processEvent(em, log, evmLog)
+      processed = await this._processEvent(em, log, evmLog)
       if (processed) em.persist(evmLog)
     }
+    return processed
   }
 
   protected async _processEvent(em: EntityManager, log: Event, evmLog: Entities.EvmLog): Promise<boolean> {
