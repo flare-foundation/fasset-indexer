@@ -494,11 +494,11 @@ export class DashboardAnalytics extends SharedAnalytics {
       .where({ 'bl.timestamp': { $gte: from, $lt: to } })
       .groupBy(['ubc.fasset', 'ubc.agentVault'])
       .getKnexQuery()
-    const mainQuery = knex
+    const mainquery = knex
       .from(knex.raw('(?) as sub', [subquery]))
       .select(['sub.fasset', knex.raw('sum(sub.agent_balance) as total_agent_balance')])
       .groupBy('sub.fasset')
-    const { sql, bindings } = mainQuery.toSQL()
+    const { sql, bindings } = mainquery.toSQL()
     const result = await em.getConnection().execute(sql, bindings as any) as {
       fasset: FAssetType, total_agent_balance: string }[]
     return this.convertOrmResultToFAssetValueResult(result, 'total_agent_balance')
