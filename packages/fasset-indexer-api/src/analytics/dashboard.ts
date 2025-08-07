@@ -6,7 +6,7 @@ import { unixnow } from "../shared/utils"
 import { fassetToUsdPrice } from "./utils/prices"
 import { SharedAnalytics } from "./shared"
 import { AgentStatistics } from "./statistics"
-import { PRICE_FACTOR } from "../config/constants"
+import { MAX_BIPS, PRICE_FACTOR } from "../config/constants"
 import { COLLATERAL_POOL_PORTFOLIO_SQL } from "./utils/raw-sql"
 import type {
   AmountResult,
@@ -15,6 +15,10 @@ import type {
   FAssetValueResult, FAssetAmountResult
 } from "./interface"
 
+
+const add = (x: bigint, y: bigint) => x + y
+const sub = (x: bigint, y: bigint) => x - y
+const rat = (x: bigint, y: bigint) => Number(MAX_BIPS * x / y) / Number(MAX_BIPS)
 
 /**
  * DashboardAnalytics provides a set of analytics functions for the FAsset UI's dashboard.
@@ -280,10 +284,8 @@ export class DashboardAnalytics extends SharedAnalytics {
     const trackedAgentBalance = await this.trackedAgentBackingTimespan(timestamps)
     const coreVaultBalance = await this.coreVaultBalanceTimespan(timestamps)
     const fassetSupply = await this.fAssetSupplyTimespan(timestamps)
-    const underlyingBacking = this.transformFAssetTimespan
-    (trackedAgentBalance, coreVaultBalance, (x, y) => x + y)
-    const transformer = (x, y) => Number(PRICE_FACTOR * x / y) / Number(PRICE_FACTOR)
-    return this.transformFAssetTimespan(underlyingBacking, fassetSupply, transformer)
+    const underlyingBacking = this.transformFAssetTimespan(trackedAgentBalance, coreVaultBalance, add)
+    return this.transformFAssetTimespan(underlyingBacking, fassetSupply, rat)
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -300,7 +302,7 @@ export class DashboardAnalytics extends SharedAnalytics {
     return this.transformTimeSeries(
       await this.aggregateTimeSeries(redeemedTs),
       await this.aggregateTimeSeries(transferredTs),
-      (x, y) => x - y
+      sub
     )
   }
 
@@ -322,13 +324,13 @@ export class DashboardAnalytics extends SharedAnalytics {
   async coreVaultOutflowAggregateTimeSeries(end: number, npoints: number, start?: number): Promise<TimeSeries<bigint>> {
     const ts1 = await this.coreVaultReturnOutflowAggregateTimeSeries(end, npoints, start)
     const ts2 = await this.coreVaultRedeemOutflowAggregateTimeSeries(end, npoints, start)
-    return this.transformTimeSeries(ts1, ts2, (x, y) => x + y)
+    return this.transformTimeSeries(ts1, ts2, add)
   }
 
   async coreVaultBalanceAggregateTimeSeries(end: number, npoints: number, start?: number): Promise<TimeSeries<bigint>> {
     const ts1 = await this.coreVaultInflowAggregateTimeSeries(end, npoints, start)
     const ts2 = await this.coreVaultOutflowAggregateTimeSeries(end, npoints, start)
-    return this.transformTimeSeries(ts1, ts2, (x, y) => x - y)
+    return this.transformTimeSeries(ts1, ts2, sub)
   }
 
   async mintedTimeSeries(end: number, npoints: number, start?: number): Promise<FAssetTimeSeries<bigint>> {
@@ -422,7 +424,7 @@ export class DashboardAnalytics extends SharedAnalytics {
     return this.transformFAssetValueResults(
       this.convertOrmResultToFAssetValueResult(redeemed, 'value'),
       this.convertOrmResultToFAssetValueResult(transferred, 'value'),
-      (x, y) => x - y)
+      sub)
   }
 
   protected async coreVaultTransferredDuring(em: EntityManager, from: number, to: number): Promise<FAssetValueResult> {
@@ -472,16 +474,16 @@ export class DashboardAnalytics extends SharedAnalytics {
   protected async coreVaultOutflowDuring(em: EntityManager, from: number, to: number): Promise<FAssetValueResult> {
     const returns = await this.coreVaultReturnOutflowDuring(em, from, to)
     const redeems = await this.coreVaultRedeemOutflowDuring(em, from, to)
-    return this.transformFAssetValueResults(returns, redeems, (x, y) => x + y)
+    return this.transformFAssetValueResults(returns, redeems, add)
   }
 
   protected async coreVaultBalanceDuring(em: EntityManager, from: number, to: number): Promise<FAssetValueResult> {
     const inflow = await this.coreVaultInflowDuring(em, from, to)
     const outflow = await this.coreVaultOutflowDuring(em, from, to)
-    return this.transformFAssetValueResults(inflow, outflow, (x, y) => x - y)
+    return this.transformFAssetValueResults(inflow, outflow, sub)
   }
 
-  protected async trackedAgentBackingDuring(em: EntityManager, from: number, to: number): Promise<FAssetValueResult> {
+  async trackedAgentBackingDuring(em: EntityManager, from: number, to: number): Promise<FAssetValueResult> {
     const knex = em.getKnex()
     const subquery = em.createQueryBuilder(Entities.UnderlyingBalanceChanged, 'ubc')
       .select(['ubc.fasset', 'ubc.agentVault', raw('max(ubc.balance_uba) as agent_balance')])
