@@ -15,7 +15,7 @@ import type { RedemptionDefault } from 'fasset-indexer-core/entities'
 import type {
   AmountResult, TimeSeries, Timespan, TokenPortfolio,
   FAssetCollateralPoolScore, FAssetValueResult,
-  FAssetAmountResult, FAssetTimespan, FAssetTimeSeries
+  FAssetAmountResult, FAssetTimespan
 } from '../analytics/interface'
 
 

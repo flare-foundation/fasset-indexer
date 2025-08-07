@@ -553,9 +553,9 @@ export class DashboardAnalytics extends SharedAnalytics {
   protected async aggregateTimeSeries(timeseries: FAssetTimeSeries<bigint>): Promise<TimeSeries<bigint>> {
     const em = this.orm.em.fork()
     const acc = {} as { [index: number]: { start: number, end: number, value: bigint } }
-    for (const fasset in timeseries) {
+    for (const [fasset, ts] of Object.entries(timeseries)) {
       const [priceMul, priceDiv] = await fassetToUsdPrice(em, FAssetType[fasset as FAsset])
-      for (const point of timeseries[fasset as FAsset]) {
+      for (const point of ts) {
         const value = PRICE_FACTOR * point.value * priceMul / priceDiv
         if (acc[point.index] === undefined) {
           acc[point.index] = { start: point.start, end: point.end, value }
