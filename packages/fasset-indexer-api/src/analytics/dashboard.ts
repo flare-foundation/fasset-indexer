@@ -18,7 +18,7 @@ import type {
 
 const add = (x: bigint, y: bigint) => x + y
 const sub = (x: bigint, y: bigint) => x - y
-const rat = (x: bigint, y: bigint) => Number(MAX_BIPS * x / y) / Number(MAX_BIPS)
+const rat = (x: bigint, y: bigint) => y == BigInt(0) ? 0 : Number(MAX_BIPS * x / y) / Number(MAX_BIPS)
 
 /**
  * DashboardAnalytics provides a set of analytics functions for the FAsset UI's dashboard.
