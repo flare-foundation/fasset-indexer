@@ -316,19 +316,6 @@ export class DashboardController {
     return apiResponse(this.service.coreVaultBalanceAggregateTimeSeries(end, npoints, start), 200)
   }
 
-  @Get('/timeseries/tracked-agent-backing?')
-  @ApiOperation({ summary: 'Time series of the contract-tracked underlying backing across all agents' })
-  @ApiQuery({ name: "startTime", type: Number, required: false })
-  getTimeSeriesTrackedAgentBacking(
-    @Query('endtime', ParseIntPipe) end: number,
-    @Query('npoints', ParseIntPipe) npoints: number,
-    @Query('startTime', new ParseIntPipe({ optional: true })) start?: number
-  ): Promise<ApiResponse<FAssetTimeSeries<bigint>>> {
-    const err = this.restrictPoints(end, npoints, start)
-    if (err !== null) return apiResponse(Promise.reject(err), 400)
-    return apiResponse(this.service.trackedAgentBackingTimeSeries(end, npoints, start), 200)
-  }
-
   //////////////////////////////////////////////////////////////////////
   // helpers
 

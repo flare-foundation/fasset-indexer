@@ -355,10 +355,6 @@ export class DashboardAnalytics extends SharedAnalytics {
     return this.prepareTimeSeries(this.coreVaultRedeemOutflowDuring.bind(this), npoints, end, start)
   }
 
-  async trackedAgentBackingTimeSeries(end: number, npoints: number, start?: number): Promise<FAssetTimeSeries<bigint>> {
-    return this.prepareTimeSeries(this.trackedAgentBackingDuring.bind(this), npoints, end, start)
-  }
-
   //////////////////////////////////////////////////////////////////////
   // generic query definitions
 
