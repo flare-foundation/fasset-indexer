@@ -241,7 +241,7 @@ export class DashboardAnalytics extends SharedAnalytics {
   }
 
   async coreVaultInflowTimespan(timestamps: number[]): Promise<FAssetTimespan<bigint>> {
-    return this.prepareTimespan(this.coreVaultInflowDuring.bind(this), timestamps)
+    return this.prepareTimespan(this.coreVaultInflowAt.bind(this), timestamps)
   }
 
   async coreVaultBalanceTimespan(timestamps: number[]): Promise<FAssetTimespan<bigint>> {
@@ -498,6 +498,10 @@ export class DashboardAnalytics extends SharedAnalytics {
     const result = await em.getConnection().execute(sql, bindings as any) as {
       fasset: FAssetType, total_agent_balance: string }[]
     return this.convertOrmResultToFAssetValueResult(result, 'total_agent_balance')
+  }
+
+  protected async coreVaultInflowAt(em: EntityManager, timestamp: number): Promise<FAssetValueResult> {
+    return this.coreVaultInflowDuring(em, 0, timestamp)
   }
 
   protected async trackedAgentBackingAt(em: EntityManager, timestamp: number): Promise<FAssetValueResult> {
