@@ -83,3 +83,18 @@ left join underlying_vout_reference dvr on rr.payment_reference = dvr.reference 
 left join redemption_default rd on rd.redemption_requested_evm_log_id = rr.evm_log_id
 where rr.fasset=${FAssetType.FDOGE} and eb.timestamp > ? and dvr.id is null and rd.evm_log_id is null
 limit ?`
+
+// postgres-specific query
+export const UNDERLYING_AGENT_BALANCE = `
+SELECT t.fasset, SUM(t.balance_uba) AS total_balance FROM (
+  SELECT DISTINCT ON (ubc.fasset, ubc.agent_vault_address_id)
+    ubc.fasset, ubc.agent_vault_address_id, ubc.balance_uba, el.block_index
+  FROM underlying_balance_changed ubc
+  JOIN evm_log el ON ubc.evm_log_id = el.id
+  JOIN evm_block eb ON el.block_index = eb.index
+  WHERE eb.timestamp <= ?
+  ORDER BY ubc.fasset, ubc.agent_vault_address_id, el.block_index DESC
+) t
+GROUP BY t.fasset
+ORDER BY t.fasset
+`

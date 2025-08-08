@@ -7,7 +7,7 @@ import { fassetToUsdPrice } from "./utils/prices"
 import { SharedAnalytics } from "./shared"
 import { AgentStatistics } from "./statistics"
 import { MAX_BIPS, PRICE_FACTOR } from "../config/constants"
-import { COLLATERAL_POOL_PORTFOLIO_SQL } from "./utils/raw-sql"
+import { COLLATERAL_POOL_PORTFOLIO_SQL, UNDERLYING_AGENT_BALANCE } from "./utils/raw-sql"
 import type {
   AmountResult,
   TimeSeries, Timespan, FAssetTimeSeries, FAssetTimespan,
@@ -103,7 +103,7 @@ export class DashboardAnalytics extends SharedAnalytics {
     return this.convertOrmResultToFAssetValueResult(settings, 'lotSizeAmg')
   }
 
-  async trackedUnderlyingBacking(): Promise<FAssetValueResult> {
+  async trackedAgentUnderlyingBacking(): Promise<FAssetValueResult> {
     return this.trackedAgentBackingAt(this.orm.em.fork(), unixnow())
   }
 
@@ -497,22 +497,9 @@ export class DashboardAnalytics extends SharedAnalytics {
   }
 
   protected async trackedAgentBackingAt(em: EntityManager, timestamp: number): Promise<FAssetValueResult> {
-    const knex = em.getKnex()
-    const subquery = em.createQueryBuilder(Entities.UnderlyingBalanceChanged, 'ubc')
-      .select(['ubc.fasset', 'ubc.agentVault', raw('max(ubc.balance_uba) as agent_balance')])
-      .join('ubc.evmLog', 'el')
-      .join('el.block', 'bl')
-      .where({ 'bl.timestamp': { $lt: timestamp } })
-      .groupBy(['ubc.fasset', 'ubc.agentVault'])
-      .getKnexQuery()
-    const mainquery = knex
-      .from(knex.raw('(?) as sub', [subquery]))
-      .select(['sub.fasset', knex.raw('sum(sub.agent_balance) as total_agent_balance')])
-      .groupBy('sub.fasset')
-    const { sql, bindings } = mainquery.toSQL()
-    const result = await em.getConnection().execute(sql, bindings as any) as {
-      fasset: FAssetType, total_agent_balance: string }[]
-    return this.convertOrmResultToFAssetValueResult(result, 'total_agent_balance')
+    const res = await em.getConnection('read').execute(UNDERLYING_AGENT_BALANCE, [timestamp]) as {
+      fasset: FAssetType, total_balance: string }[]
+    return this.convertOrmResultToFAssetValueResult(res, 'total_balance')
   }
 
   protected async coreVaultInflowAt(em: EntityManager, timestamp: number): Promise<FAssetValueResult> {

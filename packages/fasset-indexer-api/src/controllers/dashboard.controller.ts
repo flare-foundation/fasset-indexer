@@ -64,10 +64,10 @@ export class DashboardController {
     return apiResponse(this.service.redemptionDefault(id, FAssetType[fasset]), 200)
   }
 
-  @Get('/tracked-underlying-backing?')
+  @Get('/total-tracked-underlying-agent-backing?')
   @ApiOperation({ summary: 'Total underlying assets tracked by the contracts' })
   getTrackedUnderlyingBacking(): Promise<ApiResponse<FAssetValueResult>>{
-    return apiResponse(this.service.trackedUnderlyingBacking(), 200)
+    return apiResponse(this.service.trackedAgentUnderlyingBacking(), 200)
   }
 
   //////////////////////////////////////////////////////////////////////
