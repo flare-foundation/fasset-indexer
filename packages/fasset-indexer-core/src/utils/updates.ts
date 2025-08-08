@@ -1,5 +1,5 @@
 import { FIRST_UNHANDLED_EVENT_BLOCK_DB_KEY } from "../config"
-import { EntityManager, getVar, ORM } from "../orm"
+import { EntityManager, getVar } from "../orm"
 
 // back indexer db vars
 export function backUpdateFirstUnhandledBlockName(updateName: string): string {
