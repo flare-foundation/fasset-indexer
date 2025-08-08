@@ -19,6 +19,7 @@ import type {
 const add = (x: bigint, y: bigint) => x + y
 const sub = (x: bigint, y: bigint) => x - y
 const rat = (x: bigint, y: bigint) => y == BigInt(0) ? 0 : Number(MAX_BIPS * x / y) / Number(MAX_BIPS)
+const div = (x: bigint, y: bigint) => y == BigInt(0) ? BigInt(0) : x / y
 
 /**
  * DashboardAnalytics provides a set of analytics functions for the FAsset UI's dashboard.
@@ -45,10 +46,14 @@ export class DashboardAnalytics extends SharedAnalytics {
     const result = await qb.count().where({
       name: {
         $in: [
+          EVENTS.ASSET_MANAGER.REDEMPTION_REQUESTED,
+          EVENTS.ASSET_MANAGER.COLLATERAL_RESERVED,
+          EVENTS.COLLATERAL_POOL.CP_ENTERED,
+          EVENTS.COLLATERAL_POOL.CP_EXITED,
+          EVENTS.COLLATERAL_POOL.CP_FEES_WITHDRAWN,
+          EVENTS.COLLATERAL_POOL.CP_SELF_CLOSE_EXITED,
           EVENTS.COLLATERAL_POOL.EXIT,
           EVENTS.COLLATERAL_POOL.ENTER,
-          EVENTS.ASSET_MANAGER.REDEMPTION_REQUESTED,
-          EVENTS.ASSET_MANAGER.COLLATERAL_RESERVED
         ]
       }
     }).execute()
@@ -84,15 +89,22 @@ export class DashboardAnalytics extends SharedAnalytics {
   }
 
   async totalRedeemedLots(): Promise<FAssetAmountResult> {
-    const ret = {} as FAssetAmountResult
+    const redeemed = await this.totalRedeemed()
+    const lotSizes = await this.lotSizeUBA()
+    const valueResult = this.transformFAssetValueResults(redeemed, lotSizes, div)
+    return this.convertFAssetValueResultToFAssetAmountResult(valueResult)
+  }
+
+  async lotSizeUBA(): Promise<FAssetValueResult> {
     const em = this.orm.em.fork()
-    const tr = await this.totalRedeemed()
-    for (const [fasset, { value }] of Object.entries(tr)) {
-      const fassetType = FAssetType[fasset]
-      const settings = await em.findOneOrFail(Entities.AssetManagerSettings, { fasset: fassetType })
-      ret[fasset] = { amount: Number(value / settings.lotSizeAmg) }
-    }
-    return ret
+    const settings = await em.createQueryBuilder(Entities.AssetManagerSettings, 'ams')
+      .select(['fasset', 'lotSizeAmg'])
+      .execute() as { fasset: FAssetType, lotSizeAmg: string }[]
+    return this.convertOrmResultToFAssetValueResult(settings, 'lotSizeAmg')
+  }
+
+  async trackedUnderlyingBacking(): Promise<FAssetValueResult> {
+    return this.trackedAgentBackingAt(this.orm.em.fork(), unixnow())
   }
 
   async redemptionDefault(id: number, fasset: FAssetType): Promise<Entities.RedemptionDefault | null> {
@@ -424,7 +436,8 @@ export class DashboardAnalytics extends SharedAnalytics {
     return this.transformFAssetValueResults(
       this.convertOrmResultToFAssetValueResult(redeemed, 'value'),
       this.convertOrmResultToFAssetValueResult(transferred, 'value'),
-      sub)
+      sub
+    )
   }
 
   protected async coreVaultTransferredDuring(em: EntityManager, from: number, to: number): Promise<FAssetValueResult> {
@@ -483,13 +496,13 @@ export class DashboardAnalytics extends SharedAnalytics {
     return this.transformFAssetValueResults(inflow, outflow, sub)
   }
 
-  async trackedAgentBackingDuring(em: EntityManager, from: number, to: number): Promise<FAssetValueResult> {
+  protected async trackedAgentBackingAt(em: EntityManager, timestamp: number): Promise<FAssetValueResult> {
     const knex = em.getKnex()
     const subquery = em.createQueryBuilder(Entities.UnderlyingBalanceChanged, 'ubc')
       .select(['ubc.fasset', 'ubc.agentVault', raw('max(ubc.balance_uba) as agent_balance')])
       .join('ubc.evmLog', 'el')
       .join('el.block', 'bl')
-      .where({ 'bl.timestamp': { $gte: from, $lt: to } })
+      .where({ 'bl.timestamp': { $lt: timestamp } })
       .groupBy(['ubc.fasset', 'ubc.agentVault'])
       .getKnexQuery()
     const mainquery = knex
@@ -504,10 +517,6 @@ export class DashboardAnalytics extends SharedAnalytics {
 
   protected async coreVaultInflowAt(em: EntityManager, timestamp: number): Promise<FAssetValueResult> {
     return this.coreVaultInflowDuring(em, 0, timestamp)
-  }
-
-  protected async trackedAgentBackingAt(em: EntityManager, timestamp: number): Promise<FAssetValueResult> {
-    return this.trackedAgentBackingDuring(em, 0, timestamp)
   }
 
   protected async coreVaultOutflowAt(em: EntityManager, timestamp: number): Promise<FAssetValueResult> {
@@ -695,6 +704,28 @@ export class DashboardAnalytics extends SharedAnalytics {
       res[fasset] = { value: transformer(x, y) }
     }
     return res
+  }
+
+  protected transformFAssetAmountResults(
+    res1: FAssetAmountResult,
+    res2: FAssetAmountResult,
+    transformer: (x: number, y: number) => number
+  ): FAssetAmountResult {
+    const res = {} as FAssetAmountResult
+    for (let fasset of this.supportedFAssets) {
+      const x = res1[fasset]?.amount ?? 0
+      const y = res2[fasset]?.amount ?? 0
+      res[fasset] = { amount: transformer(x, y) }
+    }
+    return res
+  }
+
+  protected convertFAssetValueResultToFAssetAmountResult(
+    result: FAssetValueResult
+  ): FAssetAmountResult {
+    return Object.fromEntries(Object.entries(result).map(
+      ([fasset, { value }]) => [ fasset, { amount: Number(value) }]
+    )) as FAssetAmountResult
   }
 
   private convertOrmResultToFAssetValueResult<K extends string>(

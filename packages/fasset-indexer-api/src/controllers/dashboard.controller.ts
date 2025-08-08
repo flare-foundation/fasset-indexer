@@ -64,6 +64,12 @@ export class DashboardController {
     return apiResponse(this.service.redemptionDefault(id, FAssetType[fasset]), 200)
   }
 
+  @Get('/tracked-underlying-backing?')
+  @ApiOperation({ summary: 'Total underlying assets tracked by the contracts' })
+  getTrackedUnderlyingBacking(): Promise<ApiResponse<FAssetValueResult>>{
+    return apiResponse(this.service.trackedUnderlyingBacking(), 200)
+  }
+
   //////////////////////////////////////////////////////////////////////
   // agents
 
@@ -239,7 +245,7 @@ export class DashboardController {
   @Get('/timespan/tracked-underlying-backing-ratio?')
   @ApiOperation({ summary: 'Timespan of the ratio between issued FAssets and backed Assets' })
   @ApiQuery({ name: "timestamps", type: Number, isArray: true })
-  getUTrackedUnderlyingBackingRatioTimespan(
+  getTrackedUnderlyingBackingRatioTimespan(
     @Query('timestamps') timestamps: string | string[]
   ): Promise<ApiResponse<FAssetTimespan<number>>>{
     const ts = this.parseTimestamps(timestamps)
