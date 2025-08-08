@@ -97,6 +97,7 @@ export class XrpIndexer {
     const { Account, Destination } = transaction
     if (this.tracked.has(Account) || this.tracked.has(Destination!)) {
       utransaction = await this.storeTransaction(em, transaction, block)
+      logger.info(`ripple indexer stored transaction ${utransaction.hash}`)
     }
     if (transaction.Memos == null) return
     for (const memo of transaction.Memos) {
@@ -110,6 +111,7 @@ export class XrpIndexer {
         continue
       }
       await this.storeReference(em, reference, utransaction, utransaction.source, block)
+      logger.info(`ripple indexer stored reference ${reference}`)
       break
     }
   }
