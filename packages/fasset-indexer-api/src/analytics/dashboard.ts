@@ -309,13 +309,8 @@ export class DashboardAnalytics extends SharedAnalytics {
   }
 
   async redeemedAggregateTimeSeries(end: number, npoints: number, start?: number): Promise<TimeSeries<bigint>> {
-    const redeemedTs = await this.redeemedTimeSeries(end, npoints, start)
-    const transferredTs = await this.coreVaultTransferredTimeSeries(end, npoints, start)
-    return this.transformTimeSeries(
-      await this.aggregateTimeSeries(redeemedTs),
-      await this.aggregateTimeSeries(transferredTs),
-      sub
-    )
+    const timeseries = await this.redeemedTimeSeries(end, npoints, start)
+    return this.aggregateTimeSeries(timeseries)
   }
 
   async coreVaultInflowAggregateTimeSeries(end: number, npoints: number, start?: number): Promise<TimeSeries<bigint>> {
