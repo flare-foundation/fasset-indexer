@@ -3,7 +3,6 @@ import { uint256, uint64 } from "../../custom/uint"
 import { AgentEventBound, FAssetEventBound } from "./_bound"
 import { EvmAddress } from "../evm/address"
 import { UnderlyingAddress } from "../underlying/address"
-import { AgentVault } from "../agent"
 import { BYTES32_LENGTH } from "../../../config/constants"
 
 
