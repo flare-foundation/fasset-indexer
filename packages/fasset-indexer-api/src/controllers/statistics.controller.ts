@@ -18,7 +18,7 @@ export class StatisticsController {
   getCollateralPoolScore(
     @Query('pool') pool: string,
   ): Promise<ApiResponse<bigint>> {
-    return apiResponse(this.service.collateralPoolScore(pool, unixnow(), DELTA, STAT_LIMIT), 200)
+    return apiResponse(this.service.collateralPoolScore(pool, unixnow(), DELTA, STAT_LIMIT), 200, false)
   }
 
   @Get('redemption-default-wa?')

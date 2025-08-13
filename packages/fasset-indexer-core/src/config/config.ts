@@ -40,7 +40,12 @@ export class ConfigLoader {
     if (this.isNull(type)) {
       return 'safe'
     }
-    if (type == 'none' || type == 'full' || type == 'recreate') {
+    if (
+      type == 'safe'
+      || type == 'none'
+      || type == 'full'
+      || type == 'recreate'
+    ) {
       return type
     }
     throw new Error(`invalid DB_SCHEMA_UPDATE_TYPE value ${type}`)

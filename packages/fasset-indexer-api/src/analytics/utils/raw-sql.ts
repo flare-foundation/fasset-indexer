@@ -98,3 +98,45 @@ SELECT t.fasset, SUM(t.balance_uba) AS total_balance FROM (
 GROUP BY t.fasset
 ORDER BY t.fasset
 `
+
+// postgres-specific query
+export const EXPLORER_TRANSACTIONS = `
+WITH t AS MATERIALIZED (
+  SELECT el.id, el.name, ea.hex, eb.timestamp, et.hash FROM evm_log el
+  JOIN evm_block eb ON eb.index = el.block_index
+  JOIN evm_transaction et ON et.id = el.transaction_id
+  JOIN evm_address ea ON ea.id = et.source_id
+  WHERE el.name IN (
+      'CollateralReserved',
+      'RedemptionRequested',
+      'TransferToCoreVaultStarted',
+      'ReturnFromCoreVaultRequested'
+  )
+  ORDER BY el.block_index
+  LIMIT ? OFFSET ?
+)
+
+SELECT t.name, t.timestamp, t.hex as source, t.hash, cr.agent_vault_address_id as agent_id, cr.value_uba FROM t
+JOIN collateral_reserved cr ON cr.evm_log_id = t.id
+WHERE t.name = 'CollateralReserved'
+
+UNION ALL
+
+SELECT t.name, t.timestamp, t.hex as source, t.hash, rr.agent_vault_address_id as agent_id, rr.value_uba FROM t
+JOIN redemption_requested rr ON rr.evm_log_id = t.id
+WHERE t.name = 'RedemptionRequested'
+
+UNION ALL
+
+SELECT t.name, t.timestamp, t.hex as source, t.hash, tcvs.agent_vault_address_id as agent_id, tcvs.value_uba FROM t
+JOIN transfer_to_core_vault_started tcvs ON tcvs.evm_log_id = t.id
+WHERE t.name = 'TransferToCoreVaultStarted'
+
+UNION ALL
+
+SELECT t.name, t.timestamp, t.hex as source, t.hash, rfcvr.agent_vault_address_id as agent_id, rfcvr.value_uba FROM t
+JOIN return_from_core_vault_requested rfcvr ON rfcvr.evm_log_id = t.id
+WHERE t.name = 'ReturnFromCoreVaultRequested'
+
+ORDER BY timestamp;
+`

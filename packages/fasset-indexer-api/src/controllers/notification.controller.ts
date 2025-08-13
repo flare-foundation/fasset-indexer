@@ -11,7 +11,10 @@ export class NotificationController {
   constructor(private readonly service: NotificationService) {}
 
   @Get('/redemption-payment-status?')
-  getRedemptionPaymentStatus(@Query('redemptionId') redemptionId: number, @Query('fasset') fasset: FAsset): Promise<ApiResponse<any>> {
+  getRedemptionPaymentStatus(
+    @Query('redemptionId') redemptionId: number,
+    @Query('fasset') fasset: FAsset
+  ): Promise<ApiResponse<any>> {
     return apiResponse(this.service.getRedemptionPaymentStatus(redemptionId, FAssetType[fasset]), 200)
   }
 

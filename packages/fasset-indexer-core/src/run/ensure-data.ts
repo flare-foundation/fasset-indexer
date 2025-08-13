@@ -1,5 +1,6 @@
 import { Context } from "../context/context"
-import { AssetManagerSettings } from "../orm/entities"
+import { findOrCreateEntity } from "../orm"
+import { AssetManagerSettings, UnderlyingAddress } from "../orm/entities"
 import { CoreVaultManagerSettings } from "../orm/entities/state/settings"
 import { FASSETS, FAssetType } from "../shared"
 
@@ -30,20 +31,26 @@ async function ensureAssetManagerSettings(context: Context) {
 
 async function ensureCoreVaultManagerSettings(context: Context) {
   const fasset = FAssetType.FXRP
+  const coreVaultManagerAddress = context.fassetTypeToCoreVaultManagerAddress(fasset)
+  const coreVaultManager = context.getCoreVaultManagerContract(coreVaultManagerAddress)
   await context.orm.em.transactional(async em => {
     let coreVaultManagerSettings = await em.findOne(CoreVaultManagerSettings, { fasset })
     if (coreVaultManagerSettings == null) {
-      const coreVaultManagerAddress = context.fassetTypeToCoreVaultManagerAddress(fasset)
-      const coreVaultManager = context.getCoreVaultManagerContract(coreVaultManagerAddress)
       const settings = await coreVaultManager.getSettings()
       coreVaultManagerSettings = em.create(CoreVaultManagerSettings, {
         fasset,
         escrowAmount: settings._escrowAmount,
         minimalAmount: settings._minimalAmount,
         escrowEndTimeSeconds: Number(settings._escrowEndTimeSeconds),
-        chainPaymentFee: settings._fee
+        chainPaymentFee: settings._fee,
+
       })
       em.persist(coreVaultManagerSettings)
+    }
+    if (coreVaultManagerSettings.coreVault == null) {
+      const _coreVault = await coreVaultManager.coreVaultAddress()
+      const coreVault = await findOrCreateEntity(em, UnderlyingAddress, { text: _coreVault })
+      coreVaultManagerSettings.coreVault = coreVault
     }
   })
 }

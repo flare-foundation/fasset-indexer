@@ -1,6 +1,6 @@
 import { Injectable, Inject } from '@nestjs/common'
 import { NotificationAnalytics } from '../analytics/notification'
-import type { ApiContext } from 'src/config/context'
+import type { ApiContext } from '../config/context'
 
 
 @Injectable()

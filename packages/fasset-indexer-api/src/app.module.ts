@@ -8,6 +8,8 @@ import { NotificationController } from './controllers/notification.controller'
 import { DashboardController } from './controllers/dashboard.controller'
 import { StatisticsController } from './controllers/statistics.controller'
 import { MetadataController } from './controllers/metadata.controller'
+import { ExplorerService } from './services/explorer.service'
+import { ExplorerController } from './controllers/explorer.controller'
 import { ApiConfigLoader } from './config/config'
 import { ApiContext } from './config/context'
 import { CACHE_MAX_ENTRIES, CACHE_TTL_MS } from './config/constants'
@@ -22,8 +24,24 @@ const apiContextProvider = {
 }
 
 @Module({
-  imports: [CacheModule.register({ ttl: CACHE_TTL_MS, max: CACHE_MAX_ENTRIES })],
-  controllers: [DashboardController, NotificationController, MetadataController, StatisticsController],
-  providers: [apiContextProvider, DashboardService, NotificationService, MetadataService, StatisticsService]
+  imports: [CacheModule.register({
+    ttl: CACHE_TTL_MS,
+    max: CACHE_MAX_ENTRIES
+  })],
+  controllers: [
+    DashboardController,
+    ExplorerController,
+    NotificationController,
+    MetadataController,
+    StatisticsController
+  ],
+  providers: [
+    apiContextProvider,
+    DashboardService,
+    ExplorerService,
+    NotificationService,
+    MetadataService,
+    StatisticsService
+  ]
 })
 export class FAssetIndexerModule {}

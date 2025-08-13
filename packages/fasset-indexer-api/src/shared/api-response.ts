@@ -28,26 +28,25 @@ export class ApiResponse<T> {
   }
 }
 
-function replaceBigInts(obj: any): any {
-  if (obj === null || obj === undefined) return obj
-  if (typeof obj === 'bigint') return obj.toString()
-  if (typeof obj !== 'object') return obj
-  if (Array.isArray(obj)) {
-    return obj.map(replaceBigInts)
+function getJsonReplacer() {
+  const seen = new WeakSet<object>()
+  return function (_key: string, value: any) {
+    if (typeof value === 'bigint') return value.toString()
+    if (value && typeof value === 'object') {
+      if (seen.has(value)) return undefined
+      seen.add(value)
+    }
+    return value
   }
-  const newObj: any = {}
-  Object.keys(obj).forEach(key => {
-    newObj[key] = replaceBigInts(obj[key])
-  })
-  return newObj
+}
+
+function removeObjectCycles(obj: any) {
+  return JSON.parse(JSON.stringify(obj, getJsonReplacer()))
 }
 
 export async function apiResponse<T>(action: Promise<T>, status: number, sanitize = true): Promise<ApiResponse<T>> {
   try {
-    const resp = await action
-    // @ts-ignore
-    const respStringsToBigints = replaceBigInts(typeof resp.toJSON === 'function' ? resp.toJSON() : resp)
-    return new ApiResponse<T>(respStringsToBigints, status)
+    return new ApiResponse<T>(removeObjectCycles(await action), status)
   } catch (reason) {
     if (sanitize) {
       const message = reason instanceof Error && reason.message ? reason.message : "Server error"

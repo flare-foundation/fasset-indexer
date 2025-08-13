@@ -1,4 +1,5 @@
-import { Entity, Enum, Property } from "@mikro-orm/core"
+import { Entity, Enum, ManyToOne, Property } from "@mikro-orm/core"
+import { UnderlyingAddress } from "../underlying/address"
 import { uint256 } from "../../custom/uint"
 import { FAssetType } from "../../../shared"
 
@@ -29,4 +30,7 @@ export class CoreVaultManagerSettings {
 
   @Property({ type: new uint256() })
   chainPaymentFee!: bigint
+
+  @ManyToOne({ entity: () => UnderlyingAddress, nullable: true })
+  coreVault?: UnderlyingAddress
 }
