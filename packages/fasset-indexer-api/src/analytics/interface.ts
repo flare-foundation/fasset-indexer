@@ -52,47 +52,43 @@ export interface TransactionInfo {
   count?: number
 }
 
-type ResolutionType<T> = {
-  name: string
-  event: T
-}
-
 export interface MintTransactionDetails {
-  event: Entities.CollateralReserved
   underlyingTransaction?: Entities.UnderlyingVoutReference
-  resolution?: ResolutionType<
-      Entities.MintingExecuted
-    | Entities.MintingPaymentDefault
-    | Entities.CollateralReservationDeleted
-  >
+  events: {
+    original: Entities.CollateralReserved
+    resolution?: Entities.MintingExecuted
+      | Entities.MintingPaymentDefault
+      | Entities.CollateralReservationDeleted
+  }
 }
 
 export interface RedeemTransactionDetails {
-  event: Entities.RedemptionRequested
   underlyingTransaction?: Entities.UnderlyingVoutReference
-  resolution?: ResolutionType<
-      Entities.RedemptionRequested
+  events: {
+    original: Entities.RedemptionRequested
+    resolution?: Entities.RedemptionRequested
     | Entities.RedemptionPerformed
     | Entities.RedemptionDefault
     | Entities.RedemptionPaymentBlocked
     | Entities.RedemptionPaymentFailed
-  >
+  }
+
 }
 
 export interface TransferToCoreVaultTransactionDetails {
-  event: Entities.TransferToCoreVaultStarted
   underlyingTransaction?: Entities.UnderlyingVoutReference
-  resolution?: ResolutionType<
-      Entities.TransferToCoreVaultSuccessful
-    | Entities.TransferToCoreVaultDefaulted
-  >
+  events: {
+    original: Entities.TransferToCoreVaultStarted
+    resolution?: Entities.TransferToCoreVaultSuccessful
+      | Entities.TransferToCoreVaultDefaulted
+  }
 }
 
 export interface ReturnFromCoreVaultTransactionDetails {
-  event: Entities.ReturnFromCoreVaultRequested
   underlyingTransaction?: Entities.UnderlyingVoutReference
-  resolution?: ResolutionType<
-      Entities.ReturnFromCoreVaultConfirmed
-    | Entities.ReturnFromCoreVaultCancelled
-  >
+  events: {
+    original: Entities.ReturnFromCoreVaultRequested
+    resolution?: Entities.ReturnFromCoreVaultConfirmed
+      | Entities.ReturnFromCoreVaultCancelled
+  }
 }
