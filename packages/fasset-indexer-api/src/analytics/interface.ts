@@ -52,7 +52,7 @@ export interface TransactionInfo {
   count?: number
 }
 
-export interface MintTransactionDetails {
+export interface MintEventDetails {
   underlyingTransaction?: Entities.UnderlyingVoutReference
   events: {
     original: Entities.CollateralReserved
@@ -62,7 +62,7 @@ export interface MintTransactionDetails {
   }
 }
 
-export interface RedeemTransactionDetails {
+export interface RedeemEventDetails {
   underlyingTransaction?: Entities.UnderlyingVoutReference
   events: {
     original: Entities.RedemptionRequested
@@ -75,7 +75,7 @@ export interface RedeemTransactionDetails {
 
 }
 
-export interface TransferToCoreVaultTransactionDetails {
+export interface TransferToCoreVaultEventDetails {
   underlyingTransaction?: Entities.UnderlyingVoutReference
   events: {
     original: Entities.TransferToCoreVaultStarted
@@ -84,7 +84,7 @@ export interface TransferToCoreVaultTransactionDetails {
   }
 }
 
-export interface ReturnFromCoreVaultTransactionDetails {
+export interface ReturnFromCoreVaultEventDetails {
   underlyingTransaction?: Entities.UnderlyingVoutReference
   events: {
     original: Entities.ReturnFromCoreVaultRequested

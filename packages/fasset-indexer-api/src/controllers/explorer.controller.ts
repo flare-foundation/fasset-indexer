@@ -4,9 +4,9 @@ import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { ExplorerService } from '../services/explorer.service'
 import { apiResponse, ApiResponse } from '../shared/api-response'
 import type {
-  MintTransactionDetails, RedeemTransactionDetails,
-  ReturnFromCoreVaultTransactionDetails,
-  TransactionInfo, TransferToCoreVaultTransactionDetails
+  MintEventDetails, RedeemEventDetails,
+  ReturnFromCoreVaultEventDetails,
+  TransactionInfo, TransferToCoreVaultEventDetails
 } from '../analytics/interface'
 
 
@@ -32,7 +32,7 @@ export class ExplorerController {
   @ApiQuery({ name: 'hash', type: String })
   getMintingTransactionDetails(
     @Query('hash') hash: string,
-  ): Promise<ApiResponse<MintTransactionDetails>> {
+  ): Promise<ApiResponse<MintEventDetails[]>> {
     return apiResponse(this.service.mintingTransactionDetails(hash), 200)
   }
 
@@ -41,7 +41,7 @@ export class ExplorerController {
   @ApiQuery({ name: 'hash', type: String })
   getRedemptionTransactionDetails(
     @Query('hash') hash: string,
-  ): Promise<ApiResponse<RedeemTransactionDetails>> {
+  ): Promise<ApiResponse<RedeemEventDetails[]>> {
     return apiResponse(this.service.redemptionTransactionDetails(hash), 200)
   }
 
@@ -50,7 +50,7 @@ export class ExplorerController {
   @ApiQuery({ name: 'hash', type: String })
   getCoreVaultTransferTransactionDetails(
     @Query('hash') hash: string,
-  ): Promise<ApiResponse<TransferToCoreVaultTransactionDetails>> {
+  ): Promise<ApiResponse<TransferToCoreVaultEventDetails[]>> {
     return apiResponse(this.service.transferToCoreVaultTransactionDetails(hash), 200)
   }
 
@@ -59,7 +59,7 @@ export class ExplorerController {
   @ApiQuery({ name: 'hash', type: String })
   getReturnFromCoreVaultTransactionDetails(
     @Query('hash') hash: string,
-  ): Promise<ApiResponse<ReturnFromCoreVaultTransactionDetails>> {
+  ): Promise<ApiResponse<ReturnFromCoreVaultEventDetails[]>> {
     return apiResponse(this.service.returnFromCoreVaultTransactionDetails(hash), 200)
   }
 

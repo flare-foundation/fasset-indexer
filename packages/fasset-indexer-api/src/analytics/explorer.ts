@@ -31,9 +31,11 @@ export class ExplorerAnalytics {
     return ret
   }
 
-  async mintingTransactionDetails(hash: string): Promise<ExplorerType.MintTransactionDetails> {
+  async mintingTransactionDetails(
+    hash: string
+  ): Promise<ExplorerType.MintEventDetails[]> {
     const em = this.orm.em.fork()
-    const collateralReserved = await em.findOneOrFail(Entities.CollateralReserved,
+    const collateralReservations = await em.find(Entities.CollateralReserved,
       { evmLog: { transaction: { hash }} },
       { populate: [
         'evmLog.block', 'evmLog.transaction.source',
@@ -41,12 +43,79 @@ export class ExplorerAnalytics {
         'minter', 'paymentAddress', 'executor'
       ] }
     )
+    const ret: ExplorerType.MintEventDetails[] = []
+    for (const collateralReserved of collateralReservations) {
+      const details = await this.mintingEventDetails(em, collateralReserved)
+      ret.push(details)
+    }
+    return ret
+  }
+
+  async redemptionTransactionDetails(
+    hash: string
+  ): Promise<ExplorerType.RedeemEventDetails[]> {
+    const em = this.orm.em.fork()
+    const redemptionRequests = await em.find(Entities.RedemptionRequested,
+      { evmLog: { transaction: { hash } } },
+      { populate: [
+        'evmLog.block', 'evmLog.transaction.source',
+        'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager',
+        'redeemer', 'paymentAddress', 'executor'
+      ] })
+    const ret: ExplorerType.RedeemEventDetails[] = []
+    for (const redemptionRequested of redemptionRequests) {
+      const details = await this.redemptionEventDetails(em, redemptionRequested)
+      ret.push(details)
+    }
+    return ret
+  }
+
+  async transferToCoreVaultTransactionDetails(
+    hash: string
+  ): Promise<ExplorerType.TransferToCoreVaultEventDetails[]> {
+    const em = this.orm.em.fork()
+    const transferToCoreVaultRequests = await em.find(Entities.TransferToCoreVaultStarted,
+      { evmLog: { transaction: { hash } } },
+      { populate: [
+        'evmLog.block', 'evmLog.transaction.source',
+        'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
+      ] }
+    )
+    const ret: ExplorerType.TransferToCoreVaultEventDetails[] = []
+    for (const transferToCoreVaultStarted of transferToCoreVaultRequests) {
+      const details = await this.transferToCoreVaultEventDetails(em, transferToCoreVaultStarted)
+      ret.push(details)
+    }
+    return ret
+  }
+
+  async returnFromCoreVaultTransactionDetails(
+    hash: string
+  ): Promise<ExplorerType.ReturnFromCoreVaultEventDetails[]> {
+    const em = this.orm.em.fork()
+    const returnFromCoreVaultRequests = await em.find(Entities.ReturnFromCoreVaultRequested,
+      { evmLog: { transaction: { hash }} }, { populate: [
+        'evmLog.block', 'evmLog.transaction.source',
+        'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
+      ] }
+    )
+    const ret: ExplorerType.ReturnFromCoreVaultEventDetails[] = []
+    for (const returnFromCoreVaultRequested of returnFromCoreVaultRequests) {
+      const details = await this.returnFromCoreVaultEventDetails(em, returnFromCoreVaultRequested)
+      ret.push(details)
+    }
+    return ret
+  }
+
+  protected async mintingEventDetails(
+    em: EntityManager, collateralReserved: Entities.CollateralReserved
+  ): Promise<ExplorerType.MintEventDetails> {
     const underlyingTransaction = await this.getUnderlyingTransaction(
       em, collateralReserved.fasset,
       collateralReserved.paymentReference,
       collateralReserved.paymentAddress.text
     )
-    const resp: ExplorerType.MintTransactionDetails = {
+    const resp: ExplorerType.MintEventDetails = {
       events: { original: collateralReserved }, underlyingTransaction
     }
     // find resolution event
@@ -71,22 +140,16 @@ export class ExplorerAnalytics {
     return resp
   }
 
-  async redemptionTransactionDetails(hash: string): Promise<ExplorerType.RedeemTransactionDetails> {
-    const em = this.orm.em.fork()
-    const redemptionRequested = await em.findOneOrFail(Entities.RedemptionRequested,
-      { evmLog: { transaction: { hash } } },
-      { populate: [
-        'evmLog.block', 'evmLog.transaction.source',
-        'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager',
-        'redeemer', 'paymentAddress', 'executor'
-      ] })
+  protected async redemptionEventDetails(
+    em: EntityManager, redemptionRequested: Entities.RedemptionRequested
+  ): Promise<ExplorerType.RedeemEventDetails> {
     const underlyingTransaction = await this.getUnderlyingTransaction(
       em, redemptionRequested.fasset,
       redemptionRequested.paymentReference,
       redemptionRequested.paymentAddress.text,
       redemptionRequested.agentVault.underlyingAddress.text
     )
-    const resp: ExplorerType.RedeemTransactionDetails = {
+    const resp: ExplorerType.RedeemEventDetails = {
       events: { original: redemptionRequested }, underlyingTransaction
     }
     // find resolution event
@@ -117,15 +180,9 @@ export class ExplorerAnalytics {
     return resp
   }
 
-  async transferToCoreVaultTransactionDetails(hash: string): Promise<ExplorerType.TransferToCoreVaultTransactionDetails> {
-    const em = this.orm.em.fork()
-    const transferToCoreVaultStarted = await em.findOneOrFail(Entities.TransferToCoreVaultStarted,
-      { evmLog: { transaction: { hash } } },
-      { populate: [
-        'evmLog.block', 'evmLog.transaction.source',
-        'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
-      ] }
-    )
+  protected async transferToCoreVaultEventDetails(
+    em: EntityManager, transferToCoreVaultStarted: Entities.TransferToCoreVaultStarted
+  ): Promise<ExplorerType.TransferToCoreVaultEventDetails> {
     const redemptionRequested = await em.findOneOrFail(Entities.RedemptionRequested, {
       fasset: transferToCoreVaultStarted.fasset,
       requestId: transferToCoreVaultStarted.transferRedemptionRequestId
@@ -136,7 +193,7 @@ export class ExplorerAnalytics {
       redemptionRequested.paymentAddress.text,
       transferToCoreVaultStarted.agentVault.underlyingAddress.text
     )
-    const resp: ExplorerType.TransferToCoreVaultTransactionDetails = {
+    const resp: ExplorerType.TransferToCoreVaultEventDetails = {
       events: { original: transferToCoreVaultStarted }, underlyingTransaction
     }
     // find resolution event
@@ -155,14 +212,9 @@ export class ExplorerAnalytics {
     return resp
   }
 
-  async returnFromCoreVaultTransactionDetails(hash: string): Promise<ExplorerType.ReturnFromCoreVaultTransactionDetails> {
-    const em = this.orm.em.fork()
-    const returnFromCoreVaultRequested = await em.findOneOrFail(Entities.ReturnFromCoreVaultRequested,
-      { evmLog: { transaction: { hash }} }, { populate: [
-        'evmLog.block', 'evmLog.transaction.source',
-        'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
-      ] }
-    )
+  protected async returnFromCoreVaultEventDetails(
+    em: EntityManager, returnFromCoreVaultRequested: Entities.ReturnFromCoreVaultRequested
+  ): Promise<ExplorerType.ReturnFromCoreVaultEventDetails> {
     const coreVault = await this.getCoreVaultAddress(em, returnFromCoreVaultRequested.fasset)
     const underlyingTransaction = await this.getUnderlyingTransaction(
       em, returnFromCoreVaultRequested.fasset,
@@ -170,7 +222,7 @@ export class ExplorerAnalytics {
       returnFromCoreVaultRequested.agentVault.underlyingAddress.text,
       coreVault
     )
-    const resp: ExplorerType.ReturnFromCoreVaultTransactionDetails = {
+    const resp: ExplorerType.ReturnFromCoreVaultEventDetails = {
       events: { original: returnFromCoreVaultRequested }, underlyingTransaction
     }
     // find resolution event
