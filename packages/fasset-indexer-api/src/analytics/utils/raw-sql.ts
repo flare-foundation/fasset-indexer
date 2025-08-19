@@ -104,7 +104,7 @@ SELECT et.hash, el.name, eb.timestamp, eaa.hex as agent_vault, am.name as agent_
   UNION ALL
   SELECT rr.evm_log_id, rr.agent_vault_address_id, rr.value_uba, rr.redeemer_id as user_id FROM redemption_requested rr
   FULL JOIN transfer_to_core_vault_started tc ON rr.fasset = tc.fasset AND rr.request_id = tc.transfer_redemption_request_id
-  WHERE tc.evm_log_id = NULL
+  WHERE tc.evm_log_id IS NULL
   UNION ALL
   SELECT tc.evm_log_id, tc.agent_vault_address_id, tc.value_uba, NULL as user_id FROM transfer_to_core_vault_started tc
   UNION ALL
@@ -139,7 +139,7 @@ SELECT COUNT(evm_log_id) as cnt FROM (
   UNION ALL
   SELECT rr.evm_log_id, rr.redeemer_id as user_id FROM redemption_requested rr
   FULL JOIN transfer_to_core_vault_started tc ON rr.fasset = tc.fasset AND rr.request_id = tc.transfer_redemption_request_id
-  WHERE tc.evm_log_id = NULL
+  WHERE tc.evm_log_id IS NULL
 ) t
 JOIN evm_address ea ON t.user_id = ea.id
 WHERE ea.hex = ?
