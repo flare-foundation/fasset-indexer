@@ -17,7 +17,7 @@ async function runWatchdog() {
   })
 
   logger.info('ensuring configuration integrity...')
-  await ensureConfigIntegrity(context)
+  await ensureConfigIntegrity(context, false)
   logger.info('starting watchdog...')
   await watchdog.run()
 }

@@ -7,9 +7,10 @@ import { logger } from "../logger"
 import type { JsonRpcApiProvider } from "ethers"
 
 
-export async function ensureConfigIntegrity(context: Context, updateName?: string): Promise<void> {
+export async function ensureConfigIntegrity(context: Context, updates: boolean, updateName?: string): Promise<void> {
   await ensureChainIntegrity(context)
   await ensureDatabaseIntegrity(context)
+  if (!updates) return
   await ensureUpdateIndexerIntegrity(context, updateName)
 }
 
