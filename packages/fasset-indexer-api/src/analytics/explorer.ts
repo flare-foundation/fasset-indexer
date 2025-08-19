@@ -29,11 +29,11 @@ export class ExplorerAnalytics {
       (isuser || isagent) ? [user ?? agent, limit, offset] : [limit, offset]
     ) as SQL.ExplorerTransactionsOrmResult[]
     const info: ExplorerType.TransactionInfo[] = []
-    for (const { name, timestamp, source, hash, agent_vault, agent_name, value_uba } of transactions) {
+    for (const { name, timestamp, source, hash, agent_vault, agent_name, value_uba, user } of transactions) {
       const transactionType = this.eventNameToTransactionType(name)
       info.push({
         name: ExplorerType.TransactionType[transactionType] as any,
-        agentVault: agent_vault, agentName: agent_name,
+        agentVault: agent_vault, agentName: agent_name, user,
         timestamp, origin: source, hash, value: BigInt(value_uba)
       })
     }

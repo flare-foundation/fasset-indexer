@@ -110,6 +110,7 @@ SELECT et.hash, el.name, eb.timestamp, eaa.hex as agent_vault, am.name as agent_
   UNION ALL
   SELECT rc.evm_log_id, rc.agent_vault_address_id, rc.value_uba, NULL as user_id FROM return_from_core_vault_requested rc
 ) t
+FULL JOIN evm_address eau ON eau.id = t.user_id
 JOIN evm_log el ON el.id = t.evm_log_id
 JOIN evm_block eb ON eb.index = el.block_index
 JOIN evm_transaction et ON et.id = el.transaction_id
@@ -118,7 +119,6 @@ JOIN evm_address eao ON eao.id = et.source_id
 JOIN agent_vault av ON av.address_id = t.agent_vault_address_id
 JOIN agent_owner ao ON av.vaults = ao.id
 JOIN agent_manager am ON am.address_id = ao.agents
-FULL JOIN evm_address eau ON eau.id = t.user_id
 ${user ? 'WHERE eau.hex = ?' : ''}
 ${agent ? 'WHERE eaa.hex = ?' : ''}
 ORDER BY el.block_index DESC
@@ -158,6 +158,6 @@ WHERE eaa.hex = ?
 `
 
 export type ExplorerTransactionsOrmResult = {
-  name: string, timestamp: number, source: string,
+  name: string, timestamp: number, source: string, user: string,
   hash: string, agent_vault: string, agent_name: string, value_uba: string
 }

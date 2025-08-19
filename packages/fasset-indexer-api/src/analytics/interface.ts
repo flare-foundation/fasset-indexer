@@ -50,6 +50,7 @@ export interface TransactionsInfo {
 export interface TransactionInfo {
   name: keyof typeof TransactionType
   origin: string
+  user?: string
   hash: string
   timestamp: number
   value: bigint
