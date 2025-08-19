@@ -76,7 +76,7 @@ services:
     ports:
       - "${API_PORT}:3000"
   db-postgres:
-    image: postgres:16
+    image: postgres:16.8
     container_name: ${COMPOSE_PROJECT_NAME}-db
     profiles: ["core", "watchdog", "api", "ripple", "dogecoin"]
     environment:
