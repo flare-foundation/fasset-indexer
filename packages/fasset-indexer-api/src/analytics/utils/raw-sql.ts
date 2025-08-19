@@ -6,7 +6,6 @@ with cpt as (
     select collateral_pool_token_id
     from agent_vault
 )
-
 select
     a.hex as address,
     tb.token_id as token,
@@ -99,44 +98,66 @@ GROUP BY t.fasset
 ORDER BY t.fasset
 `
 
-// postgres-specific query
-export const EXPLORER_TRANSACTIONS = `
-WITH t AS MATERIALIZED (
-  SELECT el.id, el.name, ea.hex, eb.timestamp, et.hash FROM evm_log el
-  JOIN evm_block eb ON eb.index = el.block_index
-  JOIN evm_transaction et ON et.id = el.transaction_id
-  JOIN evm_address ea ON ea.id = et.source_id
-  WHERE el.name IN (
-      'CollateralReserved',
-      'RedemptionRequested',
-      'TransferToCoreVaultStarted',
-      'ReturnFromCoreVaultRequested'
-  )
-  ORDER BY el.block_index
-  LIMIT ? OFFSET ?
-)
-
-SELECT t.name, t.timestamp, t.hex as source, t.hash, cr.agent_vault_address_id as agent_id, cr.value_uba FROM t
-JOIN collateral_reserved cr ON cr.evm_log_id = t.id
-WHERE t.name = 'CollateralReserved'
-
-UNION ALL
-
-SELECT t.name, t.timestamp, t.hex as source, t.hash, rr.agent_vault_address_id as agent_id, rr.value_uba FROM t
-JOIN redemption_requested rr ON rr.evm_log_id = t.id
-WHERE t.name = 'RedemptionRequested'
-
-UNION ALL
-
-SELECT t.name, t.timestamp, t.hex as source, t.hash, tcvs.agent_vault_address_id as agent_id, tcvs.value_uba FROM t
-JOIN transfer_to_core_vault_started tcvs ON tcvs.evm_log_id = t.id
-WHERE t.name = 'TransferToCoreVaultStarted'
-
-UNION ALL
-
-SELECT t.name, t.timestamp, t.hex as source, t.hash, rfcvr.agent_vault_address_id as agent_id, rfcvr.value_uba FROM t
-JOIN return_from_core_vault_requested rfcvr ON rfcvr.evm_log_id = t.id
-WHERE t.name = 'ReturnFromCoreVaultRequested'
-
-ORDER BY timestamp;
+export const EXPLORER_TRANSACTIONS = (user: boolean, agent: boolean) => `
+SELECT et.hash, el.name, eb.timestamp, eaa.hex as agent_vault, am.name as agent_name, eau.hex as user, eao.hex as source, t.value_uba FROM (
+  SELECT cr.evm_log_id, cr.agent_vault_address_id, cr.value_uba, cr.minter_id as user_id FROM collateral_reserved cr
+  UNION ALL
+  SELECT rr.evm_log_id, rr.agent_vault_address_id, rr.value_uba, rr.redeemer_id as user_id FROM redemption_requested rr
+  FULL JOIN transfer_to_core_vault_started tc ON rr.fasset = tc.fasset AND rr.request_id = tc.transfer_redemption_request_id
+  WHERE tc.evm_log_id = NULL
+  UNION ALL
+  SELECT tc.evm_log_id, tc.agent_vault_address_id, tc.value_uba, NULL as user_id FROM transfer_to_core_vault_started tc
+  UNION ALL
+  SELECT rc.evm_log_id, rc.agent_vault_address_id, rc.value_uba, NULL as user_id FROM return_from_core_vault_requested rc
+) t
+JOIN evm_log el ON el.id = t.evm_log_id
+JOIN evm_block eb ON eb.index = el.block_index
+JOIN evm_transaction et ON et.id = el.transaction_id
+JOIN evm_address eaa ON eaa.id = t.agent_vault_address_id
+JOIN evm_address eao ON eao.id = et.source_id
+JOIN agent_vault av ON av.address_id = t.agent_vault_address_id
+JOIN agent_owner ao ON av.vaults = ao.id
+JOIN agent_manager am ON am.address_id = ao.agents
+FULL JOIN evm_address eau ON eau.id = t.user_id
+${user ? 'WHERE eau.hex = ?' : ''}
+${agent ? 'WHERE eaa.hex = ?' : ''}
+ORDER BY el.block_index DESC
+LIMIT ? OFFSET ?
 `
+
+// postgresql-specific query
+export const EXPLORER_TRANSACTION_COUNT = `
+SELECT SUM(reltuples::bigint) AS cnt FROM pg_class
+WHERE relkind = 'r' AND relname IN (
+  'collateral_reserved', 'redemption_requested', 'return_from_core_vault_requested'
+);
+`
+
+export const EXPLORER_TRANSACTION_USER_COUNT = `
+SELECT COUNT(evm_log_id) as cnt FROM (
+  SELECT cr.evm_log_id, cr.minter_id as user_id FROM collateral_reserved cr
+  UNION ALL
+  SELECT rr.evm_log_id, rr.redeemer_id as user_id FROM redemption_requested rr
+  FULL JOIN transfer_to_core_vault_started tc ON rr.fasset = tc.fasset AND rr.request_id = tc.transfer_redemption_request_id
+  WHERE tc.evm_log_id = NULL
+) t
+JOIN evm_address ea ON t.user_id = ea.id
+WHERE ea.hex = ?
+`
+
+export const EXPLORER_TRANSACTION_AGENT_COUNT = `
+SELECT COUNT(evm_log_id) AS cnt FROM (
+  SELECT cr.evm_log_id, cr.agent_vault_address_id FROM collateral_reserved cr
+  UNION ALL
+  SELECT rr.evm_log_id, rr.agent_vault_address_id FROM redemption_requested rr
+  UNION ALL
+  SELECT rc.evm_log_id, rc.agent_vault_address_id FROM return_from_core_vault_requested rc
+) t
+JOIN evm_address eaa ON eaa.id = t.agent_vault_address_id
+WHERE eaa.hex = ?
+`
+
+export type ExplorerTransactionsOrmResult = {
+  name: string, timestamp: number, source: string,
+  hash: string, agent_vault: string, agent_name: string, value_uba: string
+}

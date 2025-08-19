@@ -1,39 +1,51 @@
 import { ContractLookup, FAssetType } from "fasset-indexer-core"
 import * as Entities from "fasset-indexer-core/entities"
 import * as ExplorerType from "./interface"
-import { EXPLORER_TRANSACTIONS } from "./utils/raw-sql"
+import * as SQL from "./utils/raw-sql"
 import type { EntityManager, ORM } from "fasset-indexer-core/orm"
 
 
 export class ExplorerAnalytics {
   protected lookup: ContractLookup
-  private agentNameCache = new Map<number, Entities.AgentVault>()
   private coreVaultCache = new Map<FAssetType, string>()
 
-  constructor(public readonly orm: ORM, public readonly chain: string, addressesJson?: string) {
+  constructor(
+    public readonly orm: ORM,
+    public readonly chain: string,
+    addressesJson?: string
+  ) {
     this.lookup = new ContractLookup(chain, addressesJson)
   }
 
-  async transactions(limit: number, offset: number): Promise<ExplorerType.TransactionInfo[]> {
+  async transactions(
+    limit: number, offset: number,
+    user?: string, agent?: string
+  ): Promise<ExplorerType.TransactionsInfo> {
     const em = this.orm.em.fork()
-    const transactions = await em.getConnection('read').execute(EXPLORER_TRANSACTIONS, [limit, offset]) as {
-      name: string, timestamp: number, source: string, hash: string, agent_id: number, value_uba: string
-    }[]
-    const ret = []
-    for (const { name, timestamp, source, hash, agent_id, value_uba } of transactions) {
-      const agent = await this.getAgentVault(em, agent_id)
+    const isuser = user != null
+    const isagent = agent != null
+    const transactions = await em.getConnection('read').execute(
+      SQL.EXPLORER_TRANSACTIONS(isuser, isagent),
+      (isuser || isagent) ? [user ?? agent, limit, offset] : [limit, offset]
+    ) as SQL.ExplorerTransactionsOrmResult[]
+    const info: ExplorerType.TransactionInfo[] = []
+    for (const { name, timestamp, source, hash, agent_vault, agent_name, value_uba } of transactions) {
       const transactionType = this.eventNameToTransactionType(name)
-      ret.push({
-        name: ExplorerType.TransactionType[transactionType],
-        agent, timestamp, origin: source, hash, value: BigInt(value_uba)
+      info.push({
+        name: ExplorerType.TransactionType[transactionType] as any,
+        agentVault: agent_vault, agentName: agent_name,
+        timestamp, origin: source, hash, value: BigInt(value_uba)
       })
     }
-    return ret
+    const count = (info.length < limit)
+      ? offset + info.length
+      : await this.getExplorerTransactionCount(em, user, agent)
+    return { transactions: info, count }
   }
 
   async mintingTransactionDetails(
     hash: string
-  ): Promise<ExplorerType.MintEventDetails[]> {
+  ): Promise<ExplorerType.MintTransactionDetails> {
     const em = this.orm.em.fork()
     const collateralReservations = await em.find(Entities.CollateralReserved,
       { evmLog: { transaction: { hash }} },
@@ -43,17 +55,17 @@ export class ExplorerAnalytics {
         'minter', 'paymentAddress', 'executor'
       ] }
     )
-    const ret: ExplorerType.MintEventDetails[] = []
+    const flows: ExplorerType.MintEventDetails[] = []
     for (const collateralReserved of collateralReservations) {
       const details = await this.mintingEventDetails(em, collateralReserved)
-      ret.push(details)
+      flows.push(details)
     }
-    return ret
+    return { flows }
   }
 
   async redemptionTransactionDetails(
     hash: string
-  ): Promise<ExplorerType.RedeemEventDetails[]> {
+  ): Promise<ExplorerType.RedeemTransactionDetails> {
     const em = this.orm.em.fork()
     const redemptionRequests = await em.find(Entities.RedemptionRequested,
       { evmLog: { transaction: { hash } } },
@@ -62,17 +74,19 @@ export class ExplorerAnalytics {
         'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager',
         'redeemer', 'paymentAddress', 'executor'
       ] })
-    const ret: ExplorerType.RedeemEventDetails[] = []
+    const flows: ExplorerType.RedeemEventDetails[] = []
     for (const redemptionRequested of redemptionRequests) {
       const details = await this.redemptionEventDetails(em, redemptionRequested)
-      ret.push(details)
+      flows.push(details)
     }
-    return ret
+    const redemptionRequestIncompletes = await em.find(Entities.RedemptionRequestIncomplete,
+      { evmLog: { transaction: { hash } }}, { populate: [ 'evmLog.block', 'redeemer' ] })
+    return { flows, flags: redemptionRequestIncompletes }
   }
 
   async transferToCoreVaultTransactionDetails(
     hash: string
-  ): Promise<ExplorerType.TransferToCoreVaultEventDetails[]> {
+  ): Promise<ExplorerType.TransferToCoreVaultTransactionDetails> {
     const em = this.orm.em.fork()
     const transferToCoreVaultRequests = await em.find(Entities.TransferToCoreVaultStarted,
       { evmLog: { transaction: { hash } } },
@@ -81,17 +95,17 @@ export class ExplorerAnalytics {
         'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
       ] }
     )
-    const ret: ExplorerType.TransferToCoreVaultEventDetails[] = []
+    const flows: ExplorerType.TransferToCoreVaultEventDetails[] = []
     for (const transferToCoreVaultStarted of transferToCoreVaultRequests) {
       const details = await this.transferToCoreVaultEventDetails(em, transferToCoreVaultStarted)
-      ret.push(details)
+      flows.push(details)
     }
-    return ret
+    return { flows }
   }
 
   async returnFromCoreVaultTransactionDetails(
     hash: string
-  ): Promise<ExplorerType.ReturnFromCoreVaultEventDetails[]> {
+  ): Promise<ExplorerType.RetrunFromCoreVaultTransactionDetails> {
     const em = this.orm.em.fork()
     const returnFromCoreVaultRequests = await em.find(Entities.ReturnFromCoreVaultRequested,
       { evmLog: { transaction: { hash }} }, { populate: [
@@ -99,12 +113,12 @@ export class ExplorerAnalytics {
         'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
       ] }
     )
-    const ret: ExplorerType.ReturnFromCoreVaultEventDetails[] = []
+    const flows: ExplorerType.ReturnFromCoreVaultEventDetails[] = []
     for (const returnFromCoreVaultRequested of returnFromCoreVaultRequests) {
       const details = await this.returnFromCoreVaultEventDetails(em, returnFromCoreVaultRequested)
-      ret.push(details)
+      flows.push(details)
     }
-    return ret
+    return { flows }
   }
 
   protected async mintingEventDetails(
@@ -241,6 +255,19 @@ export class ExplorerAnalytics {
     return resp
   }
 
+  async getExplorerTransactionCount(em: EntityManager, user?: string, agent?: string): Promise<number> {
+    let query = null
+    if (user != null) {
+      query = SQL.EXPLORER_TRANSACTION_USER_COUNT
+    } else if (agent != null) {
+      query = SQL.EXPLORER_TRANSACTION_AGENT_COUNT
+    } else {
+      query = SQL.EXPLORER_TRANSACTION_COUNT
+    }
+    const resp = await em.getConnection('read').execute(query, [user ?? agent])
+    return Number(resp[0]?.cnt)
+  }
+
   protected async getUnderlyingTransaction(
     em: EntityManager, fasset: FAssetType, reference: string, target: string, source?: string
   ): Promise<Entities.UnderlyingVoutReference | null> {
@@ -264,18 +291,6 @@ export class ExplorerAnalytics {
       default:
         throw new Error(`event name ${name} cannot be mapped to transaction type`)
     }
-  }
-
-  private async getAgentVault(em: EntityManager, id: number): Promise<Entities.AgentVault> {
-    if (!this.agentNameCache.has(id)) {
-      const vault = await em.findOne(Entities.AgentVault,
-        { address: id }, { populate: [
-          'owner.manager', 'address', 'underlyingAddress', 'collateralPool'
-        ] }
-      )
-      this.agentNameCache.set(id, vault)
-    }
-    return this.agentNameCache.get(id) ?? null
   }
 
   private async getCoreVaultAddress(em: EntityManager, fasset: FAssetType): Promise<string> {

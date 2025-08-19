@@ -4,9 +4,11 @@ import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { ExplorerService } from '../services/explorer.service'
 import { apiResponse, ApiResponse } from '../shared/api-response'
 import type {
-  MintEventDetails, RedeemEventDetails,
-  ReturnFromCoreVaultEventDetails,
-  TransactionInfo, TransferToCoreVaultEventDetails
+  MintTransactionDetails,
+  RedeemTransactionDetails,
+  RetrunFromCoreVaultTransactionDetails,
+  TransferToCoreVaultTransactionDetails,
+  TransactionsInfo,
 } from '../analytics/interface'
 
 
@@ -20,11 +22,15 @@ export class ExplorerController {
   @ApiOperation({ summary: 'Transactions tracked by the FAsset explorer' })
   @ApiQuery({ name: 'limit', type: Number })
   @ApiQuery({ name: "offset", type: Number })
+  @ApiQuery({ name: 'user', type: String, required: false })
+  @ApiQuery({ name: 'agent', type: String, required: false })
   getTransactions(
     @Query('limit', ParseIntPipe) limit: number,
     @Query('offset', ParseIntPipe) offset: number,
-  ): Promise<ApiResponse<TransactionInfo[]>> {
-    return apiResponse(this.service.transactions(limit, offset), 200)
+    @Query('user') user?: string,
+    @Query('agent') agent?: string
+  ): Promise<ApiResponse<TransactionsInfo>> {
+    return apiResponse(this.service.transactions(limit, offset, user, agent), 200)
   }
 
   @Get('transactions-details/minting')
@@ -32,7 +38,7 @@ export class ExplorerController {
   @ApiQuery({ name: 'hash', type: String })
   getMintingTransactionDetails(
     @Query('hash') hash: string,
-  ): Promise<ApiResponse<MintEventDetails[]>> {
+  ): Promise<ApiResponse<MintTransactionDetails>> {
     return apiResponse(this.service.mintingTransactionDetails(hash), 200)
   }
 
@@ -41,7 +47,7 @@ export class ExplorerController {
   @ApiQuery({ name: 'hash', type: String })
   getRedemptionTransactionDetails(
     @Query('hash') hash: string,
-  ): Promise<ApiResponse<RedeemEventDetails[]>> {
+  ): Promise<ApiResponse<RedeemTransactionDetails>> {
     return apiResponse(this.service.redemptionTransactionDetails(hash), 200)
   }
 
@@ -50,7 +56,7 @@ export class ExplorerController {
   @ApiQuery({ name: 'hash', type: String })
   getCoreVaultTransferTransactionDetails(
     @Query('hash') hash: string,
-  ): Promise<ApiResponse<TransferToCoreVaultEventDetails[]>> {
+  ): Promise<ApiResponse<TransferToCoreVaultTransactionDetails>> {
     return apiResponse(this.service.transferToCoreVaultTransactionDetails(hash), 200)
   }
 
@@ -59,7 +65,7 @@ export class ExplorerController {
   @ApiQuery({ name: 'hash', type: String })
   getReturnFromCoreVaultTransactionDetails(
     @Query('hash') hash: string,
-  ): Promise<ApiResponse<ReturnFromCoreVaultEventDetails[]>> {
+  ): Promise<ApiResponse<RetrunFromCoreVaultTransactionDetails>> {
     return apiResponse(this.service.returnFromCoreVaultTransactionDetails(hash), 200)
   }
 

@@ -42,15 +42,30 @@ export enum TransactionType {
   ReturnFromCV = 3
 }
 
+export interface TransactionsInfo {
+  transactions: TransactionInfo[]
+  count: number
+}
+
 export interface TransactionInfo {
   name: keyof typeof TransactionType
   origin: string
   hash: string
   timestamp: number
   value: bigint
-  agent: Entities.AgentVault
-  count?: number
+  agentVault: string
+  agentName: string
 }
+
+interface TransactionDetails<T,U> {
+  flows: T[]
+  flags?: U
+}
+
+export type MintTransactionDetails = TransactionDetails<MintEventDetails, void>
+export type RedeemTransactionDetails = TransactionDetails<RedeemEventDetails, Entities.RedemptionRequestIncomplete[]>
+export type TransferToCoreVaultTransactionDetails = TransactionDetails<TransferToCoreVaultEventDetails, void>
+export type RetrunFromCoreVaultTransactionDetails = TransactionDetails<ReturnFromCoreVaultEventDetails, void>
 
 export interface MintEventDetails {
   underlyingTransaction?: Entities.UnderlyingVoutReference

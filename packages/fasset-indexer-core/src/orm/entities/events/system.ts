@@ -2,7 +2,7 @@ import { Entity, ManyToOne, Property } from "@mikro-orm/core"
 import { FAssetEventBound } from "./_bound"
 import { EvmAddress } from "../evm/address"
 import { CollateralTypeAdded } from "./token"
-import { uint256, uint64 } from "../../custom/uint"
+import { uint64 } from "../../custom/uint"
 
 
 @Entity()
