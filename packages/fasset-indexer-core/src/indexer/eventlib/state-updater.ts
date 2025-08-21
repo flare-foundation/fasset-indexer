@@ -49,7 +49,7 @@ export class StateUpdater extends EventStorer {
   protected async ensureAgentWorker(em: EntityManager, manager: AgentManager): Promise<AgentOwner> {
     let agentWorker = await em.findOne(AgentOwner, { manager })
     if (agentWorker === null) {
-      const address = await this.context.contracts.agentOwnerRegistryContract.getWorkAddress(manager.address.hex)
+      const address = await this.context.contracts.agentOwnerRegistry.getWorkAddress(manager.address.hex)
       const evmAddress = await findOrCreateEntity(em, EvmAddress, { hex: address })
       agentWorker = em.create(AgentOwner, { address: evmAddress, manager })
     }
@@ -63,9 +63,9 @@ export class StateUpdater extends EventStorer {
       agentManager = em.create(AgentManager, { address: managerEvmAddress })
     }
     if (full && agentManager.name === undefined) {
-      agentManager.name = await this.context.contracts.agentOwnerRegistryContract.getAgentName(manager)
-      agentManager.description = await this.context.contracts.agentOwnerRegistryContract.getAgentDescription(manager)
-      agentManager.iconUrl = await this.context.contracts.agentOwnerRegistryContract.getAgentIconUrl(manager)
+      agentManager.name = await this.context.contracts.agentOwnerRegistry.getAgentName(manager)
+      agentManager.description = await this.context.contracts.agentOwnerRegistry.getAgentDescription(manager)
+      agentManager.iconUrl = await this.context.contracts.agentOwnerRegistry.getAgentIconUrl(manager)
     }
     return agentManager
   }

@@ -10,7 +10,7 @@ import type { ConfigLoader } from "../config/config"
 export class Context extends ContractLookup {
   public provider: JsonRpcProvider
   public contracts: {
-    agentOwnerRegistryContract: IAgentOwnerRegistry
+    agentOwnerRegistry: IAgentOwnerRegistry
     priceReader: IPriceReader
   }
 
@@ -18,7 +18,7 @@ export class Context extends ContractLookup {
     super(config.chain, config.addressesJson)
     this.provider = this.getEthersApiProvider(config.rpcUrl, config.rpcApiKey)
     this.contracts = {
-      agentOwnerRegistryContract: this.getAgentOwnerRegistryContract(),
+      agentOwnerRegistry: this.getAgentOwnerRegistryContract(),
       priceReader: this.getPriceReaderContract()
     }
   }
