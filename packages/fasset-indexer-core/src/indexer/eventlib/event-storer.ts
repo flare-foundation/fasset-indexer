@@ -72,7 +72,7 @@ export class EventStorer {
         await this.onAgentSettingChanged(em, evmLog, log.args)
         break
       } case EVENTS.ASSET_MANAGER.AGENT_DESTROYED: {
-        await this.onAgentDestroyed(em, log.args as AssetManager.AgentDestroyedEvent.OutputTuple)
+        await this.onAgentDestroyed(em, log.args)
         break
       } case EVENTS.ASSET_MANAGER.VAULT_COLLATERAL_WITHDRAWAL_ANNOUNCED: {
         await this.onVaultCollateralWithdrawalAnnounced(em, evmLog, log.args)
