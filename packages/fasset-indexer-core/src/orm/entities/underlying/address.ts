@@ -1,4 +1,4 @@
-import { Entity, ManyToOne, PrimaryKey, Property } from "@mikro-orm/core"
+import { Entity, OneToOne, PrimaryKey, Property } from "@mikro-orm/core"
 import { uint256 } from "../../custom/uint"
 
 
@@ -15,7 +15,7 @@ export class UnderlyingAddress {
 @Entity()
 export class UnderlyingBalance {
 
-  @ManyToOne({ entity: () => UnderlyingAddress, primary: true })
+  @OneToOne({ entity: () => UnderlyingAddress, owner: true, primary: true })
   address!: UnderlyingAddress
 
   @Property({ type: new uint256() })

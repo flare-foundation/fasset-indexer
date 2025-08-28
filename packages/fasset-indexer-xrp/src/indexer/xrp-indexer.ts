@@ -4,6 +4,7 @@ import { findOrCreateEntity, getVar, setVar, type EntityManager } from "fasset-i
 import { PaymentReference } from "fasset-indexer-core/utils"
 import { logger } from "fasset-indexer-core/logger"
 import { IXrpMemo, IXrpBlock, IXrpTransaction } from "../client/interface"
+import { XRP_TIMESTAMP_UNIX_OFFSET } from "../constants"
 import type { XrpContext } from "../context"
 
 
@@ -137,7 +138,8 @@ export class XrpIndexer {
 
   private async storeXrpBlock(em: EntityManager, xrpBlock: IXrpBlock): Promise<Entities.UnderlyingBlock> {
     return em.create(Entities.UnderlyingBlock, {
-      hash: xrpBlock.ledger_hash, height: xrpBlock.ledger_index, timestamp: xrpBlock.close_time
+      hash: xrpBlock.ledger_hash, height: xrpBlock.ledger_index,
+      timestamp: xrpBlock.close_time + XRP_TIMESTAMP_UNIX_OFFSET
     })
   }
 
