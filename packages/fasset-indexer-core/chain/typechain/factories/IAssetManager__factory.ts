@@ -8,6 +8,11 @@ import type { IAssetManager, IAssetManagerInterface } from "../IAssetManager";
 const _abi = [
   {
     inputs: [],
+    name: "InvalidAgentVaultAddress",
+    type: "error",
+  },
+  {
+    inputs: [],
     name: "AlreadyInProductionMode",
     type: "error",
   },

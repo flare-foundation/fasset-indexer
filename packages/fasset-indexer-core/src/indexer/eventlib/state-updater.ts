@@ -75,7 +75,7 @@ export class StateUpdater extends EventStorer {
       const assetManager = this.context.fAssetTypeToAssetManagerAddress(agentVault.fasset)
       await updateAgentVaultInfo(this.context, em, assetManager, agentVault.address.hex)
     } catch (e: any) {
-      if (e?.reason === 'InvalidAgentVaultAddress()') {
+      if (e?.reason === 'InvalidAgentVaultAddress()' || e?.data == '0xd68a46c5') {
         return await em.transactional(async (em) => {
           const address = e.invocation.args[0]
           const untrackedAgentVault = em.create(UntrackedAgentVault, { address })

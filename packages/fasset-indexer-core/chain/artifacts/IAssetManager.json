@@ -5,6 +5,11 @@
   "abi": [
     {
       "inputs": [],
+      "name": "InvalidAgentVaultAddress",
+      "type": "error"
+    },
+    {
+      "inputs": [],
       "name": "AlreadyInProductionMode",
       "type": "error"
     },
