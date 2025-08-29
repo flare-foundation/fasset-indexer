@@ -3,7 +3,6 @@ import type {
   IXrpAccountInfoResponse, IXrpAccountTxResponse,
   IXrpBlock, IXrpBlockQueryResponse,
   IXrpLedgerCurrentResponse, IXrpServerInfoResponse,
-  IXrpTransaction,
   IXrpWeirdAfTx
 } from "./interface"
 

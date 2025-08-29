@@ -3,7 +3,6 @@ import { XrpIndexer } from "../indexer/xrp-indexer"
 import { XrpConfigLoader } from "../config/config"
 import { XrpContext } from "../context"
 import { monitor } from "./run-monitor"
-import { fixRippleBlockTimestamp } from "../scripts/fix-ripple-block-timestamps"
 import {
   FIRST_UNHANDLED_XRP_BLOCK_DB_KEY,
   MIN_XRP_BLOCK_NUMBER_DB_KEY
@@ -21,7 +20,6 @@ async function runIndexer() {
   )
   const runner = new IndexerRunner(indexer, 'xrp')
   await Promise.all([
-    fixRippleBlockTimestamp(context),
     monitor(config, context),
     runner.run(config.xrpMinBlockNumber)
   ])
