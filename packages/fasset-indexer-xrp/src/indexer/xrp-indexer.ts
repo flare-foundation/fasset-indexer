@@ -10,6 +10,7 @@ import type { XrpContext } from "../context"
 
 export class XrpIndexer {
   private tracked = new Set<string>()
+  private coreVaultLoaded: boolean = false
 
   constructor(
     public readonly context: XrpContext,
@@ -24,14 +25,6 @@ export class XrpIndexer {
 
   async run(startBlock?: number): Promise<void> {
     return this.runHistoric(startBlock)
-  }
-
-  async updateTrackedAddresses(): Promise<void> {
-    const agents = await this.context.orm.em.fork().findAll(
-      Entities.AgentVault, { populate: [ 'underlyingAddress' ] })
-    for (const agent of agents) {
-      this.tracked.add(agent.underlyingAddress.text)
-    }
   }
 
   async runHistoric(startBlock?: number, endBlock?: number): Promise<void> {
@@ -76,6 +69,12 @@ export class XrpIndexer {
   protected async setFirstUnhandledBlock(block: number): Promise<void> {
     const em = this.context.orm.em.fork()
     await setVar(em, this.firstUnhandledBlockDbKey, block.toString())
+  }
+
+  protected async updateTrackedAddresses(): Promise<void> {
+    const em = this.context.orm.em.fork()
+    await this.updateCoreVaultTracking(em)
+    await this.updateAgentVaultTracking(em)
   }
 
   protected async processBlock(block: IXrpBlock): Promise<void> {
@@ -134,6 +133,25 @@ export class XrpIndexer {
     return findOrCreateEntity(em, Entities.UnderlyingTransaction, {
       hash: transaction.hash, block, value: BigInt(Amount ?? 0), source, target
     })
+  }
+
+  private async updateCoreVaultTracking(em: EntityManager): Promise<void> {
+    if (this.coreVaultLoaded) return
+    const settings = await em.findOne(Entities.CoreVaultManagerSettings,
+      { fasset: FAssetType.FXRP }, { populate: ['coreVault'] }
+    )
+    if (settings != null && settings.coreVault != null) {
+      this.tracked.add(settings.coreVault.text)
+      this.coreVaultLoaded = true
+    }
+  }
+
+  private async updateAgentVaultTracking(em: EntityManager): Promise<void> {
+    const agents = await em.findAll(
+      Entities.AgentVault, { populate: [ 'underlyingAddress' ] })
+    for (const agent of agents) {
+      this.tracked.add(agent.underlyingAddress.text)
+    }
   }
 
   private async storeXrpBlock(em: EntityManager, xrpBlock: IXrpBlock): Promise<Entities.UnderlyingBlock> {
