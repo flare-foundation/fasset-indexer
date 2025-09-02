@@ -130,9 +130,9 @@ export class XrpIndexer {
     if(Destination != null) {
       target = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: Destination })
     }
-    return findOrCreateEntity(em, Entities.UnderlyingTransaction, {
-      hash: transaction.hash, block, value: BigInt(Amount ?? 0), source, target
-    })
+    return findOrCreateEntity(em, Entities.UnderlyingTransaction,
+      { hash: transaction.hash }, {}, { block, value: BigInt(Amount ?? 0), source, target }
+    )
   }
 
   private async updateCoreVaultTracking(em: EntityManager): Promise<void> {
