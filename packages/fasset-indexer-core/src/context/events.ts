@@ -1,26 +1,26 @@
 import { Interface, Log, LogDescription } from "ethers"
 import {
-  IAssetManager__factory, IERC20__factory, ICollateralPool__factory,
-  IPriceChangeEmitter__factory, ICoreVaultManager__factory,
-  IAssetManagerPreUpgrade__factory, ICollateralPoolPreUpgrade__factory
+  IAssetManager__latest__factory, IERC20__factory, ICollateralPool__latest__factory,
+  IAssetManager__initial__factory, ICollateralPool__initial__factory,
+  IPriceChangeEmitter__factory, ICoreVaultManager__factory
 } from "../../chain/typechain"
 import { EVENTS } from "../config/constants"
-import type { IAssetManagerInterface } from "../../chain/typechain/IAssetManager"
-import type { ICollateralPoolInterface } from "../../chain/typechain/ICollateralPool"
+import type { IAssetManager__latestInterface } from "../../chain/typechain/assetManager/IAssetManager__latest"
+import type { ICollateralPool__latestInterface } from "../../chain/typechain/collateralPool/ICollateralPool__latest"
 import type { IPriceChangeEmitterInterface } from "../../chain/typechain/IPriceChangeEmitter"
 import type { IERC20Interface } from "../../chain/typechain/IERC20"
 import type { FAssetIface } from "../shared"
 import type { ICoreVaultManagerInterface } from "../../chain/typechain/ICoreVaultManager"
 // deprecated due to upgrades
-import type { IAssetManagerPreUpgradeInterface } from "../../chain/typechain/IAssetManagerPreUpgrade"
-import type { ICollateralPoolPreUpgradeInterface } from "../../chain/typechain/ICollateralPoolPreUpgrade"
+import type { IAssetManager__initialInterface } from "../../chain/typechain/assetManager/IAssetManager__initial"
+import type { ICollateralPool__initialInterface } from "../../chain/typechain/collateralPool/ICollateralPool__initial"
 
 
 export class EventInterface {
   public interfaces: {
-    assetManagerInterface: [IAssetManagerPreUpgradeInterface, IAssetManagerInterface],
+    assetManagerInterface: [IAssetManager__initialInterface, IAssetManager__latestInterface],
     erc20Interface: [IERC20Interface],
-    collateralPoolInterface: [ICollateralPoolPreUpgradeInterface, ICollateralPoolInterface],
+    collateralPoolInterface: [ICollateralPool__initialInterface, ICollateralPool__latestInterface],
     priceReader: [IPriceChangeEmitterInterface],
     coreVaultManager: [ICoreVaultManagerInterface]
   }
@@ -28,15 +28,15 @@ export class EventInterface {
   constructor() {
     this.interfaces = {
       assetManagerInterface: [
-        IAssetManagerPreUpgrade__factory.createInterface(),
-        IAssetManager__factory.createInterface()
+        IAssetManager__initial__factory.createInterface(),
+        IAssetManager__latest__factory.createInterface()
       ],
       erc20Interface: [
         IERC20__factory.createInterface()
       ],
       collateralPoolInterface: [
-        ICollateralPoolPreUpgrade__factory.createInterface(),
-        ICollateralPool__factory.createInterface()
+        ICollateralPool__initial__factory.createInterface(),
+        ICollateralPool__latest__factory.createInterface()
       ],
       priceReader: [
         IPriceChangeEmitter__factory.createInterface()

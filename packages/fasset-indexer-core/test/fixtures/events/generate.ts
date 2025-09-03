@@ -59,9 +59,10 @@ import type {
   TransferToCoreVaultSuccessfulEvent,
   TransferToCoreVaultDefaultedEvent,
   SettingChangedEvent
-} from "../../../chain/typechain/IAssetManager"
+} from "../../../chain/typechain/assetManager/IAssetManager__latest"
 import type { TransferEvent } from "../../../chain/typechain/IERC20"
 import type { SettingsUpdatedEvent } from "../../../chain/typechain/ICoreVaultManager"
+import type { EmergencyPauseTriggeredEvent } from "../../../chain/typechain/assetManager/IAssetManager__initial"
 import type {
   CPClaimedRewardEvent,
   CPEnteredEvent,
@@ -71,12 +72,11 @@ import type {
   CPFeesWithdrawnEvent,
   CPPaidOutEvent,
   CPSelfCloseExitedEvent
-} from "../../../chain/typechain/ICollateralPool"
+} from "../../../chain/typechain/collateralPool/ICollateralPool__latest"
 import type {
   EnteredEvent,
   ExitedEvent
-} from "../../../chain/typechain/ICollateralPoolPreUpgrade"
-
+} from "../../../chain/typechain/collateralPool/ICollateralPool__initial"
 
 export class EventGeneration {
 
@@ -373,6 +373,10 @@ export class EventGeneration {
       BigInt(randomNumber(11_000, 20_000)),
       BigInt(randomNumber(1, 1e3))
     ]
+  }
+
+  protected async generateEmergencyPauseTriggered(): Promise<EmergencyPauseTriggeredEvent.OutputTuple> {
+    return [ BigInt(randomNumber(100, 100000)) ]
   }
 
   protected async generateCollateralPoolEnter(): Promise<EnteredEvent.OutputTuple> {

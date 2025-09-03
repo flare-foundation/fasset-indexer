@@ -1,4 +1,4 @@
-import { FAssetType } from "../../../src"
+import { EventInterface, FAssetType } from "../../../src"
 import { ORM } from "../../../src/orm"
 import { EvmAddress } from "../../../src/orm/entities/evm/address"
 import { UnderlyingAddress } from "../../../src/orm/entities/underlying/address"
@@ -13,8 +13,12 @@ import type { EventNameToEventArgs } from "./types"
 
 
 export class EventFixture extends EventGeneration {
+  events: EventInterface
 
-  constructor(public readonly orm: ORM) { super(orm) }
+  constructor(public readonly orm: ORM) {
+    super(orm)
+    this.events = new EventInterface()
+  }
 
   async storeInitialCoreVaultManagerSettings(fasset: FAssetType = FAssetType.FXRP): Promise<void> {
     await this.orm.em.transactional(async em => {
@@ -70,7 +74,8 @@ export class EventFixture extends EventGeneration {
   }
 
   async generateEvent(name: keyof EventNameToEventArgs, source?: string, args: any[] = []): Promise<Event> {
-    return { name, args: await this.generateEventArgs(name, args), ...this.generateEventWithoutArgs(source) }
+    const topic = this.events.getEventTopics(name, Object.values(this.events.interfaces).flat())[0]
+    return { name, args: await this.generateEventArgs(name, args), ...this.generateEventWithoutArgs(source), topic }
   }
 
   protected async generateEventArgs<T extends keyof EventNameToEventArgs>(name: T, args: any[]): Promise<EventNameToEventArgs[T]>
@@ -132,6 +137,8 @@ export class EventFixture extends EventGeneration {
         return this.generateAvailableAgentExited()
       } case EVENTS.ASSET_MANAGER.AGENT_ENTERED_AVAILABLE: {
         return this.generateAgentEnteredAvailable()
+      } case EVENTS.ASSET_MANAGER.EMERGENCY_PAUSE_TRIGGERED: {
+        return this.generateEmergencyPauseTriggered()
       } case EVENTS.COLLATERAL_POOL.ENTER: {
         return this.generateCollateralPoolEnter()
       } case EVENTS.COLLATERAL_POOL.EXIT: {

@@ -4,11 +4,51 @@
 
 import { Contract, Interface, type ContractRunner } from "ethers";
 import type {
-  IAssetManagerPreUpgrade,
-  IAssetManagerPreUpgradeInterface,
-} from "../IAssetManagerPreUpgrade";
+  IAssetManager__refactor,
+  IAssetManager__refactorInterface,
+} from "../../assetManager/IAssetManager__refactor";
 
 const _abi = [
+  {
+    inputs: [],
+    name: "InvalidAgentVaultAddress",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "AlreadyInProductionMode",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "GovernedAddressZero",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "GovernedAlreadyInitialized",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "OnlyExecutor",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "OnlyGovernance",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "TimelockInvalidSelector",
+    type: "error",
+  },
+  {
+    inputs: [],
+    name: "TimelockNotAllowedYet",
+    type: "error",
+  },
   {
     anonymous: false,
     inputs: [
@@ -101,25 +141,6 @@ const _abi = [
       },
     ],
     name: "AgentDestroyed",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "agentVault",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "timestamp",
-        type: "uint256",
-      },
-    ],
-    name: "AgentInCCB",
     type: "event",
   },
   {
@@ -308,17 +329,7 @@ const _abi = [
           },
           {
             internalType: "uint256",
-            name: "poolTopupCollateralRatioBIPS",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "poolTopupTokenPriceFactorBIPS",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "handshakeType",
+            name: "redemptionPoolFeeShareBIPS",
             type: "uint256",
           },
         ],
@@ -387,42 +398,11 @@ const _abi = [
       {
         indexed: false,
         internalType: "uint256",
-        name: "ccbMinCollateralRatioBIPS",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
         name: "safetyMinCollateralRatioBIPS",
         type: "uint256",
       },
     ],
     name: "CollateralRatiosChanged",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "agentVault",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "minter",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "collateralReservationId",
-        type: "uint256",
-      },
-    ],
-    name: "CollateralReservationCancelled",
     type: "event",
   },
   {
@@ -454,31 +434,6 @@ const _abi = [
       },
     ],
     name: "CollateralReservationDeleted",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "agentVault",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "minter",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "collateralReservationId",
-        type: "uint256",
-      },
-    ],
-    name: "CollateralReservationRejected",
     type: "event",
   },
   {
@@ -603,12 +558,6 @@ const _abi = [
         indexed: false,
         internalType: "uint256",
         name: "minCollateralRatioBIPS",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "ccbMinCollateralRatioBIPS",
         type: "uint256",
       },
       {
@@ -931,49 +880,6 @@ const _abi = [
         type: "address",
       },
       {
-        indexed: true,
-        internalType: "address",
-        name: "minter",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "uint256",
-        name: "collateralReservationId",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "string[]",
-        name: "minterUnderlyingAddresses",
-        type: "string[]",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "valueUBA",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "feeUBA",
-        type: "uint256",
-      },
-    ],
-    name: "HandshakeRequired",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "agentVault",
-        type: "address",
-      },
-      {
         indexed: false,
         internalType: "bytes32",
         name: "transactionHash",
@@ -1193,9 +1099,9 @@ const _abi = [
       },
       {
         indexed: true,
-        internalType: "uint64",
+        internalType: "uint256",
         name: "requestId",
-        type: "uint64",
+        type: "uint256",
       },
       {
         indexed: false,
@@ -1236,9 +1142,9 @@ const _abi = [
       },
       {
         indexed: true,
-        internalType: "uint64",
+        internalType: "uint256",
         name: "requestId",
-        type: "uint64",
+        type: "uint256",
       },
       {
         indexed: false,
@@ -1279,9 +1185,9 @@ const _abi = [
       },
       {
         indexed: true,
-        internalType: "uint64",
+        internalType: "uint256",
         name: "requestId",
-        type: "uint64",
+        type: "uint256",
       },
       {
         indexed: false,
@@ -1322,9 +1228,9 @@ const _abi = [
       },
       {
         indexed: true,
-        internalType: "uint64",
+        internalType: "uint256",
         name: "requestId",
-        type: "uint64",
+        type: "uint256",
       },
       {
         indexed: false,
@@ -1359,9 +1265,9 @@ const _abi = [
       },
       {
         indexed: true,
-        internalType: "uint64",
+        internalType: "uint256",
         name: "requestId",
-        type: "uint64",
+        type: "uint256",
       },
       {
         indexed: false,
@@ -1390,9 +1296,9 @@ const _abi = [
       },
       {
         indexed: true,
-        internalType: "uint64",
+        internalType: "uint256",
         name: "requestId",
-        type: "uint64",
+        type: "uint256",
       },
       {
         indexed: false,
@@ -1421,86 +1327,6 @@ const _abi = [
       },
     ],
     name: "RedemptionRequestIncomplete",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "agentVault",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "redeemer",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "uint64",
-        name: "requestId",
-        type: "uint64",
-      },
-      {
-        indexed: false,
-        internalType: "string",
-        name: "paymentAddress",
-        type: "string",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "valueUBA",
-        type: "uint256",
-      },
-    ],
-    name: "RedemptionRequestRejected",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "agentVault",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "address",
-        name: "redeemer",
-        type: "address",
-      },
-      {
-        indexed: true,
-        internalType: "uint64",
-        name: "requestId",
-        type: "uint64",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "valueTakenOverUBA",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "newAgentVault",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint64",
-        name: "newRequestId",
-        type: "uint64",
-      },
-    ],
-    name: "RedemptionRequestTakenOver",
     type: "event",
   },
   {
@@ -1856,62 +1682,6 @@ const _abi = [
     anonymous: false,
     inputs: [
       {
-        indexed: false,
-        internalType: "uint256",
-        name: "nextTransferFeeMillionths",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "scheduledAt",
-        type: "uint256",
-      },
-    ],
-    name: "TransferFeeChangeScheduled",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "agentVault",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "recipient",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "agentClaimedUBA",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "poolClaimedUBA",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "remainingUnclaimedEpochs",
-        type: "uint256",
-      },
-    ],
-    name: "TransferFeesClaimed",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
         indexed: true,
         internalType: "address",
         name: "agentVault",
@@ -2063,9 +1833,9 @@ const _abi = [
       },
       {
         indexed: true,
-        internalType: "uint64",
+        internalType: "uint256",
         name: "announcementId",
-        type: "uint64",
+        type: "uint256",
       },
       {
         indexed: false,
@@ -2088,9 +1858,9 @@ const _abi = [
       },
       {
         indexed: true,
-        internalType: "uint64",
+        internalType: "uint256",
         name: "announcementId",
-        type: "uint64",
+        type: "uint256",
       },
     ],
     name: "UnderlyingWithdrawalCancelled",
@@ -2107,9 +1877,9 @@ const _abi = [
       },
       {
         indexed: true,
-        internalType: "uint64",
+        internalType: "uint256",
         name: "announcementId",
-        type: "uint64",
+        type: "uint256",
       },
       {
         indexed: false,
@@ -2216,11 +1986,6 @@ const _abi = [
           },
           {
             internalType: "uint256",
-            name: "ccbMinCollateralRatioBIPS",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
             name: "safetyMinCollateralRatioBIPS",
             type: "uint256",
           },
@@ -2321,78 +2086,6 @@ const _abi = [
       {
         internalType: "uint256",
         name: "_nextRedemptionTicketId",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_agentVault",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "_maxEpochsToClaim",
-        type: "uint256",
-      },
-    ],
-    name: "agentTransferFeeShare",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "_feeShareUBA",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_agentVault",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "_epoch",
-        type: "uint256",
-      },
-    ],
-    name: "agentTransferFeeShareForEpoch",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_agentVault",
-        type: "address",
-      },
-    ],
-    name: "agentUnclaimedTransferFeeEpochs",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "_first",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_count",
         type: "uint256",
       },
     ],
@@ -2547,19 +2240,6 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_collateralReservationId",
-        type: "uint256",
-      },
-    ],
-    name: "approveCollateralReservation",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
     inputs: [],
     name: "assetManagerController",
     outputs: [
@@ -2650,32 +2330,6 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "address",
-        name: "_agentVault",
-        type: "address",
-      },
-    ],
-    name: "buybackAgentCollateral",
-    outputs: [],
-    stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_collateralReservationId",
-        type: "uint256",
-      },
-    ],
-    name: "cancelCollateralReservation",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
         internalType: "bytes",
         name: "_encodedCall",
         type: "bytes",
@@ -2709,45 +2363,6 @@ const _abi = [
     ],
     name: "cancelUnderlyingWithdrawal",
     outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_agentVault",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "_recipient",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "_maxEpochsToClaim",
-        type: "uint256",
-      },
-    ],
-    name: "claimTransferFees",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "_agentClaimedUBA",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_poolClaimedUBA",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_remainingUnclaimedEpochs",
-        type: "uint256",
-      },
-    ],
     stateMutability: "nonpayable",
     type: "function",
   },
@@ -2853,14 +2468,9 @@ const _abi = [
             type: "uint256",
           },
           {
-            internalType: "uint64",
-            name: "handshakeStartTimestamp",
-            type: "uint64",
-          },
-          {
-            internalType: "bytes32",
-            name: "sourceAddressesRoot",
-            type: "bytes32",
+            internalType: "enum CollateralReservationInfo.Status",
+            name: "status",
+            type: "uint8",
           },
         ],
         internalType: "struct CollateralReservationInfo.Data",
@@ -3618,17 +3228,7 @@ const _abi = [
           },
           {
             internalType: "uint256",
-            name: "poolTopupCollateralRatioBIPS",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "poolTopupTokenPriceFactorBIPS",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "handshakeType",
+            name: "redemptionPoolFeeShareBIPS",
             type: "uint256",
           },
         ],
@@ -3646,19 +3246,6 @@ const _abi = [
       },
     ],
     stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "currentTransferFeeEpoch",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
     type: "function",
   },
   {
@@ -4361,19 +3948,6 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "_fee",
-        type: "uint256",
-      },
-    ],
-    name: "fassetTransferFeePaid",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
         components: [
           {
             internalType: "bytes32[]",
@@ -4465,19 +4039,6 @@ const _abi = [
     name: "finishRedemptionWithoutPayment",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "firstClaimableTransferFeeEpoch",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
     type: "function",
   },
   {
@@ -4780,11 +4341,6 @@ const _abi = [
           },
           {
             internalType: "uint256",
-            name: "ccbStartTimestamp",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
             name: "liquidationStartTimestamp",
             type: "uint256",
           },
@@ -4835,17 +4391,7 @@ const _abi = [
           },
           {
             internalType: "uint256",
-            name: "poolTopupCollateralRatioBIPS",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "poolTopupTokenPriceFactorBIPS",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "handshakeType",
+            name: "redemptionPoolFeeShareBIPS",
             type: "uint256",
           },
         ],
@@ -5201,11 +4747,6 @@ const _abi = [
           },
           {
             internalType: "uint256",
-            name: "ccbMinCollateralRatioBIPS",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
             name: "safetyMinCollateralRatioBIPS",
             type: "uint256",
           },
@@ -5262,11 +4803,6 @@ const _abi = [
           {
             internalType: "uint256",
             name: "minCollateralRatioBIPS",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "ccbMinCollateralRatioBIPS",
             type: "uint256",
           },
           {
@@ -5350,19 +4886,6 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "getCoreVaultTransferFeeBIPS",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
     name: "getCoreVaultTransferTimeExtensionSeconds",
     outputs: [
       {
@@ -5431,7 +4954,7 @@ const _abi = [
           },
           {
             internalType: "address",
-            name: "whitelist",
+            name: "__whitelist",
             type: "address",
           },
           {
@@ -5501,12 +5024,12 @@ const _abi = [
           },
           {
             internalType: "uint16",
-            name: "minUnderlyingBackingBIPS",
+            name: "__minUnderlyingBackingBIPS",
             type: "uint16",
           },
           {
             internalType: "bool",
-            name: "requireEOAAddressProof",
+            name: "__requireEOAAddressProof",
             type: "bool",
           },
           {
@@ -5536,7 +5059,7 @@ const _abi = [
           },
           {
             internalType: "uint32",
-            name: "redemptionDefaultFactorPoolBIPS",
+            name: "__redemptionDefaultFactorPoolBIPS",
             type: "uint32",
           },
           {
@@ -5576,7 +5099,7 @@ const _abi = [
           },
           {
             internalType: "uint64",
-            name: "ccbTimeSeconds",
+            name: "__ccbTimeSeconds",
             type: "uint64",
           },
           {
@@ -5591,12 +5114,12 @@ const _abi = [
           },
           {
             internalType: "uint64",
-            name: "buybackCollateralFactorBIPS",
+            name: "__buybackCollateralFactorBIPS",
             type: "uint64",
           },
           {
             internalType: "uint64",
-            name: "announcedUnderlyingConfirmationMinSeconds",
+            name: "__announcedUnderlyingConfirmationMinSeconds",
             type: "uint64",
           },
           {
@@ -5626,7 +5149,7 @@ const _abi = [
           },
           {
             internalType: "uint64",
-            name: "poolExitAndTopupChangeTimelockSeconds",
+            name: "poolExitCRChangeTimelockSeconds",
             type: "uint64",
           },
           {
@@ -5671,32 +5194,32 @@ const _abi = [
           },
           {
             internalType: "uint64",
-            name: "cancelCollateralReservationAfterSeconds",
+            name: "__cancelCollateralReservationAfterSeconds",
             type: "uint64",
           },
           {
             internalType: "uint16",
-            name: "rejectOrCancelCollateralReservationReturnFactorBIPS",
+            name: "__rejectOrCancelCollateralReservationReturnFactorBIPS",
             type: "uint16",
           },
           {
             internalType: "uint64",
-            name: "rejectRedemptionRequestWindowSeconds",
+            name: "__rejectRedemptionRequestWindowSeconds",
             type: "uint64",
           },
           {
             internalType: "uint64",
-            name: "takeOverRedemptionRequestWindowSeconds",
+            name: "__takeOverRedemptionRequestWindowSeconds",
             type: "uint64",
           },
           {
             internalType: "uint32",
-            name: "rejectedRedemptionDefaultFactorVaultCollateralBIPS",
+            name: "__rejectedRedemptionDefaultFactorVaultCollateralBIPS",
             type: "uint32",
           },
           {
             internalType: "uint32",
-            name: "rejectedRedemptionDefaultFactorPoolBIPS",
+            name: "__rejectedRedemptionDefaultFactorPoolBIPS",
             type: "uint32",
           },
         ],
@@ -5714,6 +5237,25 @@ const _abi = [
     outputs: [
       {
         internalType: "contract IWNat",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_managementAddress",
+        type: "address",
+      },
+    ],
+    name: "getWorkAddress",
+    outputs: [
+      {
+        internalType: "address",
         name: "",
         type: "address",
       },
@@ -5836,7 +5378,7 @@ const _abi = [
           },
         ],
         internalType: "struct IBalanceDecreasingTransaction.Proof",
-        name: "_transaction",
+        name: "_payment",
         type: "tuple",
       },
       {
@@ -5846,19 +5388,6 @@ const _abi = [
       },
     ],
     name: "illegalPaymentChallenge",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address[]",
-        name: "_agentVaults",
-        type: "address[]",
-      },
-    ],
-    name: "initAgentsMintingHistory",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -6242,147 +5771,6 @@ const _abi = [
   {
     inputs: [
       {
-        components: [
-          {
-            internalType: "bytes32[]",
-            name: "merkleProof",
-            type: "bytes32[]",
-          },
-          {
-            components: [
-              {
-                internalType: "bytes32",
-                name: "attestationType",
-                type: "bytes32",
-              },
-              {
-                internalType: "bytes32",
-                name: "sourceId",
-                type: "bytes32",
-              },
-              {
-                internalType: "uint64",
-                name: "votingRound",
-                type: "uint64",
-              },
-              {
-                internalType: "uint64",
-                name: "lowestUsedTimestamp",
-                type: "uint64",
-              },
-              {
-                components: [
-                  {
-                    internalType: "bytes32",
-                    name: "transactionId",
-                    type: "bytes32",
-                  },
-                  {
-                    internalType: "uint256",
-                    name: "inUtxo",
-                    type: "uint256",
-                  },
-                  {
-                    internalType: "uint256",
-                    name: "utxo",
-                    type: "uint256",
-                  },
-                ],
-                internalType: "struct IPayment.RequestBody",
-                name: "requestBody",
-                type: "tuple",
-              },
-              {
-                components: [
-                  {
-                    internalType: "uint64",
-                    name: "blockNumber",
-                    type: "uint64",
-                  },
-                  {
-                    internalType: "uint64",
-                    name: "blockTimestamp",
-                    type: "uint64",
-                  },
-                  {
-                    internalType: "bytes32",
-                    name: "sourceAddressHash",
-                    type: "bytes32",
-                  },
-                  {
-                    internalType: "bytes32",
-                    name: "sourceAddressesRoot",
-                    type: "bytes32",
-                  },
-                  {
-                    internalType: "bytes32",
-                    name: "receivingAddressHash",
-                    type: "bytes32",
-                  },
-                  {
-                    internalType: "bytes32",
-                    name: "intendedReceivingAddressHash",
-                    type: "bytes32",
-                  },
-                  {
-                    internalType: "int256",
-                    name: "spentAmount",
-                    type: "int256",
-                  },
-                  {
-                    internalType: "int256",
-                    name: "intendedSpentAmount",
-                    type: "int256",
-                  },
-                  {
-                    internalType: "int256",
-                    name: "receivedAmount",
-                    type: "int256",
-                  },
-                  {
-                    internalType: "int256",
-                    name: "intendedReceivedAmount",
-                    type: "int256",
-                  },
-                  {
-                    internalType: "bytes32",
-                    name: "standardPaymentReference",
-                    type: "bytes32",
-                  },
-                  {
-                    internalType: "bool",
-                    name: "oneToOne",
-                    type: "bool",
-                  },
-                  {
-                    internalType: "uint8",
-                    name: "status",
-                    type: "uint8",
-                  },
-                ],
-                internalType: "struct IPayment.ResponseBody",
-                name: "responseBody",
-                type: "tuple",
-              },
-            ],
-            internalType: "struct IPayment.Response",
-            name: "data",
-            type: "tuple",
-          },
-        ],
-        internalType: "struct IPayment.Proof",
-        name: "_payment",
-        type: "tuple",
-      },
-    ],
-    name: "proveUnderlyingAddressEOA",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
         internalType: "uint256",
         name: "_lots",
         type: "uint256",
@@ -6468,9 +5856,9 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "uint64",
+        internalType: "uint256",
         name: "_lots",
-        type: "uint64",
+        type: "uint256",
       },
       {
         internalType: "string",
@@ -6762,16 +6150,6 @@ const _abi = [
             name: "executorFeeNatWei",
             type: "uint256",
           },
-          {
-            internalType: "uint64",
-            name: "rejectionTimestamp",
-            type: "uint64",
-          },
-          {
-            internalType: "uint64",
-            name: "takeOverTimestamp",
-            type: "uint64",
-          },
         ],
         internalType: "struct RedemptionRequestInfo.Data",
         name: "",
@@ -6779,19 +6157,6 @@ const _abi = [
       },
     ],
     stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_collateralReservationId",
-        type: "uint256",
-      },
-    ],
-    name: "rejectCollateralReservation",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -6883,32 +6248,6 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "_redemptionRequestId",
-        type: "uint256",
-      },
-    ],
-    name: "rejectRedemptionRequest",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_redemptionRequestId",
-        type: "uint256",
-      },
-    ],
-    name: "rejectedRedemptionPaymentDefault",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
         internalType: "address",
         name: "_agentVault",
         type: "address",
@@ -6932,9 +6271,9 @@ const _abi = [
         type: "address",
       },
       {
-        internalType: "uint64",
+        internalType: "uint256",
         name: "_lots",
-        type: "uint64",
+        type: "uint256",
       },
     ],
     name: "requestReturnFromCoreVault",
@@ -6963,11 +6302,6 @@ const _abi = [
         internalType: "address payable",
         name: "_executor",
         type: "address",
-      },
-      {
-        internalType: "string[]",
-        name: "_minterUnderlyingAddresses",
-        type: "string[]",
       },
     ],
     name: "reserveCollateral",
@@ -7256,19 +6590,6 @@ const _abi = [
         type: "uint256",
       },
     ],
-    name: "setAnnouncedUnderlyingConfirmationMinSeconds",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
     name: "setAttestationWindowSeconds",
     outputs: [],
     stateMutability: "nonpayable",
@@ -7283,32 +6604,6 @@ const _abi = [
       },
     ],
     name: "setAverageBlockTimeMS",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setCancelCollateralReservationAfterSeconds",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setCcbTimeSeconds",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -7393,11 +6688,6 @@ const _abi = [
       {
         internalType: "uint256",
         name: "_minCollateralRatioBIPS",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_ccbMinCollateralRatioBIPS",
         type: "uint256",
       },
       {
@@ -7511,19 +6801,6 @@ const _abi = [
       },
     ],
     name: "setCoreVaultRedemptionFeeBIPS",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_transferFeeBIPS",
-        type: "uint256",
-      },
-    ],
-    name: "setCoreVaultTransferFeeBIPS",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -7658,19 +6935,6 @@ const _abi = [
         type: "uint256",
       },
     ],
-    name: "setMinUnderlyingBackingBips",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
     name: "setMinUpdateRepeatTimeSeconds",
     outputs: [],
     stateMutability: "nonpayable",
@@ -7728,7 +6992,7 @@ const _abi = [
         type: "uint256",
       },
     ],
-    name: "setPoolExitAndTopupChangeTimelockSeconds",
+    name: "setPoolExitCRChangeTimelockSeconds",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -7750,16 +7014,11 @@ const _abi = [
     inputs: [
       {
         internalType: "uint256",
-        name: "_vaultFactor",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_poolFactor",
+        name: "_value",
         type: "uint256",
       },
     ],
-    name: "setRedemptionDefaultFactorBips",
+    name: "setRedemptionDefaultFactorVaultCollateralBIPS",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -7786,63 +7045,6 @@ const _abi = [
       },
     ],
     name: "setRedemptionPaymentExtensionSeconds",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setRejectOrCancelCollateralReservationReturnFactorBIPS",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setRejectRedemptionRequestWindowSeconds",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_vaultF",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_poolF",
-        type: "uint256",
-      },
-    ],
-    name: "setRejectedRedemptionDefaultFactorBips",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setTakeOverRedemptionRequestWindowSeconds",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -7885,39 +7087,8 @@ const _abi = [
         name: "_value",
         type: "uint256",
       },
-      {
-        internalType: "uint256",
-        name: "_scheduledAt",
-        type: "uint256",
-      },
-    ],
-    name: "setTransferFeeMillionths",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
     ],
     name: "setVaultCollateralBuyForFlareFactorBIPS",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_value",
-        type: "address",
-      },
-    ],
-    name: "setWhitelist",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -7945,11 +7116,6 @@ const _abi = [
     ],
     name: "startLiquidation",
     outputs: [
-      {
-        internalType: "uint8",
-        name: "_liquidationStatus",
-        type: "uint8",
-      },
       {
         internalType: "uint256",
         name: "_liquidationStartTs",
@@ -8012,225 +7178,13 @@ const _abi = [
       },
       {
         internalType: "uint256",
-        name: "_redemptionRequestId",
-        type: "uint256",
-      },
-    ],
-    name: "takeOverRedemptionRequest",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "terminate",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "terminated",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_agentVault",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "_epoch",
-        type: "uint256",
-      },
-    ],
-    name: "transferFeeCalculationDataForAgent",
-    outputs: [
-      {
-        components: [
-          {
-            internalType: "uint256",
-            name: "totalFees",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "cumulativeMinted",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "totalCumulativeMinted",
-            type: "uint256",
-          },
-          {
-            internalType: "bool",
-            name: "claimable",
-            type: "bool",
-          },
-          {
-            internalType: "bool",
-            name: "claimed",
-            type: "bool",
-          },
-        ],
-        internalType: "struct ITransferFees.TransferFeeCalculationDataForAgent",
-        name: "",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_epoch",
-        type: "uint256",
-      },
-    ],
-    name: "transferFeeEpochData",
-    outputs: [
-      {
-        components: [
-          {
-            internalType: "uint256",
-            name: "startTs",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "endTs",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "totalFees",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "claimedFees",
-            type: "uint256",
-          },
-          {
-            internalType: "bool",
-            name: "claimable",
-            type: "bool",
-          },
-          {
-            internalType: "bool",
-            name: "expired",
-            type: "bool",
-          },
-        ],
-        internalType: "struct ITransferFees.TransferFeeEpochData",
-        name: "",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "transferFeeMillionths",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "transferFeeSettings",
-    outputs: [
-      {
-        components: [
-          {
-            internalType: "uint256",
-            name: "transferFeeMillionths",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "firstEpochStartTs",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "epochDuration",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "maxUnexpiredEpochs",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "firstClaimableEpoch",
-            type: "uint256",
-          },
-        ],
-        internalType: "struct ITransferFees.TransferFeeSettings",
-        name: "",
-        type: "tuple",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_agentVault",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
         name: "_amountUBA",
         type: "uint256",
       },
     ],
     name: "transferToCoreVault",
     outputs: [],
-    stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_amountUBA",
-        type: "uint256",
-      },
-    ],
-    name: "transferToCoreVaultFee",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "_transferFeeNatWei",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -8553,19 +7507,19 @@ const _abi = [
   },
 ] as const;
 
-export class IAssetManagerPreUpgrade__factory {
+export class IAssetManager__refactor__factory {
   static readonly abi = _abi;
-  static createInterface(): IAssetManagerPreUpgradeInterface {
-    return new Interface(_abi) as IAssetManagerPreUpgradeInterface;
+  static createInterface(): IAssetManager__refactorInterface {
+    return new Interface(_abi) as IAssetManager__refactorInterface;
   }
   static connect(
     address: string,
     runner?: ContractRunner | null
-  ): IAssetManagerPreUpgrade {
+  ): IAssetManager__refactor {
     return new Contract(
       address,
       _abi,
       runner
-    ) as unknown as IAssetManagerPreUpgrade;
+    ) as unknown as IAssetManager__refactor;
   }
 }

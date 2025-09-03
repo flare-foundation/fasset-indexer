@@ -8,7 +8,7 @@ import { updateAgentVaultInfo } from "../utils"
 import { findOrCreateEntity } from "../../orm"
 import { EventStorer } from "./event-storer"
 import type { EntityManager } from "@mikro-orm/knex"
-import type { AgentVaultCreatedEvent } from "../../../chain/typechain/IAssetManager"
+import type { AgentVaultCreatedEvent } from "../../../chain/typechain/assetManager/IAssetManager__latest"
 import type { Context } from "../../context/context"
 import type { EvmLog } from "../../orm/entities/evm/log"
 

@@ -4,121 +4,11 @@
 
 import { Contract, Interface, type ContractRunner } from "ethers";
 import type {
-  ICollateralPool,
-  ICollateralPoolInterface,
-} from "../ICollateralPool";
+  ICollateralPool__initial,
+  ICollateralPool__initialInterface,
+} from "../../collateralPool/ICollateralPool__initial";
 
 const _abi = [
-  {
-    inputs: [],
-    name: "AlreadyInitialized",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "AmountOfCollateralTooLow",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "AmountOfNatTooLow",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "CannotDestroyPoolWithIssuedTokens",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "CollateralAfterExitTooLow",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "CollateralRatioFallsBelowExitCR",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "DepositResultsInZeroTokens",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "FAssetAllowanceTooSmall",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "FreeFAssetBalanceTooSmall",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "InvalidRecipientAddress",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "OnlyAgent",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "OnlyAssetManager",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "OnlyInternalUse",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "PaymentLargerThanFeeDebt",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "PoolTokenAlreadySet",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "RedemptionRequiresClosingTooManyTickets",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "SentAmountTooLow",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "TokenBalanceTooLow",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "TokenShareIsZero",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "TokenSupplyAfterExitTooLow",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "WithdrawZeroFAsset",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "ZeroFAssetDebtPayment",
-    type: "error",
-  },
   {
     anonymous: false,
     inputs: [
@@ -135,7 +25,26 @@ const _abi = [
         type: "uint8",
       },
     ],
-    name: "CPClaimedReward",
+    name: "ClaimedReward",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "donator",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amountNatWei",
+        type: "uint256",
+      },
+    ],
+    name: "Donated",
     type: "event",
   },
   {
@@ -162,11 +71,23 @@ const _abi = [
       {
         indexed: false,
         internalType: "uint256",
+        name: "addedFAssetFeesUBA",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "newFAssetFeeDebt",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
         name: "timelockExpiresAt",
         type: "uint256",
       },
     ],
-    name: "CPEntered",
+    name: "Entered",
     type: "event",
   },
   {
@@ -190,65 +111,45 @@ const _abi = [
         name: "receivedNatWei",
         type: "uint256",
       },
-    ],
-    name: "CPExited",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "tokenHolder",
-        type: "address",
-      },
       {
         indexed: false,
-        internalType: "int256",
-        name: "newFeeDebtUBA",
-        type: "int256",
-      },
-    ],
-    name: "CPFeeDebtChanged",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "tokenHolder",
-        type: "address",
+        internalType: "uint256",
+        name: "receviedFAssetFeesUBA",
+        type: "uint256",
       },
       {
         indexed: false,
         internalType: "uint256",
-        name: "paidFeesUBA",
+        name: "closedFAssetsUBA",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "newFAssetFeeDebt",
         type: "uint256",
       },
     ],
-    name: "CPFeeDebtPaid",
+    name: "Exited",
     type: "event",
   },
   {
     anonymous: false,
     inputs: [
       {
-        indexed: true,
-        internalType: "address",
-        name: "tokenHolder",
-        type: "address",
+        indexed: false,
+        internalType: "uint256",
+        name: "burnedTokensWei",
+        type: "uint256",
       },
       {
         indexed: false,
         internalType: "uint256",
-        name: "withdrawnFeesUBA",
+        name: "redeemedFAssetUBA",
         type: "uint256",
       },
     ],
-    name: "CPFeesWithdrawn",
+    name: "IncompleteSelfCloseExit",
     type: "event",
   },
   {
@@ -273,38 +174,7 @@ const _abi = [
         type: "uint256",
       },
     ],
-    name: "CPPaidOut",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: true,
-        internalType: "address",
-        name: "tokenHolder",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "burnedTokensWei",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "receivedNatWei",
-        type: "uint256",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "closedFAssetsUBA",
-        type: "uint256",
-      },
-    ],
-    name: "CPSelfCloseExited",
+    name: "PaidOut",
     type: "event",
   },
   {
@@ -497,7 +367,18 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [],
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_fAssets",
+        type: "uint256",
+      },
+      {
+        internalType: "bool",
+        name: "_enterWithFullFassets",
+        type: "bool",
+      },
+    ],
     name: "enter",
     outputs: [
       {
@@ -521,12 +402,22 @@ const _abi = [
         name: "_tokenShare",
         type: "uint256",
       },
+      {
+        internalType: "enum ICollateralPool.TokenExitType",
+        name: "_exitType",
+        type: "uint8",
+      },
     ],
     name: "exit",
     outputs: [
       {
         internalType: "uint256",
         name: "_natShare",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_fassetShare",
         type: "uint256",
       },
     ],
@@ -558,12 +449,22 @@ const _abi = [
         name: "_recipient",
         type: "address",
       },
+      {
+        internalType: "enum ICollateralPool.TokenExitType",
+        name: "_exitType",
+        type: "uint8",
+      },
     ],
     name: "exitTo",
     outputs: [
       {
         internalType: "uint256",
         name: "_natShare",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_fassetShare",
         type: "uint256",
       },
     ],
@@ -581,9 +482,9 @@ const _abi = [
     name: "fAssetFeeDebtOf",
     outputs: [
       {
-        internalType: "int256",
+        internalType: "uint256",
         name: "",
-        type: "int256",
+        type: "uint256",
       },
     ],
     stateMutability: "view",
@@ -790,6 +691,58 @@ const _abi = [
     type: "function",
   },
   {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_value",
+        type: "uint256",
+      },
+    ],
+    name: "setTopupCollateralRatioBIPS",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_value",
+        type: "uint256",
+      },
+    ],
+    name: "setTopupTokenPriceFactorBIPS",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "topupCollateralRatioBIPS",
+    outputs: [
+      {
+        internalType: "uint32",
+        name: "",
+        type: "uint32",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "topupTokenPriceFactorBIPS",
+    outputs: [
+      {
+        internalType: "uint16",
+        name: "",
+        type: "uint16",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "totalCollateral",
     outputs: [
@@ -807,9 +760,9 @@ const _abi = [
     name: "totalFAssetFeeDebt",
     outputs: [
       {
-        internalType: "int256",
+        internalType: "uint256",
         name: "",
-        type: "int256",
+        type: "uint256",
       },
     ],
     stateMutability: "view",
@@ -894,15 +847,19 @@ const _abi = [
   },
 ] as const;
 
-export class ICollateralPool__factory {
+export class ICollateralPool__initial__factory {
   static readonly abi = _abi;
-  static createInterface(): ICollateralPoolInterface {
-    return new Interface(_abi) as ICollateralPoolInterface;
+  static createInterface(): ICollateralPool__initialInterface {
+    return new Interface(_abi) as ICollateralPool__initialInterface;
   }
   static connect(
     address: string,
     runner?: ContractRunner | null
-  ): ICollateralPool {
-    return new Contract(address, _abi, runner) as unknown as ICollateralPool;
+  ): ICollateralPool__initial {
+    return new Contract(
+      address,
+      _abi,
+      runner
+    ) as unknown as ICollateralPool__initial;
   }
 }

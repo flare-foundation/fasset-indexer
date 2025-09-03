@@ -8,9 +8,9 @@ import { EVENTS } from '../../config/constants'
 import type { EntityManager } from "@mikro-orm/knex"
 import type { ORM } from "../../orm/interface"
 import type { Event } from "./event-scraper"
-import type * as AssetManager from "../../../chain/typechain/IAssetManager"
-import type * as CollateralPool from "../../../chain/typechain/ICollateralPool"
-import type * as CollateralPoolPreUpgrade  from "../../../chain/typechain/ICollateralPoolPreUpgrade"
+import type * as AssetManager from "../../../chain/typechain/assetManager/IAssetManager__latest"
+import type * as CollateralPool from "../../../chain/typechain/collateralPool/ICollateralPool__latest"
+import type * as CollateralPoolPreUpgrade  from "../../../chain/typechain/collateralPool/ICollateralPool__initial"
 import type * as CoreVaultManager from "../../../chain/typechain/ICoreVaultManager"
 import type * as ERC20 from "../../../chain/typechain/IERC20"
 import type * as PriceChangeEmitter from "../../../chain/typechain/IPriceChangeEmitter"
@@ -19,11 +19,13 @@ import type * as PriceChangeEmitter from "../../../chain/typechain/IPriceChangeE
 export class EventStorer {
   oldCollateralTypeAddedTopic: string
   oldAgentVaultCreatedTopic: string
+  oldEmergencySystemPauseTopic: string
 
   constructor(readonly orm: ORM, public readonly lookup: ContractLookup) {
     const oldIface = this.lookup.interfaces.assetManagerInterface[0]
     this.oldCollateralTypeAddedTopic = this.lookup.getEventTopics(EVENTS.ASSET_MANAGER.COLLATERAL_TYPE_ADDED, [oldIface])[0]
     this.oldAgentVaultCreatedTopic = this.lookup.getEventTopics(EVENTS.ASSET_MANAGER.AGENT_VAULT_CREATED, [oldIface])[0]
+    this.oldEmergencySystemPauseTopic = this.lookup.getEventTopics(EVENTS.ASSET_MANAGER.EMERGENCY_PAUSE_TRIGGERED, [oldIface])[0]
   }
 
   async processEvent(log: Event): Promise<boolean> {
@@ -60,7 +62,7 @@ export class EventStorer {
         await this.onCollateralTypeAdded(em, evmLog, log.args)
         break
       } case EVENTS.ASSET_MANAGER.AGENT_VAULT_CREATED: {
-        if (log.topic === this.oldAgentVaultCreatedTopic) {
+        if (log.topic == this.oldAgentVaultCreatedTopic) {
           log.args = AssetManagerEventMigration.migrateAgentVaultCreated(log.args)
         }
         await this.onAgentVaultCreated(em, evmLog, log.args)
@@ -210,6 +212,9 @@ export class EventStorer {
         await this.onCoreVaultRedemptionRequested(em, evmLog, log.args)
         break
       } case EVENTS.ASSET_MANAGER.EMERGENCY_PAUSE_TRIGGERED: {
+        if (log.topic == this.oldEmergencySystemPauseTopic) {
+          log.args = AssetManagerEventMigration.migrateEmergencyPauseTriggered(log.args)
+        }
         await this.onEmergencyPauseTriggered(em, evmLog, log.args)
         break
       } case EVENTS.ASSET_MANAGER.EMERGENCY_PAUSE_CANCELLED: {
@@ -1302,8 +1307,10 @@ export class EventStorer {
     logArgs: AssetManager.EmergencyPauseTriggeredEvent.OutputTuple
   ): Promise<Entities.EmergencyPauseTriggered> {
     const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
-    const [ pausedUntil ] = logArgs
-    return em.create(Entities.EmergencyPauseTriggered, { evmLog, fasset, pausedUntil })
+    const [ level, pausedUntil ] = logArgs
+    return em.create(Entities.EmergencyPauseTriggered, {
+      evmLog, fasset, level: Number(level), pausedUntil
+    })
   }
 
   protected async onEmergencyPauseCancelled(

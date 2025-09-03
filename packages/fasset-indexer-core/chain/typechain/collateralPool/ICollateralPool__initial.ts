@@ -21,7 +21,7 @@ import type {
   TypedLogDescription,
   TypedListener,
   TypedContractMethod,
-} from "./common";
+} from "../common";
 
 export declare namespace RewardsV2Interface {
   export type RewardClaimStruct = {
@@ -57,7 +57,7 @@ export declare namespace RewardsV2Interface {
   };
 }
 
-export interface ICollateralPoolPreUpgradeInterface extends Interface {
+export interface ICollateralPool__initialInterface extends Interface {
   getFunction(
     nameOrSignature:
       | "agentVault"
@@ -508,11 +508,11 @@ export namespace PaidOutEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export interface ICollateralPoolPreUpgrade extends BaseContract {
-  connect(runner?: ContractRunner | null): ICollateralPoolPreUpgrade;
+export interface ICollateralPool__initial extends BaseContract {
+  connect(runner?: ContractRunner | null): ICollateralPool__initial;
   waitForDeployment(): Promise<this>;
 
-  interface: ICollateralPoolPreUpgradeInterface;
+  interface: ICollateralPool__initialInterface;
 
   queryFilter<TCEvent extends TypedContractEvent>(
     event: TCEvent,

@@ -3,14 +3,12 @@
 /* eslint-disable */
 
 import { Contract, Interface, type ContractRunner } from "ethers";
-import type { IAssetManager, IAssetManagerInterface } from "../IAssetManager";
+import type {
+  IAssetManager__latest,
+  IAssetManager__latestInterface,
+} from "../../assetManager/IAssetManager__latest";
 
 const _abi = [
-  {
-    inputs: [],
-    name: "InvalidAgentVaultAddress",
-    type: "error",
-  },
   {
     inputs: [],
     name: "AlreadyInProductionMode",
@@ -787,6 +785,12 @@ const _abi = [
   {
     anonymous: false,
     inputs: [
+      {
+        indexed: false,
+        internalType: "enum EmergencyPause.Level",
+        name: "level",
+        type: "uint8",
+      },
       {
         indexed: false,
         internalType: "uint256",
@@ -3545,6 +3549,11 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "enum EmergencyPause.Level",
+        name: "_level",
+        type: "uint8",
+      },
+      {
         internalType: "bool",
         name: "_byGovernance",
         type: "bool",
@@ -3565,6 +3574,11 @@ const _abi = [
     name: "emergencyPauseDetails",
     outputs: [
       {
+        internalType: "enum EmergencyPause.Level",
+        name: "_level",
+        type: "uint8",
+      },
+      {
         internalType: "uint256",
         name: "_pausedUntil",
         type: "uint256",
@@ -3584,41 +3598,13 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "bool",
-        name: "_byGovernance",
-        type: "bool",
-      },
-      {
-        internalType: "uint256",
-        name: "_duration",
-        type: "uint256",
-      },
-    ],
-    name: "emergencyPauseTransfers",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
     inputs: [],
-    name: "emergencyPauseTransfersDetails",
+    name: "emergencyPauseLevel",
     outputs: [
       {
-        internalType: "uint256",
-        name: "_pausedUntil",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_totalPauseDuration",
-        type: "uint256",
-      },
-      {
-        internalType: "bool",
-        name: "_pausedByGovernance",
-        type: "bool",
+        internalType: "enum EmergencyPause.Level",
+        name: "",
+        type: "uint8",
       },
     ],
     stateMutability: "view",
@@ -4546,7 +4532,7 @@ const _abi = [
     outputs: [
       {
         internalType: "address[]",
-        name: "_agentVaults",
+        name: "_agents",
         type: "address[]",
       },
       {
@@ -4641,7 +4627,7 @@ const _abi = [
     outputs: [
       {
         internalType: "address[]",
-        name: "_agentVaults",
+        name: "_agents",
         type: "address[]",
       },
       {
@@ -5465,6 +5451,25 @@ const _abi = [
       },
     ],
     name: "isPoolTokenSuffixReserved",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "contract IERC20",
+        name: "_token",
+        type: "address",
+      },
+    ],
+    name: "isVaultCollateralToken",
     outputs: [
       {
         internalType: "bool",
@@ -6310,20 +6315,6 @@ const _abi = [
       },
     ],
     stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "resetEmergencyPauseTotalDuration",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "resetEmergencyPauseTransfersTotalDuration",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -7186,32 +7177,6 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "transfersEmergencyPaused",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "transfersEmergencyPausedUntil",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
     name: "unpauseMinting",
     outputs: [],
     stateMutability: "nonpayable",
@@ -7504,15 +7469,19 @@ const _abi = [
   },
 ] as const;
 
-export class IAssetManager__factory {
+export class IAssetManager__latest__factory {
   static readonly abi = _abi;
-  static createInterface(): IAssetManagerInterface {
-    return new Interface(_abi) as IAssetManagerInterface;
+  static createInterface(): IAssetManager__latestInterface {
+    return new Interface(_abi) as IAssetManager__latestInterface;
   }
   static connect(
     address: string,
     runner?: ContractRunner | null
-  ): IAssetManager {
-    return new Contract(address, _abi, runner) as unknown as IAssetManager;
+  ): IAssetManager__latest {
+    return new Contract(
+      address,
+      _abi,
+      runner
+    ) as unknown as IAssetManager__latest;
   }
 }

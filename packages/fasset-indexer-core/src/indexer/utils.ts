@@ -3,7 +3,7 @@ import { AgentVault } from "../orm/entities/agent"
 import { AgentVaultInfo } from "../orm/entities/state/agent"
 import { UntrackedAgentVault } from "../orm/entities/state/var"
 import type { Context } from "../context/context"
-import type { AgentInfo } from "../../chain/typechain/IAssetManager"
+import type { AgentInfo } from "../../chain/typechain/assetManager/IAssetManager__latest"
 
 
 export async function isUntrackedAgentVault(em: EntityManager, address: string): Promise<boolean> {

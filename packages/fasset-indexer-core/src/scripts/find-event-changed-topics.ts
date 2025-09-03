@@ -1,11 +1,11 @@
 import { Context } from "../context/context"
 import { EVENTS } from "../config"
-import { IAssetManager__factory, IAssetManagerPreUpgrade__factory } from "../../chain/typechain"
+import { IAssetManager__latest__factory, IAssetManager__initial__factory } from "../../chain/typechain"
 import { ConfigLoader } from "../config/config"
 
 
-const iface1 = IAssetManagerPreUpgrade__factory.createInterface()
-const iface2 = IAssetManager__factory.createInterface()
+const iface1 = IAssetManager__initial__factory.createInterface()
+const iface2 = IAssetManager__latest__factory.createInterface()
 
 async function am(context: Context) {
   for (const iface of Object.keys(EVENTS)) {

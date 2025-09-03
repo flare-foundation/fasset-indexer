@@ -38,7 +38,7 @@ import type {
   TransferToCoreVaultSuccessfulEvent,
   TransferToCoreVaultDefaultedEvent,
   SettingChangedEvent
-} from "../../../chain/typechain/IAssetManager"
+} from "../../../chain/typechain/assetManager/IAssetManager__latest"
 import type {
   CPClaimedRewardEvent,
   CPEnteredEvent,
@@ -47,8 +47,9 @@ import type {
   CPFeesWithdrawnEvent,
   CPPaidOutEvent,
   CPSelfCloseExitedEvent
-} from "../../../chain/typechain/ICollateralPool"
-import type { EnteredEvent, ExitedEvent } from "../../../chain/typechain/ICollateralPoolPreUpgrade"
+} from "../../../chain/typechain/collateralPool/ICollateralPool__latest"
+import type { EmergencyPauseTriggeredEvent } from "../../../chain/typechain/assetManager/IAssetManager__initial"
+import type { EnteredEvent, ExitedEvent } from "../../../chain/typechain/collateralPool/ICollateralPool__initial"
 import type { TransferEvent } from "../../../chain/typechain/IERC20"
 import type { SettingsUpdatedEvent } from "../../../chain/typechain/ICoreVaultManager"
 
@@ -84,6 +85,7 @@ export type EventNameToEventArgs = {
   [EVENTS.ASSET_MANAGER.AGENT_ENTERED_AVAILABLE]: AgentAvailableEvent.OutputTuple
   [EVENTS.ASSET_MANAGER.AGENT_PING]: AgentPingEvent.OutputTuple
   [EVENTS.ASSET_MANAGER.AGENT_PING_RESPONSE]: AgentPingResponseEvent.OutputTuple
+  [EVENTS.ASSET_MANAGER.EMERGENCY_PAUSE_TRIGGERED]: EmergencyPauseTriggeredEvent.OutputTuple
   [EVENTS.COLLATERAL_POOL.ENTER]: EnteredEvent.OutputTuple
   [EVENTS.COLLATERAL_POOL.EXIT]: ExitedEvent.OutputTuple
   [EVENTS.ERC20.TRANSFER]: TransferEvent.OutputTuple

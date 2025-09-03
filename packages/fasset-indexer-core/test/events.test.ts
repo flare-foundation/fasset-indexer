@@ -28,7 +28,9 @@ import { TokenBalance } from "../src/orm/entities/state/balance"
 import { EventStorer } from "../src/indexer/eventlib/event-storer"
 import { Context } from "../src/context/context"
 import { EVENTS } from "../src/config/constants"
-import { RedemptionTicketCreated, RedemptionTicketDeleted, RedemptionTicketUpdated } from "../src/orm/entities/events/redemption-ticket"
+import {
+  RedemptionTicketCreated, RedemptionTicketDeleted, RedemptionTicketUpdated
+} from "../src/orm/entities/events/redemption-ticket"
 import { RedemptionTicket } from "../src/orm/entities/state/redemption-ticket"
 import { TestConfigLoader } from "./fixtures/config"
 import {
@@ -37,9 +39,12 @@ import {
   TransferToCoreVaultSuccessful
 } from "../src/orm/entities/events/core-vault"
 import { CoreVaultManagerSettingsUpdated } from "../src/orm/entities/events/core-vault-manager"
-import { AssetManagerSettings } from "../src/orm/entities"
+import { AssetManagerSettings, EmergencyPauseTriggered } from "../src/orm/entities"
 import { CoreVaultManagerSettings } from "../src/orm/entities/state/settings"
-import { CPClaimedReward, CPEntered, CPExited, CPFeeDebtChanged, CPFeeDebtPaid, CPFeesWithdrawn, CPPaidOut, CPSelfCloseExited } from "../src/orm/entities/events/collateral-pool-v2"
+import {
+  CPClaimedReward, CPEntered, CPExited, CPFeeDebtChanged,
+  CPFeeDebtPaid, CPFeesWithdrawn, CPPaidOut, CPSelfCloseExited
+} from "../src/orm/entities/events/collateral-pool-v2"
 
 
 const ASSET_MANAGER_FXRP = "AssetManager_FTestXRP"
@@ -72,7 +77,8 @@ describe("FAsset evm events", () => {
       fasset: FAssetType.FXRP, lotSizeAmg: BigInt(10)
     })
     await em.persistAndFlush(assetManagerSettings)
-    const assetManagerSettingsChanged = await fixture.generateEvent(EVENTS.ASSET_MANAGER.SETTING_CHANGED, assetManager, ['lotSizeAMG'])
+    const assetManagerSettingsChanged = await fixture.generateEvent(
+      EVENTS.ASSET_MANAGER.SETTING_CHANGED, assetManager, ['lotSizeAMG'])
     await storer.processEventUnsafe(em, assetManagerSettingsChanged)
     assetManagerSettings = await em.findOneOrFail(AssetManagerSettings, { fasset: FAssetType.FXRP })
     expect(assetManagerSettings).to.exist
@@ -129,7 +135,8 @@ describe("FAsset evm events", () => {
     const assetManager = context.getContractAddress(ASSET_MANAGER_FXRP)
     const em = context.orm.em.fork()
     // add initial collateral token type
-    const collateralTypeAddedEvent = await fixture.generateEvent(EVENTS.ASSET_MANAGER.COLLATERAL_TYPE_ADDED, assetManager)
+    const collateralTypeAddedEvent = await fixture.generateEvent(
+      EVENTS.ASSET_MANAGER.COLLATERAL_TYPE_ADDED, assetManager)
     await storer.processEvent(collateralTypeAddedEvent)
     const collateralTypeAdded = await em.findOneOrFail(CollateralTypeAdded,
       { evmLog: { index: collateralTypeAddedEvent.logIndex, block: { index: collateralTypeAddedEvent.blockNumber }}},
@@ -142,7 +149,8 @@ describe("FAsset evm events", () => {
     // store agents
     await fixture.storeInitialAgents(FAssetType.FXRP, true)
     // create agent
-    const agentVaultCreatedEvent = await fixture.generateEvent(EVENTS.ASSET_MANAGER.AGENT_VAULT_CREATED, assetManager)
+    const agentVaultCreatedEvent = await fixture.generateEvent(
+      EVENTS.ASSET_MANAGER.AGENT_VAULT_CREATED, assetManager)
     await storer.processEventUnsafe(em, agentVaultCreatedEvent)
     // check that event was logged and agent vault created
     const agentVaultCreated = await em.findOneOrFail(AgentVaultCreated,
@@ -547,6 +555,19 @@ describe("FAsset evm events", () => {
       expect(liquidationPerformed.agentVault.address.hex).to.equal(liquidationPerformedEvent.args[0])
       expect(liquidationPerformed.liquidator.hex).to.equal(liquidationPerformedEvent.args[1])
       expect(liquidationPerformed.valueUBA).to.equal(liquidationPerformedEvent.args[2])
+    })
+  })
+
+  describe("emergency pause", () => {
+
+    it.only("should test storing the emergency pause triggered event with old interface", async () => {
+      const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const event = await fixture.generateEvent(EVENTS.ASSET_MANAGER.EMERGENCY_PAUSE_TRIGGERED, assetManagerXrp)
+      await storer.processEvent(event)
+      const em = context.orm.em.fork()
+      const emergencyPauseTriggered = await em.findOneOrFail(EmergencyPauseTriggered, { fasset: FAssetType.FXRP })
+      expect(emergencyPauseTriggered.level).to.equal(1)
+      expect(emergencyPauseTriggered.pausedUntil).to.equal(event.args[1])
     })
   })
 

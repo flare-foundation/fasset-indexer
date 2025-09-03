@@ -1,17 +1,18 @@
 import type {
   AgentVaultCreatedEvent as AgentVaultCreatedEventOld,
-  CollateralTypeAddedEvent as CollateralTypeAddedOld
- } from "../../../../chain/typechain/IAssetManagerPreUpgrade"
+  CollateralTypeAddedEvent as CollateralTypeAddedOld,
+  EmergencyPauseTriggeredEvent as EmergencyPauseTriggeredOld
+} from "../../../../chain/typechain/assetManager/IAssetManager__initial"
 import type {
-  AgentVaultCreatedEvent, CollateralTypeAddedEvent
-} from "../../../../chain/typechain/IAssetManager"
+  AgentVaultCreatedEvent, CollateralTypeAddedEvent, EmergencyPauseTriggeredEvent
+} from "../../../../chain/typechain/assetManager/IAssetManager__latest"
 
 
 export class AssetManagerEventMigration {
 
   static migrateAgentVaultCreated(args: AgentVaultCreatedEventOld.OutputTuple): AgentVaultCreatedEvent.OutputTuple {
     const { 0: owner, 1: agentVault } = args
-    const [ collateralPool, collateralPoolToken, underlyingAddress, vaultCollateralToken, poolWNatToken,
+    const [collateralPool, collateralPoolToken, underlyingAddress, vaultCollateralToken, poolWNatToken,
       feeBIPS, poolFeeShareBIPS, mintingVaultCollateralRatioBIPS, mintingPoolCollateralRatioBIPS,
       buyFAssetByAgentFactorBIPS, poolExitCollateralRatioBIPS,
       poolTopupCollateralRatioBIPS, poolTopupTokenPriceFactorBIPS, handshakeType // deprecated
@@ -34,5 +35,9 @@ export class AssetManagerEventMigration {
       collateralClass, token, decimals, directPricePair, assetFtsoSymbol,
       tokenFtsoSymbol, minCollateralRatioBIPS, safetyMinCollateralRatioBIPS
     ]
+  }
+
+  static migrateEmergencyPauseTriggered(args: EmergencyPauseTriggeredOld.OutputTuple): EmergencyPauseTriggeredEvent.OutputTuple {
+    return [ BigInt(1), args[0] ]
   }
 }

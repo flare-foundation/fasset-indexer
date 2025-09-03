@@ -6,6 +6,9 @@ import { uint64 } from "../../custom/uint"
 @Entity()
 export class EmergencyPauseTriggered extends FAssetEventBound {
 
+  @Property({ type: 'int8', nullable: true })
+  level!: number
+
   @Property({ type: new uint64() })
   pausedUntil!: bigint
 }
