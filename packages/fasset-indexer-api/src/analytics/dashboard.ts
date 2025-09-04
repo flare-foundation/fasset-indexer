@@ -3,7 +3,7 @@ import { EntityManager, raw, type ORM, ZeroAddress } from "fasset-indexer-core/o
 import * as Entities from "fasset-indexer-core/entities"
 import { EVENTS } from "fasset-indexer-core/config"
 import { unixnow } from "../shared/utils"
-import { fassetToUsdPrice } from "./utils/prices"
+import { FAssetPriceLoader } from "./utils/prices"
 import { SharedAnalytics } from "./shared"
 import { AgentStatistics } from "./statistics"
 import { MAX_BIPS, PRICE_FACTOR } from "../config/constants"
@@ -27,6 +27,7 @@ const div = (x: bigint, y: bigint) => y == BigInt(0) ? BigInt(0) : x / y
  */
 export class DashboardAnalytics extends SharedAnalytics {
   protected lookup: ContractLookup
+  private price: FAssetPriceLoader
   private statistics: AgentStatistics
   private zeroAddressId: number | null = null
   private supportedFAssets: FAsset[]
@@ -34,6 +35,7 @@ export class DashboardAnalytics extends SharedAnalytics {
   constructor(public readonly orm: ORM, public readonly chain: string, addressesJson?: string) {
     super(orm)
     this.lookup = new ContractLookup(chain, addressesJson)
+    this.price = new FAssetPriceLoader()
     this.statistics = new AgentStatistics(orm)
     this.supportedFAssets = FASSETS.filter(x => this.lookup.supportsFAsset(FAssetType[x]))
   }
@@ -544,12 +546,16 @@ export class DashboardAnalytics extends SharedAnalytics {
   }
 
   protected async aggregateTimeSeries(timeseries: FAssetTimeSeries<bigint>): Promise<TimeSeries<bigint>> {
+    this.price.clearCache()
     const em = this.orm.em.fork()
     const acc = {} as { [index: number]: { start: number, end: number, value: bigint } }
     for (const [fasset, ts] of Object.entries(timeseries)) {
-      const [priceMul, priceDiv] = await fassetToUsdPrice(em, FAssetType[fasset as FAsset])
       for (const point of ts) {
-        const value = PRICE_FACTOR * point.value * priceMul / priceDiv
+        let value = BigInt(0)
+        if (point.value != BigInt(0)) {
+          const [priceMul, priceDiv] = await this.price.getFAssetToUsdPrice(em, FAssetType[fasset as FAsset])
+          value = PRICE_FACTOR * point.value * priceMul / priceDiv
+        }
         if (acc[point.index] === undefined) {
           acc[point.index] = { start: point.start, end: point.end, value }
           continue
@@ -586,12 +592,16 @@ export class DashboardAnalytics extends SharedAnalytics {
   }
 
   protected async aggregateFAssetTimespans(timespans: FAssetTimespan<bigint>): Promise<Timespan<bigint>> {
+    this.price.clearCache()
     const acc: { [timestamp: number]: bigint } = {}
     const em = this.orm.em.fork()
     for (const [fasset, timespan] of Object.entries(timespans)) {
-      const [priceMul, priceDiv] = await fassetToUsdPrice(em, FAssetType[fasset as FAsset])
       for (const point of timespan) {
-        const value = PRICE_FACTOR * point.value * priceMul / priceDiv
+        let value = BigInt(0)
+        if (point.value != BigInt(0)) {
+          const [priceMul, priceDiv] = await this.price.getFAssetToUsdPrice(em, FAssetType[fasset as FAsset])
+          value = PRICE_FACTOR * point.value * priceMul / priceDiv
+        }
         if (acc[point.timestamp] === undefined) {
           acc[point.timestamp] = value
           continue

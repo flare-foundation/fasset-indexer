@@ -6,12 +6,17 @@ import {
 } from "fasset-indexer-core/entities"
 import { SharedAnalytics } from "./shared"
 import { weightedAverage } from "./utils/weighted-average"
-import { fassetToUsd, tokenToUsd } from "./utils/prices"
+import { FAssetPriceLoader } from "./utils/prices"
 import { LIQUIDATION_DURATION_SQL } from "./utils/raw-sql"
 
 
 export class AgentStatistics extends SharedAnalytics {
-  constructor(public readonly orm: ORM) { super(orm) }
+  private price: FAssetPriceLoader
+
+  constructor(public readonly orm: ORM) {
+    super(orm)
+    this.price = new FAssetPriceLoader()
+  }
 
   async redemptionDefaultWA(vault: string, now: number, delta: number, lim: number): Promise<[bigint, number]> {
     const result = await this.orm.em.fork().createQueryBuilder(RedemptionDefault, 'rd')
@@ -114,11 +119,11 @@ export class AgentStatistics extends SharedAnalytics {
     // get usd value of pool yield
     const poolYieldFAsset = await this.collateralPoolYieldWA(pool, now, delta, lim)
     const vault = await em.findOneOrFail(AgentVault, { collateralPool: { hex: pool }})
-    const poolYieldUsd = await fassetToUsd(em, vault.fasset, poolYieldFAsset)
+    const poolYieldUsd = await this.price.fassetToUsd(em, vault.fasset, poolYieldFAsset)
     // get usd value of pool collateral
     const poolCollateralNat = await this.poolCollateralAt(pool, undefined, now)
     const token = await em.findOneOrFail(CollateralTypeAdded, { collateralClass: 1 }, { populate: ['address'] })
-    const poolCollateralUsd = await tokenToUsd(em, token.address.hex, poolCollateralNat)
+    const poolCollateralUsd = await this.price.tokenToUsd(em, token.address.hex, poolCollateralNat)
     // return
     return BigInt(1e5) * poolYieldUsd / poolCollateralUsd
   }
