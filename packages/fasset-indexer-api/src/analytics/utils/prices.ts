@@ -15,6 +15,10 @@ export class FAssetPriceLoader {
     return this.cache.get(fasset)
   }
 
+  async clearCache() {
+    this.cache.clear()
+  }
+
   // doesn't need caching yet
   async fassetToUsd(em: EntityManager, fasset: FAssetType, amount: bigint): Promise<bigint> {
     const [mul, div] = await this.fassetToUsdPrice(em, fasset)
