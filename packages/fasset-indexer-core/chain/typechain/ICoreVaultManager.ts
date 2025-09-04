@@ -194,6 +194,7 @@ export interface ICoreVaultManagerInterface extends Interface {
       | "CustomInstructions"
       | "EmergencyPauseSenderAdded"
       | "EmergencyPauseSenderRemoved"
+      | "EscrowExpired"
       | "EscrowFinished"
       | "EscrowInstructions"
       | "NotAllEscrowsProcessed"
@@ -516,6 +517,19 @@ export namespace EmergencyPauseSenderRemovedEvent {
   export type OutputTuple = [sender: string];
   export interface OutputObject {
     sender: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace EscrowExpiredEvent {
+  export type InputTuple = [preimageHash: BytesLike, amount: BigNumberish];
+  export type OutputTuple = [preimageHash: string, amount: bigint];
+  export interface OutputObject {
+    preimageHash: string;
+    amount: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -1110,6 +1124,13 @@ export interface ICoreVaultManager extends BaseContract {
     EmergencyPauseSenderRemovedEvent.OutputObject
   >;
   getEvent(
+    key: "EscrowExpired"
+  ): TypedContractEvent<
+    EscrowExpiredEvent.InputTuple,
+    EscrowExpiredEvent.OutputTuple,
+    EscrowExpiredEvent.OutputObject
+  >;
+  getEvent(
     key: "EscrowFinished"
   ): TypedContractEvent<
     EscrowFinishedEvent.InputTuple,
@@ -1273,6 +1294,17 @@ export interface ICoreVaultManager extends BaseContract {
       EmergencyPauseSenderRemovedEvent.InputTuple,
       EmergencyPauseSenderRemovedEvent.OutputTuple,
       EmergencyPauseSenderRemovedEvent.OutputObject
+    >;
+
+    "EscrowExpired(bytes32,uint256)": TypedContractEvent<
+      EscrowExpiredEvent.InputTuple,
+      EscrowExpiredEvent.OutputTuple,
+      EscrowExpiredEvent.OutputObject
+    >;
+    EscrowExpired: TypedContractEvent<
+      EscrowExpiredEvent.InputTuple,
+      EscrowExpiredEvent.OutputTuple,
+      EscrowExpiredEvent.OutputObject
     >;
 
     "EscrowFinished(bytes32,uint256)": TypedContractEvent<

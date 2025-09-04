@@ -22,6 +22,13 @@ export class CoreVaultManagerSettingsUpdated extends FAssetEventBound {
 }
 
 @Entity()
+export class CoreVaultManagerCustodianAddressUpdated extends FAssetEventBound {
+
+  @ManyToOne({ entity: () => UnderlyingAddress })
+  custodian!: UnderlyingAddress
+}
+
+@Entity()
 @Unique({ properties: ['fasset', 'transactionId'] })
 export class CoreVaultManagerPaymentConfirmed extends FAssetEventBound {
 
@@ -115,7 +122,7 @@ export class CoreVaultManagerTransferRequestCanceled extends FAssetEventBound {
 export class CoreVaultManagerNotAllEscrowsProcessed extends FAssetEventBound {}
 
 @Entity()
-export class EscrowFinished extends FAssetEventBound {
+export class EscrowExpired extends FAssetEventBound {
 
   @Property({ type: 'text', length: BYTES32_LENGTH })
   preimageHash!: string
@@ -125,8 +132,11 @@ export class EscrowFinished extends FAssetEventBound {
 }
 
 @Entity()
-export class CoreVaultManagerCustodianAddressUpdated extends FAssetEventBound {
+export class EscrowFinished extends FAssetEventBound {
 
-  @ManyToOne({ entity: () => UnderlyingAddress })
-  custodian!: UnderlyingAddress
+  @Property({ type: 'text', length: BYTES32_LENGTH })
+  preimageHash!: string
+
+  @Property({ type: new uint256() })
+  amount!: bigint
 }

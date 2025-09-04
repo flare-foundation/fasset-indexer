@@ -275,6 +275,9 @@ export class EventStorer {
       } case EVENTS.CORE_VAULT_MANAGER.CUSTODIAN_ADDRESS_UPDATED: {
         await this.onCustodianAddressUpdated(em, evmLog, log.args)
         break
+      } case EVENTS.CORE_VAULT_MANAGER.ESCROW_EXPIRED: {
+        await this.onEscrowExpired(em, evmLog, log.args)
+        break
       } case EVENTS.CORE_VAULT_MANAGER.ESCROW_FINISHED: {
         await this.onEscrowFinished(em, evmLog, log.args)
         break
@@ -1371,6 +1374,16 @@ export class EventStorer {
     return em.create(Entities.CoreVaultManagerCustodianAddressUpdated, {
       evmLog, fasset, custodian: _custodian
     })
+  }
+
+  protected async onEscrowExpired(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: CoreVaultManager.EscrowExpiredEvent.OutputTuple
+  ): Promise<Entities.EscrowExpired> {
+    const fasset = this.lookup.coreVaultManagerToFAssetType(evmLog.address.hex)
+    const [ preimageHash, amount ] = logArgs
+    return em.create(Entities.EscrowExpired, { evmLog, fasset, preimageHash, amount })
   }
 
   protected async onEscrowFinished(

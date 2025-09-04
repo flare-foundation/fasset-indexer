@@ -63,7 +63,7 @@ export {
   CoreVaultManagerEscrowInstructions, CoreVaultManagerNotAllEscrowsProcessed,
   CoreVaultManagerPaymentConfirmed, CoreVaultManagerPaymentInstructions,
   CoreVaultManagerSettingsUpdated, CoreVaultManagerTransferRequestCanceled,
-  EscrowFinished
+  EscrowExpired, EscrowFinished
 } from './events/core-vault-manager'
 export { PricesPublished } from './events/price'
 // underlying data

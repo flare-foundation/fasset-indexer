@@ -122,9 +122,10 @@ export const EVENTS = {
     ESCROW_INSTRUCTIONS: "EscrowInstructions",
     TRANSFER_REQUEST_CANCELED: "TransferRequestCanceled",
     NOT_ALL_ESCROWS_PROCESSED: "NotAllEscrowsProcessed",
+    ESCROW_EXPIRED: "EscrowExpired",
     ESCROW_FINISHED: "EscrowFinished",
-    CUSTODIAN_ADDRESS_UPDATED: "CustodianAddressUpdated",
-    SETTINGS_UPDATED: "SettingsUpdated"
+    SETTINGS_UPDATED: "SettingsUpdated",
+    CUSTODIAN_ADDRESS_UPDATED: "CustodianAddressUpdated"
   }
 } as const
 
