@@ -58,6 +58,7 @@
         "EscrowInstructions",
         "TransferRequestCanceled",
         "NotAllEscrowsProcessed",
+        "EscrowExpired",
         "EscrowFinished",
         "CustodianAddressUpdated",
         "SettingsUpdated",
