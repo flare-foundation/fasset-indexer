@@ -140,5 +140,6 @@ export const BYTES32_LENGTH = 66
 export const BLOCK_EXPLORERS = {
   coston: 'https://coston-explorer.flare.network',
   songbird: 'https://songbird-explorer.flare.network',
-  coston2: 'https://coston2-explorer.flare.network'
+  coston2: 'https://coston2-explorer.flare.network',
+  flare: 'https://flare-explorer.flare.network'
 }
