@@ -58,53 +58,50 @@ export interface TransactionInfo {
   agentName: string
 }
 
-interface TransactionDetails<T,U> {
-  flows: T[]
-  flags?: U
-}
+export type GenericTransactionClassification = {
+  transactionHash: string
+  eventName: string
+}[]
 
 export type MintTransactionDetails = TransactionDetails<MintEventDetails, void>
 export type RedeemTransactionDetails = TransactionDetails<RedeemEventDetails, Entities.RedemptionRequestIncomplete[]>
 export type TransferToCoreVaultTransactionDetails = TransactionDetails<TransferToCoreVaultEventDetails, void>
 export type RetrunFromCoreVaultTransactionDetails = TransactionDetails<ReturnFromCoreVaultEventDetails, void>
 
-export interface MintEventDetails {
-  underlyingTransaction?: Entities.UnderlyingVoutReference
-  events: {
-    original: Entities.CollateralReserved
-    resolution?: Entities.MintingExecuted
-      | Entities.MintingPaymentDefault
-      | Entities.CollateralReservationDeleted
-  }
-}
-
-export interface RedeemEventDetails {
-  underlyingTransaction?: Entities.UnderlyingVoutReference
-  events: {
-    original: Entities.RedemptionRequested
-    resolution?: Entities.RedemptionRequested
+export type MintEventDetails = EventDetails<
+  Entities.CollateralReserved,
+  Entities.MintingExecuted
+    | Entities.MintingPaymentDefault
+    | Entities.CollateralReservationDeleted
+>
+export type RedeemEventDetails = EventDetails<
+  Entities.RedemptionRequested,
+  Entities.RedemptionRequested
     | Entities.RedemptionPerformed
     | Entities.RedemptionDefault
     | Entities.RedemptionPaymentBlocked
     | Entities.RedemptionPaymentFailed
-  }
+>
+export type TransferToCoreVaultEventDetails = EventDetails<
+  Entities.TransferToCoreVaultStarted,
+  Entities.TransferToCoreVaultSuccessful
+    | Entities.TransferToCoreVaultDefaulted
+>
+export type ReturnFromCoreVaultEventDetails = EventDetails<
+  Entities.ReturnFromCoreVaultRequested,
+  Entities.ReturnFromCoreVaultConfirmed
+    | Entities.ReturnFromCoreVaultCancelled
+>
 
+interface TransactionDetails<T,U> {
+  flows: T[]
+  flags?: U
 }
 
-export interface TransferToCoreVaultEventDetails {
+interface EventDetails<T,U> {
   underlyingTransaction?: Entities.UnderlyingVoutReference
   events: {
-    original: Entities.TransferToCoreVaultStarted
-    resolution?: Entities.TransferToCoreVaultSuccessful
-      | Entities.TransferToCoreVaultDefaulted
-  }
-}
-
-export interface ReturnFromCoreVaultEventDetails {
-  underlyingTransaction?: Entities.UnderlyingVoutReference
-  events: {
-    original: Entities.ReturnFromCoreVaultRequested
-    resolution?: Entities.ReturnFromCoreVaultConfirmed
-      | Entities.ReturnFromCoreVaultCancelled
+    original: T
+    resolution?: U
   }
 }

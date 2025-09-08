@@ -9,6 +9,7 @@ import type {
   RetrunFromCoreVaultTransactionDetails,
   TransferToCoreVaultTransactionDetails,
   TransactionsInfo,
+  GenericTransactionClassification
 } from '../analytics/interface'
 
 
@@ -31,6 +32,15 @@ export class ExplorerController {
     @Query('agent') agent?: string
   ): Promise<ApiResponse<TransactionsInfo>> {
     return apiResponse(this.service.transactions(limit, offset, user, agent), 200)
+  }
+
+  @Get('transaction-classification')
+  @ApiOperation({ summary: 'Classify given native or underlying transaction' })
+  @ApiQuery({ name: 'hash', type: String })
+  getTransactionClassification(
+    @Query('hash') hash: string
+  ): Promise<ApiResponse<GenericTransactionClassification>> {
+    return apiResponse(this.service.transactionClassification(hash), 200)
   }
 
   @Get('transactions-details/minting')

@@ -3,7 +3,14 @@ import * as Entities from "fasset-indexer-core/entities"
 import * as ExplorerType from "./interface"
 import * as SQL from "./utils/raw-sql"
 import type { EntityManager, ORM } from "fasset-indexer-core/orm"
+import { EVENTS } from "fasset-indexer-core/config"
 
+const VALID_EVENTS = [
+  EVENTS.ASSET_MANAGER.COLLATERAL_RESERVED,
+  EVENTS.ASSET_MANAGER.REDEMPTION_REQUESTED,
+  EVENTS.ASSET_MANAGER.TRANSFER_TO_CORE_VAULT_STARTED,
+  EVENTS.ASSET_MANAGER.RETURN_FROM_CORE_VAULT_REQUESTED
+]
 
 export class ExplorerAnalytics {
   protected lookup: ContractLookup
@@ -41,6 +48,33 @@ export class ExplorerAnalytics {
       ? offset + info.length
       : await this.getExplorerTransactionCount(em, user, agent)
     return { transactions: info, count }
+  }
+
+  async transactionClassification(
+    hash: string
+  ): Promise<ExplorerType.GenericTransactionClassification> {
+    const em = this.orm.em.fork()
+    if (this.isNativeTransactionHash(hash)) {
+      const logs = await em.find(Entities.EvmLog, {
+        transaction: { hash },
+        name: { $in: VALID_EVENTS }
+      })
+      return logs.map(log => ({
+        transactionHash: hash,
+        eventName: ExplorerType.TransactionType[
+          this.eventNameToTransactionType(log.name)]
+      }))
+    } else if (this.isRippleTransactionHash(hash)) {
+      const resp = await em.getConnection('read').execute(
+        SQL.EVENT_FROM_UNDERLYING_HASH, [hash]
+      ) as { hash: string, name: string }[]
+      return resp.map(({ hash, name }) => ({
+        transactionHash: hash,
+        eventName:ExplorerType.TransactionType[
+          this.eventNameToTransactionType(name)]
+      }))
+    }
+    throw new Error(`don't recognize transaction hash ${hash} format`)
   }
 
   async mintingTransactionDetails(
@@ -300,5 +334,12 @@ export class ExplorerAnalytics {
       this.coreVaultCache.set(fasset, settings.coreVault?.text)
     }
     return this.coreVaultCache.get(fasset)
+  }
+
+  private isNativeTransactionHash(hash: string): boolean {
+    return /0x[a-fA-F0-9]/.test(hash)
+  }
+  private isRippleTransactionHash(hash: string): boolean {
+    return /[A-F0-9]{64}/.test(hash)
   }
 }

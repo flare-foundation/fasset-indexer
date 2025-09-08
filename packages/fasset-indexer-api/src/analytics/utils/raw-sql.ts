@@ -161,3 +161,24 @@ export type ExplorerTransactionsOrmResult = {
   name: string, timestamp: number, source: string, user: string,
   hash: string, agent_vault: string, agent_name: string, value_uba: string
 }
+
+export const EVENT_FROM_UNDERLYING_HASH = `
+SELECT et.hash, el.name, t.payment_reference FROM (
+  SELECT cr.evm_log_id, cr.payment_reference FROM collateral_reserved cr
+  UNION ALL
+  SELECT rr.evm_log_id, rr.payment_reference FROM redemption_requested rr
+  FULL JOIN transfer_to_core_vault_started tc ON rr.fasset = tc.fasset AND rr.request_id = tc.transfer_redemption_request_id
+  WHERE tc.evm_log_id IS NULL
+  UNION ALL
+  SELECT tc.evm_log_id, rr.payment_reference FROM transfer_to_core_vault_started tc
+  JOIN redemption_requested rr ON rr.fasset = tc.fasset AND rr.request_id = tc.transfer_redemption_request_id
+  UNION ALL
+  SELECT rc.evm_log_id, rc.payment_reference FROM return_from_core_vault_requested rc
+) t
+JOIN underlying_reference uvr ON uvr.reference = t.payment_reference
+JOIN underlying_transaction ut ON ut.id = uvr.transaction_id
+JOIN evm_log el ON el.id = t.evm_log_id
+JOIN evm_transaction et ON et.id = el.transaction_id
+WHERE ut.hash = ?
+ORDER BY el.block_index DESC
+`
