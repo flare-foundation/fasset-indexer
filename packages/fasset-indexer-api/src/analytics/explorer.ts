@@ -343,7 +343,7 @@ export class ExplorerAnalytics {
   }
 
   private isNativeTransactionHash(hash: string): boolean {
-    return /0x[a-fA-F0-9]/.test(hash)
+    return /0x[a-fA-F0-9]{64}/.test(hash)
   }
   private isRippleTransactionHash(hash: string): boolean {
     return /[A-F0-9]{64}/.test(hash)
