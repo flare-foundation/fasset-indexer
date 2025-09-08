@@ -213,6 +213,12 @@ export class ExplorerAnalytics {
       resp.events.resolution = redemptionDefault
       return resp
     }
+    const redemptionRejected = await em.findOne(Entities.RedemptionRejected,
+      { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ]})
+      if (redemptionRejected != null) {
+        resp.events.resolution = redemptionRejected
+        return resp
+      }
     const redemptionBlocked = await em.findOne(Entities.RedemptionPaymentBlocked,
       { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
     if (redemptionBlocked != null) {

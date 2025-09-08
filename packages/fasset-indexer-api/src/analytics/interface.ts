@@ -79,6 +79,7 @@ export type RedeemEventDetails = EventDetails<
   Entities.RedemptionRequested
     | Entities.RedemptionPerformed
     | Entities.RedemptionDefault
+    | Entities.RedemptionRejected
     | Entities.RedemptionPaymentBlocked
     | Entities.RedemptionPaymentFailed
 >
