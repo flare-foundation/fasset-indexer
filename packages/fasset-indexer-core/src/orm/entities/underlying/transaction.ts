@@ -24,4 +24,10 @@ export class UnderlyingTransaction {
 
   @ManyToOne({ entity: () => UnderlyingAddress, nullable: true })
   target?: UnderlyingAddress
+
+  @Property({ type: 'text', nullable: true })
+  result?: string
+
+  @Property({ type: new uint256() })
+  fee?: bigint
 }

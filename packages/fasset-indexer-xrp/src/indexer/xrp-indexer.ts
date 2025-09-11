@@ -131,7 +131,12 @@ export class XrpIndexer {
       target = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: Destination })
     }
     return findOrCreateEntity(em, Entities.UnderlyingTransaction,
-      { hash: transaction.hash }, {}, { block, value: BigInt(Amount ?? 0), source, target }
+      { hash: transaction.hash }, {}, {
+        block, source, target,
+        value: BigInt(Amount ?? 0),
+        result: transaction.TransactionResult,
+        fee: BigInt(transaction.Fee ?? 0)
+       }
     )
   }
 
