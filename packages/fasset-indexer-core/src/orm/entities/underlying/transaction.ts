@@ -28,6 +28,6 @@ export class UnderlyingTransaction {
   @Property({ type: 'text', nullable: true })
   result?: string
 
-  @Property({ type: new uint256() })
+  @Property({ type: new uint256(), nullable: true })
   fee?: bigint
 }
