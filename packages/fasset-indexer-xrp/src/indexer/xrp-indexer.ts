@@ -134,7 +134,7 @@ export class XrpIndexer {
       { hash: transaction.hash }, {}, {
         block, source, target,
         value: BigInt(Amount ?? 0),
-        result: transaction.TransactionResult,
+        result: transaction?.metaData?.TransactionResult,
         fee: BigInt(transaction.Fee ?? 0)
        }
     )

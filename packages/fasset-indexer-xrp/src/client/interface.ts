@@ -19,7 +19,9 @@ export interface IXrpTransaction {
   Memos?: IXrpMemo[]
   Sequence: number
   hash: string
-  TransactionResult: string
+  metaData?: {
+    TransactionResult: string
+  },
   Destination?: string
   ledger_index: number
   date: number
