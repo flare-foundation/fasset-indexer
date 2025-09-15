@@ -1053,8 +1053,8 @@ export class EventStorer {
     const [ from, to, value ] = logArgs
     const _from = await findOrCreateEntity(em, Entities.EvmAddress, { hex: from })
     const _to = await findOrCreateEntity(em, Entities.EvmAddress, { hex: to })
-    await this.increaseTokenBalance(em, evmLog.address, _to, value)
-    await this.increaseTokenBalance(em, evmLog.address, _from, -value)
+    await this.changeTokenBalance(em, evmLog.address, _to, value)
+    await this.changeTokenBalance(em, evmLog.address, _from, -value)
     return em.create(Entities.ERC20Transfer, { evmLog, from: _from, to: _to, value })
   }
 
@@ -1519,13 +1519,14 @@ export class EventStorer {
     }, { persist: false })
   }
 
-  private async increaseTokenBalance(
+  private async changeTokenBalance(
     em: EntityManager,
     token: Entities.EvmAddress,
     holder: Entities.EvmAddress,
-    amount: bigint
+    diff: bigint
   ): Promise<void> {
-    const balance = await findOrCreateEntity(em, Entities.TokenBalance, { token, holder }, {}, { token, holder, amount })
-    balance.amount = amount
+    const balance = await findOrCreateEntity(em, Entities.TokenBalance,
+      { token, holder }, {}, { token, holder, amount: BigInt(0) })
+    balance.amount += diff
   }
 }
