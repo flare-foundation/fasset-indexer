@@ -512,11 +512,13 @@ export class EventStorer {
       } case "redemptionPoolFeeShareBIPS": {
         agentSettings.redemptionPoolFeeShareBIPS = BigInt(value)
         break
-      } case "poolTopupCollateralRatioBIPS": { // legacy
+      } case "poolTopupCollateralRatioBIPS": { // deprecated
         agentSettings.poolTopupCollateralRatioBIPS = BigInt(value)
         break
-      } case "poolTopupTokenPriceFactorBIPS": { // legacy
+      } case "poolTopupTokenPriceFactorBIPS": { // deprecated
         agentSettings.poolTopupTokenPriceFactorBIPS = BigInt(value)
+        break
+      } case "handshakeType": { // deprecated
         break
       } default: {
         throw new Error(`agent has no setting ${name}`)
