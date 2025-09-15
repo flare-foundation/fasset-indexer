@@ -10,7 +10,7 @@ import { BYTES32_LENGTH } from "../../../config/constants"
 @Unique({ properties: ['fasset', 'transferRedemptionRequestId'] })
 export class TransferToCoreVaultStarted extends AgentEventBound {
 
-  @Property({ type: 'number' })
+  @Property({ type: 'number', index: true })
   transferRedemptionRequestId!: number
 
   @Property({ type: new uint64() })
@@ -41,10 +41,10 @@ export class TransferToCoreVaultSuccessful extends FAssetEventBound {
 @Unique({ properties: ['fasset', 'requestId'] })
 export class ReturnFromCoreVaultRequested extends AgentEventBound {
 
-  @Property({ type: 'number' })
+  @Property({ type: 'number', index: true })
   requestId!: number
 
-  @Property({ type: 'text', length: BYTES32_LENGTH })
+  @Property({ type: 'text', length: BYTES32_LENGTH, index: true })
   paymentReference!: string
 
   @Property({ type: new uint256() })
@@ -80,7 +80,7 @@ export class CoreVaultRedemptionRequested extends FAssetEventBound {
   @ManyToOne({ entity: () => UnderlyingAddress })
   paymentAddress!: UnderlyingAddress
 
-  @Property({ type: 'text', length: BYTES32_LENGTH, nullable: true })
+  @Property({ type: 'text', length: BYTES32_LENGTH, nullable: true, index: true })
   paymentReference!: string
 
   @Property({ type: new uint256() })

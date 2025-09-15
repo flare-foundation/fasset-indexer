@@ -8,7 +8,7 @@ import { uint64 } from "../../custom/uint"
 @Entity()
 export class CurrentUnderlyingBlockUpdated extends FAssetEventBound {
 
-  @Property({ type: 'number' })
+  @Property({ type: 'number', index: true })
   underlyingBlockNumber!: number
 
   @Property({ type: 'number' })

@@ -5,7 +5,7 @@ import { EventBound } from './_bound'
 @Entity()
 export class PricesPublished extends EventBound {
 
-  @Property({ type: 'number' })
+  @Property({ type: 'number', index: true })
   votingRoundId!: number
 }
 
@@ -18,7 +18,7 @@ export class PricePublished {
   @ManyToOne({ entity: () => PricesPublished })
   pricesPublished!: PricesPublished
 
-  @Property({ type: 'text' })
+  @Property({ type: 'text', index: true })
   symbol!: string
 
   @Property({ type: 'bigint' })

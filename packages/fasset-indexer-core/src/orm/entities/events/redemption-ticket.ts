@@ -7,7 +7,7 @@ import { AgentEventBound, FAssetEventBound } from "./_bound"
 @Unique({ properties: ['fasset', 'redemptionTicketId'] })
 export class RedemptionTicketCreated extends AgentEventBound {
 
-  @Property({ type: new uint64() })
+  @Property({ type: new uint64(), index: true })
   redemptionTicketId!: bigint
 
   @Property({ type: new uint256() })

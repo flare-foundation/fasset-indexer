@@ -11,7 +11,7 @@ import { BYTES32_LENGTH } from "../../../config/constants"
 @Unique({ properties: ['fasset', 'paymentReference'] })
 export class RedemptionRequested extends AgentEventBound {
 
-  @Property({ type: 'number' })
+  @Property({ type: 'number', index: true })
   requestId!: number
 
   @ManyToOne({ entity: () => EvmAddress })
@@ -35,7 +35,7 @@ export class RedemptionRequested extends AgentEventBound {
   @Property({ type: 'number' })
   lastUnderlyingTimestamp!: number
 
-  @Property({ type: 'text', length: BYTES32_LENGTH })
+  @Property({ type: 'text', length: BYTES32_LENGTH, index: true })
   paymentReference!: string
 
   @ManyToOne({ entity: () => EvmAddress })
@@ -84,7 +84,7 @@ export class RedemptionPaymentBlocked extends FAssetEventBound {
   @OneToOne({ entity: () => RedemptionRequested, owner: true })
   redemptionRequested!: RedemptionRequested
 
-  @Property({ type: 'text', length: BYTES32_LENGTH })
+  @Property({ type: 'text', length: BYTES32_LENGTH, index: true })
   transactionHash!: string
 
   @Property({ type: new uint256() })
@@ -97,13 +97,13 @@ export class RedemptionPaymentFailed extends FAssetEventBound {
   @OneToOne({ entity: () => RedemptionRequested, owner: true })
   redemptionRequested!: RedemptionRequested
 
-  @Property({ type: 'text', length: BYTES32_LENGTH })
+  @Property({ type: 'text', length: BYTES32_LENGTH, index: true })
   transactionHash!: string
 
   @Property({ type: new uint256() })
   spentUnderlyingUBA!: bigint
 
-  @Property({ type: 'text' })
+  @Property({ type: 'text', index: true })
   failureReason!: string
 }
 

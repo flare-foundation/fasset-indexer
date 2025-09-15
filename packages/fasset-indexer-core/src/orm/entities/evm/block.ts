@@ -7,6 +7,6 @@ export class EvmBlock {
   @PrimaryKey({ type: "number" })
   index!: number
 
-  @Property({ type: "number" })
+  @Property({ type: "number", index: true })
   timestamp!: number
 }

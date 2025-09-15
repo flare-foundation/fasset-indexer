@@ -11,7 +11,7 @@ import { BYTES32_LENGTH } from '../../../config/constants'
 @Unique({ properties: ['fasset', 'collateralReservationId'] })
 export class CollateralReserved extends AgentEventBound {
 
-  @Property({ type: 'number' })
+  @Property({ type: 'number', index: true })
   collateralReservationId!: number
 
   @ManyToOne({ entity: () => EvmAddress })
@@ -35,7 +35,7 @@ export class CollateralReserved extends AgentEventBound {
   @ManyToOne({ entity: () => UnderlyingAddress})
   paymentAddress!: UnderlyingAddress
 
-  @Property({ type: 'text', length: BYTES32_LENGTH })
+  @Property({ type: 'text', length: BYTES32_LENGTH, index: true })
   paymentReference!: string
 
   @ManyToOne({ entity: () => EvmAddress })

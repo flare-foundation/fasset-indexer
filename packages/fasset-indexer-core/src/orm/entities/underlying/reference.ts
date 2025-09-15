@@ -15,7 +15,7 @@ export class UnderlyingReference {
   @Enum(() => FAssetType)
   fasset!: FAssetType
 
-  @Property({ type: 'text' })
+  @Property({ type: 'text', index: true })
   reference!: string
 
   @ManyToOne({ entity: () => UnderlyingTransaction })

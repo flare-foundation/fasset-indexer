@@ -35,7 +35,7 @@ export class CoreVaultManagerPaymentConfirmed extends FAssetEventBound {
   @Property({ type: 'text', length: BYTES32_LENGTH, unique: true })
   transactionId!: string
 
-  @Property({ type: 'text' })
+  @Property({ type: 'text', index: true })
   paymentReference!: string
 
   @Property({ type: new uint256() })
@@ -45,7 +45,7 @@ export class CoreVaultManagerPaymentConfirmed extends FAssetEventBound {
 @Entity()
 export class CoreVaultManagerPaymentInstructions extends FAssetEventBound {
 
-  @Property({ type: new uint256() })
+  @Property({ type: new uint256(), index: true })
   sequence!: bigint
 
   @ManyToOne({ entity: () => UnderlyingAddress })
@@ -60,17 +60,17 @@ export class CoreVaultManagerPaymentInstructions extends FAssetEventBound {
   @Property({ type: new uint256() })
   fee!: bigint
 
-  @Property({ type: 'text', length: BYTES32_LENGTH })
+  @Property({ type: 'text', length: BYTES32_LENGTH, index: true })
   paymentReference!: string
 }
 
 @Entity()
 export class CoreVaultManagerEscrowInstructions extends FAssetEventBound {
 
-  @Property({ type: new uint256() })
+  @Property({ type: new uint256(), index: true })
   sequence!: bigint
 
-  @Property({ type: 'text', length: BYTES32_LENGTH })
+  @Property({ type: 'text', length: BYTES32_LENGTH, index: true })
   preimageHash!: string
 
   @ManyToOne({ entity: () => UnderlyingAddress })
@@ -95,7 +95,7 @@ export class CoreVaultManagerTransferRequested extends FAssetEventBound {
   @ManyToOne({ entity: () => UnderlyingAddress })
   destination!: UnderlyingAddress
 
-  @Property({ type: 'text', length: BYTES32_LENGTH })
+  @Property({ type: 'text', length: BYTES32_LENGTH, index: true })
   paymentReference!: string
 
   @Property({ type: new uint256() })
@@ -111,7 +111,7 @@ export class CoreVaultManagerTransferRequestCanceled extends FAssetEventBound {
   @ManyToOne({ entity: () => UnderlyingAddress })
   destination!: UnderlyingAddress
 
-  @Property({ type: 'text', length: BYTES32_LENGTH })
+  @Property({ type: 'text', length: BYTES32_LENGTH, index: true })
   paymentReference!: string
 
   @Property({ type: new uint256() })
@@ -124,7 +124,7 @@ export class CoreVaultManagerNotAllEscrowsProcessed extends FAssetEventBound {}
 @Entity()
 export class EscrowExpired extends FAssetEventBound {
 
-  @Property({ type: 'text', length: BYTES32_LENGTH })
+  @Property({ type: 'text', length: BYTES32_LENGTH, index: true })
   preimageHash!: string
 
   @Property({ type: new uint256() })
@@ -134,7 +134,7 @@ export class EscrowExpired extends FAssetEventBound {
 @Entity()
 export class EscrowFinished extends FAssetEventBound {
 
-  @Property({ type: 'text', length: BYTES32_LENGTH })
+  @Property({ type: 'text', length: BYTES32_LENGTH, index: true })
   preimageHash!: string
 
   @Property({ type: new uint256() })

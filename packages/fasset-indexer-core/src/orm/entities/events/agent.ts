@@ -52,7 +52,7 @@ export class UnderlyingWithdrawalAnnounced extends AgentEventBound {
   @Property({ type: new uint64() })
   announcementId!: bigint
 
-  @Property({ type: 'string' })
+  @Property({ type: 'string', index: true })
   paymentReference!: string
 }
 
@@ -65,7 +65,7 @@ export class UnderlyingWithdrawalConfirmed extends FAssetEventBound {
   @Property({ type: new uint256() })
   spendUBA!: bigint
 
-  @Property({ type: 'string' })
+  @Property({ type: 'string', index: true })
   transactionHash!: string
 }
 
@@ -79,7 +79,7 @@ export class UnderlyingWithdrawalCancelled extends FAssetEventBound {
 @Entity()
 export class UnderlyingBalanceToppedUp extends AgentEventBound {
 
-  @Property({ type: 'text' })
+  @Property({ type: 'text', index: true })
   transactionHash!: string
 
   @Property({ type: new uint256() })

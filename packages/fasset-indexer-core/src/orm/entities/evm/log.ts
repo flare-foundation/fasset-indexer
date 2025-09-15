@@ -11,7 +11,7 @@ export class EvmLog {
   @PrimaryKey({ type: "number", autoincrement: true })
   id!: number
 
-  @Property({ type: "number" })
+  @Property({ type: "number", index: true })
   index!: number
 
   @Property({ type: "text" })
