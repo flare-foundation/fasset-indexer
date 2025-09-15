@@ -21,7 +21,10 @@ export interface IXrpTransaction {
   hash: string
   metaData?: {
     TransactionResult: string
-  },
+  }
+  meta?: {
+    TransactionResult: string
+  }
   Destination?: string
   ledger_index: number
   date: number

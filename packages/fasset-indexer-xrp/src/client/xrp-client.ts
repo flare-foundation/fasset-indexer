@@ -3,6 +3,7 @@ import type {
   IXrpAccountInfoResponse, IXrpAccountTxResponse,
   IXrpBlock, IXrpBlockQueryResponse,
   IXrpLedgerCurrentResponse, IXrpServerInfoResponse,
+  IXrpTransaction,
   IXrpWeirdAfTx
 } from "./interface"
 
@@ -14,6 +15,15 @@ export class XrpClient {
     const resp = await this.getLedger(n)
     this.ensureSuccess(resp)
     return resp.result.ledger
+  }
+
+  async transaction(hash: string): Promise<IXrpTransaction> {
+    const resp = await this.request('tx', [{
+      transaction: hash,
+      binary: false
+    }])
+    this.ensureSuccess(resp)
+    return resp.result
   }
 
   async blockHeight(): Promise<number> {
