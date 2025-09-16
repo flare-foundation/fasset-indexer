@@ -746,24 +746,24 @@ export class DashboardAnalytics extends SharedAnalytics {
     )) as FAssetAmountResult
   }
 
-  private convertOrmResultToFAssetValueResult<K extends string>(
+  protected convertOrmResultToFAssetValueResult<K extends string>(
     result: ({ fasset: number } & { [key in K]: string | bigint })[], key: K
   ): FAssetValueResult {
     const ret = {} as FAssetValueResult
     for (const x of result) {
       ret[FAssetType[x.fasset] as FAsset] = { value: BigInt(x?.[key] ?? 0) }
     }
-    return ret
+    return this.complementFAssetValueResult(ret)
   }
 
-  private convertOrmResultToFAssetAmountResult<K extends string>(
+  protected convertOrmResultToFAssetAmountResult<K extends string>(
     result: ({ fasset: number } & { [key in K]: string | number })[], key: K
   ): FAssetAmountResult {
     const ret = {} as FAssetAmountResult
     for (const x of result) {
       ret[FAssetType[x.fasset] as FAsset] = { amount: Number(x?.[key] ?? 0) }
     }
-    return ret
+    return this.complementFAssetAmountResult(ret)
   }
 
   private convertFAssetTimeSeriesToFAssetTimespan(timeseries: FAssetTimeSeries<bigint>): FAssetTimespan<bigint> {
@@ -780,6 +780,24 @@ export class DashboardAnalytics extends SharedAnalytics {
       timespan.push({ timestamp: end, value: pval })
     }
     return timespan
+  }
+
+  private complementFAssetValueResult(result: FAssetValueResult): FAssetValueResult {
+    for (const fasset of this.supportedFAssets) {
+      if (result[fasset] == null) {
+        result[fasset] = { value: BigInt(0) }
+      }
+    }
+    return result
+  }
+
+  private complementFAssetAmountResult(result: FAssetAmountResult): FAssetAmountResult {
+    for (const fasset of this.supportedFAssets) {
+      if (result[fasset] == null) {
+        result[fasset] = { amount: 0 }
+      }
+    }
+    return result
   }
 
 }
