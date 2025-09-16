@@ -219,6 +219,10 @@ export class DashboardAnalytics extends SharedAnalytics {
     return this.totalClaimedPoolFeesAt(this.orm.em.fork(), pool, user)
   }
 
+  async totalDepositedPoolFees(): Promise<FAssetValueResult> {
+    return this.totalDepositedPoolFeesAt(this.orm.em.fork())
+  }
+
   ///////////////////////////////////////////////////////////////
   // timespans
 
@@ -379,6 +383,28 @@ export class DashboardAnalytics extends SharedAnalytics {
       'cpfw', pool, user, timestamp
     ).execute() as { fasset: number, fees: bigint }[]
     return this.convertOrmResultToFAssetValueResult(enteredFees, 'fees')
+  }
+
+  protected async totalDepositedPoolFeesAt(
+    em: EntityManager, timestamp?: number
+  ): Promise<FAssetValueResult> {
+    const mintPoolFees = await this.filterEnterOrExitQueryBy(
+      em.createQueryBuilder(Entities.MintingExecuted, 'me')
+        .select(['me.fasset', raw('sum(me.pool_fee_uba) as fees')])
+        .groupBy('me.fasset'),
+      'me', undefined, undefined, timestamp
+    ).execute() as { fasset: number, fees: bigint }[]
+    const redeemPoolFees = await this.filterEnterOrExitQueryBy(
+      em.createQueryBuilder(Entities.RedemptionPoolFeeMintedEvent, 'rpfme')
+        .select(['rpfme.fasset', raw('sum(rpfme.pool_fee_uba) as fees')])
+        .groupBy('rpfme.fasset'),
+      'rpfme', undefined, undefined, timestamp
+    ).execute() as { fasset: number, fees: bigint }[]
+    return this.transformFAssetValueResults(
+      this.convertOrmResultToFAssetValueResult(mintPoolFees, 'fees'),
+      this.convertOrmResultToFAssetValueResult(redeemPoolFees, 'fees'),
+      add
+    )
   }
 
   protected async tokenSupplyAt(

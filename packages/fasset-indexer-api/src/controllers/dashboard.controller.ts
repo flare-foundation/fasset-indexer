@@ -133,6 +133,12 @@ export class DashboardController {
     return apiResponse(this.service.totalClaimedPoolFees(pool, user), 200)
   }
 
+  @Get('total-deposited-pool-fees?')
+  @ApiOperation({ summary: 'Total deposited collateral pool fees' })
+  getTotalDepositedPoolFees(): Promise<ApiResponse<FAssetValueResult>> {
+    return apiResponse(this.service.totalDepositedPoolFees(), 200)
+  }
+
   //////////////////////////////////////////////////////////////////////
   // timespan
 
