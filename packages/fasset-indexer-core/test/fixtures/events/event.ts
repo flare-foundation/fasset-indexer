@@ -87,6 +87,8 @@ export class EventFixture extends EventGeneration {
         return this.generateCollateralTypeAdded()
       } case EVENTS.ASSET_MANAGER.AGENT_VAULT_CREATED: {
         return this.generateAgentVaultCreated()
+      } case EVENTS.ASSET_MANAGER.AGENT_VAULT_DESTROY_ANNOUNCED: {
+        return this.generateAgentVaultDestroyAnnounced()
       } case EVENTS.ASSET_MANAGER.AGENT_SETTING_CHANGED: {
         return this.generateAgentSettingsChanged()
       } case EVENTS.ASSET_MANAGER.AGENT_DESTROYED: {

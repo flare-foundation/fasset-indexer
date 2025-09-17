@@ -8,7 +8,7 @@ export {
   VaultCollateralWithdrawalAnnounced, PoolTokenRedemptionAnnounced,
   UnderlyingWithdrawalAnnounced, UnderlyingWithdrawalConfirmed,
   UnderlyingWithdrawalCancelled, UnderlyingBalanceToppedUp,
-  UnderlyingBalanceChanged, DustChanged
+  UnderlyingBalanceChanged, DustChanged, AgentDestroyAnnounced
 } from "./events/agent"
 export {
   CollateralReserved, MintingExecuted,

@@ -4,7 +4,7 @@ import chaiAsPromised from "chai-as-promised"
 import { unlink } from "fs"
 import { FAssetType } from "../src"
 import { EvmLog } from "../src/orm/entities/evm/log"
-import { AgentVaultCreated } from "../src/orm/entities/events/agent"
+import { AgentVaultCreated, AgentDestroyAnnounced } from "../src/orm/entities/events/agent"
 import { AgentVaultSettings } from "../src/orm/entities/state/agent"
 import { CollateralTypeAdded, ERC20Transfer } from "../src/orm/entities/events/token"
 import { EventFixture } from "./fixtures/events/event"
@@ -410,6 +410,21 @@ describe("FAsset evm events", () => {
     expect(selfMint.poolFeeUBA).to.equal(selfMintEvent.args[4])
   })
 
+  it("should store agent vault destroy announced", async () => {
+    const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
+    await fixture.storeInitialAgents(FAssetType.FXRP)
+    const em = context.orm.em.fork()
+    const announceDestroyEvent = await fixture.generateEvent(EVENTS.ASSET_MANAGER.AGENT_VAULT_DESTROY_ANNOUNCED, assetManagerXrp)
+    await storer.processEventUnsafe(em, announceDestroyEvent)
+    const announceDestroy = await em.findOneOrFail(AgentDestroyAnnounced,
+      { evmLog: { index: announceDestroyEvent.logIndex, block: { index: announceDestroyEvent.blockNumber }}},
+      { populate: ['evmLog.block', 'agentVault.address']}
+    )
+    expect(announceDestroy).to.exist
+    expect(announceDestroy.agentVault.address.hex).to.equal(announceDestroyEvent.args[0])
+    expect(announceDestroy.allowedAt).to.equal(announceDestroyEvent.args[1])
+  })
+
   describe("redemption tickets", () => {
 
     it("should store the redemption ticket created event and state", async () => {
@@ -560,7 +575,7 @@ describe("FAsset evm events", () => {
 
   describe("emergency pause", () => {
 
-    it.only("should test storing the emergency pause triggered event with old interface", async () => {
+    it("should test storing the emergency pause triggered event with old interface", async () => {
       const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
       const event = await fixture.generateEvent(EVENTS.ASSET_MANAGER.EMERGENCY_PAUSE_TRIGGERED, assetManagerXrp)
       await storer.processEvent(event)

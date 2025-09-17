@@ -58,7 +58,8 @@ import type {
   TransferToCoreVaultStartedEvent,
   TransferToCoreVaultSuccessfulEvent,
   TransferToCoreVaultDefaultedEvent,
-  SettingChangedEvent
+  SettingChangedEvent,
+  AgentDestroyAnnouncedEvent
 } from "../../../chain/typechain/assetManager/IAssetManager__latest"
 import type { TransferEvent } from "../../../chain/typechain/IERC20"
 import type { SettingsUpdatedEvent } from "../../../chain/typechain/ICoreVaultManager"
@@ -146,6 +147,13 @@ export class EventGeneration {
         struct.redemptionPoolFeeShareBIPS,
       ]
     } as any
+  }
+
+  protected async generateAgentVaultDestroyAnnounced(): Promise<AgentDestroyAnnouncedEvent.OutputTuple> {
+    return [
+      await this.getRandomAgentVault(),
+      BigInt(randomNumber(10, 9999))
+    ]
   }
 
   protected async generateAgentSettingsChanged(): Promise<AgentSettingChangedEvent.OutputTuple> {

@@ -31,6 +31,8 @@ export const EVENTS = {
     AGENT_ENTERED_AVAILABLE: "AgentAvailable",
     AGENT_DESTROYED: "AgentDestroyed",
     SELF_CLOSE: "SelfClose",
+    // announcements
+    AGENT_VAULT_DESTROY_ANNOUNCED: "AgentDestroyAnnounced",
     VAULT_COLLATERAL_WITHDRAWAL_ANNOUNCED: "VaultCollateralWithdrawalAnnounced",
     POOL_TOKEN_REDEMPTION_ANNOUNCED: "PoolTokenRedemptionAnnounced",
     // underlying tracking

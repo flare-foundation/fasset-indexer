@@ -70,6 +70,9 @@ export class EventStorer {
       } case EVENTS.ASSET_MANAGER.AGENT_VAULT_DESTROYED: {
         await this.onAgentVaultDestroyed(em, evmLog, log.args)
         break
+      } case EVENTS.ASSET_MANAGER.AGENT_VAULT_DESTROY_ANNOUNCED: {
+        await this.onAgentVaultDestroyAnnounced(em, evmLog, log.args)
+        break
       } case EVENTS.ASSET_MANAGER.AGENT_SETTING_CHANGED: {
         await this.onAgentSettingChanged(em, evmLog, log.args)
         break
@@ -423,6 +426,19 @@ export class EventStorer {
     const [ agentVault ] = logArgs
     const _agentVault = await em.findOneOrFail(Entities.AgentVault, { address: { hex: agentVault } })
     return em.create(Entities.AgentVaultDestroyed, { evmLog, fasset, agentVault: _agentVault })
+  }
+
+  protected async onAgentVaultDestroyAnnounced(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.AgentDestroyAnnouncedEvent.OutputTuple
+  ): Promise<Entities.AgentDestroyAnnounced> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ agentVault, destroyAllowedAt ] = logArgs
+    const _agentVault = await em.findOneOrFail(Entities.AgentVault, { address: { hex: agentVault }})
+    return em.create(Entities.AgentDestroyAnnounced, {
+      evmLog, fasset, agentVault: _agentVault, allowedAt: destroyAllowedAt
+    })
   }
 
   protected async onAgentSettingChanged(

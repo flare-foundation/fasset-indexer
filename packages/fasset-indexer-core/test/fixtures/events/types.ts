@@ -37,7 +37,8 @@ import type {
   TransferToCoreVaultStartedEvent,
   TransferToCoreVaultSuccessfulEvent,
   TransferToCoreVaultDefaultedEvent,
-  SettingChangedEvent
+  SettingChangedEvent,
+  AgentDestroyAnnouncedEvent,
 } from "../../../chain/typechain/assetManager/IAssetManager__latest"
 import type {
   CPClaimedRewardEvent,
@@ -60,6 +61,7 @@ export type EventNameToEventArgs = {
   [EVENTS.ASSET_MANAGER.AGENT_VAULT_CREATED]: AgentVaultCreatedEvent.OutputTuple
   [EVENTS.ASSET_MANAGER.AGENT_SETTING_CHANGED]: AgentSettingChangedEvent.OutputTuple
   [EVENTS.ASSET_MANAGER.AGENT_DESTROYED]: AgentDestroyedEvent.OutputTuple
+  [EVENTS.ASSET_MANAGER.AGENT_VAULT_DESTROY_ANNOUNCED]: AgentDestroyAnnouncedEvent.OutputTuple
   [EVENTS.ASSET_MANAGER.SELF_CLOSE]: SelfCloseEvent.OutputTuple
   [EVENTS.ASSET_MANAGER.COLLATERAL_RESERVED]: CollateralReservedEvent.OutputTuple
   [EVENTS.ASSET_MANAGER.MINTING_EXECUTED]: MintingExecutedEvent.OutputTuple

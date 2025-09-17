@@ -10,6 +10,13 @@ export class AgentVaultCreated extends AgentEventBound {}
 export class AgentVaultDestroyed extends AgentEventBound {}
 
 @Entity()
+export class AgentDestroyAnnounced extends AgentEventBound {
+
+  @Property({ type: new uint64() })
+  allowedAt!: bigint
+}
+
+@Entity()
 export class AgentSettingChanged extends AgentEventBound {
 
   @Property({ type: 'text' })
