@@ -13,6 +13,9 @@ const VALID_EVENTS = [
   EVENTS.ASSET_MANAGER.RETURN_FROM_CORE_VAULT_REQUESTED
 ]
 
+const ALL_TRANSACTION_TYPES = Object.values(ExplorerType.TransactionType)
+  .filter(v => typeof v === "number")
+
 export class ExplorerAnalytics {
   protected lookup: ContractLookup
   private coreVaultCache = new Map<FAssetType, string>()
@@ -29,7 +32,8 @@ export class ExplorerAnalytics {
     limit: number, offset: number,
     user?: string, agent?: string,
     start?: number, end?: number,
-    asc: boolean = false
+    asc: boolean = false,
+    types: ExplorerType.TransactionType[] = ALL_TRANSACTION_TYPES
   ): Promise<ExplorerType.TransactionsInfo> {
     const em = this.orm.em.fork()
     const isuser = user != null
@@ -37,7 +41,7 @@ export class ExplorerAnalytics {
     ;[start, end] = this.standardizeInterval(start, end)
     const window = start != null || end != null
     const transactions = await em.getConnection('read').execute(
-      SQL.EXPLORER_TRANSACTIONS(isuser, isagent, asc, window),
+      SQL.EXPLORER_TRANSACTIONS(isuser, isagent, asc, window, types),
       (isuser || isagent)
         ? (window ? [user ?? agent, start, end, limit, offset] : [user ?? agent, limit, offset])
         : (window ? [start, end, limit, offset] : [limit, offset])
@@ -51,10 +55,7 @@ export class ExplorerAnalytics {
         timestamp, origin: source, hash, value: BigInt(value_uba)
       })
     }
-    const count = (info.length < limit)
-      ? offset + info.length
-      : await this.getExplorerTransactionCount(em, user, agent)
-    return { transactions: info, count }
+    return { transactions: info, count: transactions[0]?.count ?? 0 }
   }
 
   async transactionClassification(
@@ -300,19 +301,6 @@ export class ExplorerAnalytics {
       return resp
     }
     return resp
-  }
-
-  async getExplorerTransactionCount(em: EntityManager, user?: string, agent?: string): Promise<number> {
-    let query = null
-    if (user != null) {
-      query = SQL.EXPLORER_TRANSACTION_USER_COUNT
-    } else if (agent != null) {
-      query = SQL.EXPLORER_TRANSACTION_AGENT_COUNT
-    } else {
-      query = SQL.EXPLORER_TRANSACTION_COUNT
-    }
-    const resp = await em.getConnection('read').execute(query, [user ?? agent])
-    return Number(resp[0]?.cnt)
   }
 
   protected async getUnderlyingTransaction(

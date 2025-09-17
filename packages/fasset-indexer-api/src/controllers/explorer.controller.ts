@@ -3,13 +3,14 @@ import { CacheInterceptor } from '@nestjs/cache-manager'
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { ExplorerService } from '../services/explorer.service'
 import { apiResponse, ApiResponse } from '../shared/api-response'
-import type {
-  MintTransactionDetails,
-  RedeemTransactionDetails,
-  RetrunFromCoreVaultTransactionDetails,
-  TransferToCoreVaultTransactionDetails,
-  TransactionsInfo,
-  GenericTransactionClassification
+import {
+  type MintTransactionDetails,
+  type RedeemTransactionDetails,
+  type RetrunFromCoreVaultTransactionDetails,
+  type TransferToCoreVaultTransactionDetails,
+  type TransactionsInfo,
+  type GenericTransactionClassification,
+  TransactionType
 } from '../analytics/interface'
 
 
@@ -28,6 +29,7 @@ export class ExplorerController {
   @ApiQuery({ name: 'start', type: Number, required: false })
   @ApiQuery({ name: 'end', type: Number, required: false })
   @ApiQuery({ name: 'asc', type: Boolean, required: false })
+  @ApiQuery({ name: 'types', type: String, isArray: true, required: false })
   getTransactions(
     @Query('limit', ParseIntPipe) limit: number,
     @Query('offset', ParseIntPipe) offset: number,
@@ -35,9 +37,12 @@ export class ExplorerController {
     @Query('agent') agent?: string,
     @Query('asc') asc?: boolean,
     @Query('start', new ParseIntPipe({ optional: true })) start?: number,
-    @Query('end', new ParseIntPipe({ optional: true })) end?: number
+    @Query('end', new ParseIntPipe({ optional: true })) end?: number,
+    @Query('types') types?: string | string[]
   ): Promise<ApiResponse<TransactionsInfo>> {
-    return apiResponse(this.service.transactions(limit, offset, user, agent, start, end, asc), 200)
+    if (types != null && typeof types == 'string') types = [types]
+    const transactionTypes = types != null ? this.parseTransactionTypes(types as string[]) : null
+    return apiResponse(this.service.transactions(limit, offset, user, agent, start, end, asc, transactionTypes), 200)
   }
 
   @Get('transaction-classification')
@@ -85,4 +90,7 @@ export class ExplorerController {
     return apiResponse(this.service.returnFromCoreVaultTransactionDetails(hash), 200)
   }
 
+  private parseTransactionTypes(types: string[]): TransactionType[] {
+    return types.map(t => TransactionType[t])
+  }
 }
