@@ -81,6 +81,7 @@
         "EmergencyPauseTriggered",
         "EmergencyPauseCanceled",
         "EmergencyPauseTransfersTriggered",
-        "EmergencyPauseTransfersCanceled"
+        "EmergencyPauseTransfersCanceled",
+        "AgentDestroyAnnounced"
       ]
 }
