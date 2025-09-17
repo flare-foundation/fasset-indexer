@@ -98,7 +98,7 @@ GROUP BY t.fasset
 ORDER BY t.fasset
 `
 
-export const EXPLORER_TRANSACTIONS = (user: boolean, agent: boolean) => `
+export const EXPLORER_TRANSACTIONS = (user: boolean, agent: boolean, asc: boolean) => `
 SELECT et.hash, el.name, eb.timestamp, eaa.hex as agent_vault, am.name as agent_name, eau.hex as user, eao.hex as source, t.value_uba FROM (
   SELECT cr.evm_log_id, cr.agent_vault_address_id, cr.value_uba, cr.minter_id as user_id FROM collateral_reserved cr
   UNION ALL
@@ -121,7 +121,7 @@ JOIN agent_owner ao ON av.vaults = ao.id
 JOIN agent_manager am ON am.address_id = ao.agents
 ${user ? 'WHERE eau.hex = ?' : ''}
 ${agent ? 'WHERE eaa.hex = ?' : ''}
-ORDER BY el.block_index DESC
+ORDER BY el.block_index ${asc ? 'ASC' : 'DESC'}
 LIMIT ? OFFSET ?
 `
 

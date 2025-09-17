@@ -26,13 +26,14 @@ export class ExplorerAnalytics {
 
   async transactions(
     limit: number, offset: number,
-    user?: string, agent?: string
+    user?: string, agent?: string,
+    asc: boolean = false
   ): Promise<ExplorerType.TransactionsInfo> {
     const em = this.orm.em.fork()
     const isuser = user != null
     const isagent = agent != null
     const transactions = await em.getConnection('read').execute(
-      SQL.EXPLORER_TRANSACTIONS(isuser, isagent),
+      SQL.EXPLORER_TRANSACTIONS(isuser, isagent, asc),
       (isuser || isagent) ? [user ?? agent, limit, offset] : [limit, offset]
     ) as SQL.ExplorerTransactionsOrmResult[]
     const info: ExplorerType.TransactionInfo[] = []
