@@ -41,7 +41,7 @@ export class ExplorerController {
     @Query('types') types?: string | string[]
   ): Promise<ApiResponse<TransactionsInfo>> {
     if (types != null && typeof types == 'string') types = [types]
-    const transactionTypes = types != null ? this.parseTransactionTypes(types as string[]) : null
+    const transactionTypes = types != null ? this.parseTransactionTypes(types as string[]) : undefined
     return apiResponse(this.service.transactions(limit, offset, user, agent, start, end, asc, transactionTypes), 200)
   }
 
