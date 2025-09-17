@@ -4,6 +4,7 @@ import * as ExplorerType from "./interface"
 import * as SQL from "./utils/raw-sql"
 import type { EntityManager, ORM } from "fasset-indexer-core/orm"
 import { EVENTS } from "fasset-indexer-core/config"
+import { unixnow } from "src/shared/utils"
 
 const VALID_EVENTS = [
   EVENTS.ASSET_MANAGER.COLLATERAL_RESERVED,
@@ -27,14 +28,19 @@ export class ExplorerAnalytics {
   async transactions(
     limit: number, offset: number,
     user?: string, agent?: string,
+    start?: number, end?: number,
     asc: boolean = false
   ): Promise<ExplorerType.TransactionsInfo> {
     const em = this.orm.em.fork()
     const isuser = user != null
     const isagent = agent != null
+    ;[start, end] = this.standardizeInterval(start, end)
+    const window = start != null || end != null
     const transactions = await em.getConnection('read').execute(
-      SQL.EXPLORER_TRANSACTIONS(isuser, isagent, asc),
-      (isuser || isagent) ? [user ?? agent, limit, offset] : [limit, offset]
+      SQL.EXPLORER_TRANSACTIONS(isuser, isagent, asc, window),
+      (isuser || isagent)
+        ? (window ? [user ?? agent, start, end, limit, offset] : [user ?? agent, limit, offset])
+        : (window ? [start, end, limit, offset] : [limit, offset])
     ) as SQL.ExplorerTransactionsOrmResult[]
     const info: ExplorerType.TransactionInfo[] = []
     for (const { name, timestamp, source, hash, agent_vault, agent_name, value_uba, user } of transactions) {
@@ -348,5 +354,14 @@ export class ExplorerAnalytics {
   }
   private isRippleTransactionHash(hash: string): boolean {
     return /[A-F0-9]{64}/.test(hash)
+  }
+
+  private standardizeInterval(a: number, b?: number): [number | null, number | null] {
+    if (a == null && b != null) {
+      return [0, b]
+    } else if (a != null && b == null) {
+      return [a, unixnow()]
+    }
+    return [a, b]
   }
 }
