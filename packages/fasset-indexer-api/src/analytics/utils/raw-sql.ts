@@ -126,7 +126,7 @@ JOIN agent_owner ao ON av.vaults = ao.id
 JOIN agent_manager am ON am.address_id = ao.agents
 ${user ? 'WHERE eau.hex = ?' : ''}
 ${agent ? 'WHERE eaa.hex = ?' : ''}
-${window ? (agent || user ? 'AND' : 'WHERE' + ' eb.timestamp BETWEEN ? AND ?') : ''}
+${window ? ((agent || user ? 'AND' : 'WHERE') + ' eb.timestamp BETWEEN ? AND ?') : ''}
 ORDER BY el.block_index ${asc ? 'ASC' : 'DESC'}
 LIMIT ? OFFSET ?
 `
