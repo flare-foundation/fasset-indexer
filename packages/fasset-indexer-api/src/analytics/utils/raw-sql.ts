@@ -104,8 +104,8 @@ const transactions = new Map([
   [TransactionType.Redeem, `SELECT rr.evm_log_id, rr.agent_vault_address_id, rr.value_uba, rr.redeemer_id as user_id FROM redemption_requested rr
     FULL JOIN transfer_to_core_vault_started tc ON rr.fasset = tc.fasset AND rr.request_id = tc.transfer_redemption_request_id
     WHERE tc.evm_log_id IS NULL`],
-  [TransactionType.TransferToCV, `SELECT tc.evm_log_id, tc.agent_vault_address_id, tc.value_uba, NULL as user_id FROM transfer_to_core_vault_started tc`],
-  [TransactionType.ReturnFromCV, `SELECT rc.evm_log_id, rc.agent_vault_address_id, rc.value_uba, NULL as user_id FROM return_from_core_vault_requested rc`]
+  [TransactionType.TransferToCV, `SELECT tc.evm_log_id, tc.agent_vault_address_id, tc.value_uba, NULL::integer as user_id FROM transfer_to_core_vault_started tc`],
+  [TransactionType.ReturnFromCV, `SELECT rc.evm_log_id, rc.agent_vault_address_id, rc.value_uba, NULL::integer as user_id FROM return_from_core_vault_requested rc`]
 ])
 
 // psql specific query

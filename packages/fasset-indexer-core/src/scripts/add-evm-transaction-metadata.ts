@@ -16,7 +16,7 @@ async function updateTransactions(context: Context) {
   const em = context.orm.em.fork()
 
   let i = 0
-  const txs = await em.find(EvmTransaction, { value: null }, { limit: TX_LIMIT })
+  const txs = await em.find(EvmTransaction, { value: null }, { limit: TX_LIMIT, orderBy: { block: { timestamp: 'DESC' } } })
   for (const tx of txs) {
     i += 1
     console.log(`processing transaction ${i}/${txs.length}: ${tx.hash}`)
