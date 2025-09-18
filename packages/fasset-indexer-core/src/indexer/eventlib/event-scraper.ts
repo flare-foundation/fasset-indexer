@@ -2,22 +2,6 @@ import type { Context } from "../../context/context"
 import type { Log } from "ethers"
 
 
-export type EventArgs = any
-
-export interface Event {
-  topic: string
-  name: string
-  args: EventArgs
-  blockNumber: number
-  transactionIndex: number
-  logIndex: number
-  source: string
-  blockTimestamp: number
-  transactionHash: string
-  transactionSource: string
-  transactionTarget: string | null
-}
-
 interface LogUri {
   blockNumber: number
   transactionIndex: number

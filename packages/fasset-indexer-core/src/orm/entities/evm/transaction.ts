@@ -2,6 +2,7 @@ import { Entity, PrimaryKey, Property, Unique, ManyToOne } from "@mikro-orm/core
 import { EvmAddress } from "./address"
 import { EvmBlock } from "./block"
 import { BYTES32_LENGTH } from "../../../config/constants"
+import { uint256 } from "../../custom/uint"
 
 
 @Entity()
@@ -25,4 +26,22 @@ export class EvmTransaction {
 
   @ManyToOne({ entity: () => EvmAddress, nullable: true })
   target?: EvmAddress
+
+  @Property({ type: new uint256(), nullable: true })
+  value!: bigint
+
+  @Property({ type: new uint256(), nullable: true })
+  gasUsed!: bigint
+
+  @Property({ type: new uint256(), nullable: true })
+  gasPrice!: bigint
+
+  @Property({ type: new uint256(), nullable: true })
+  gasLimit!: bigint
+
+  @Property({ type: 'number', nullable: true })
+  type!: number
+
+  @Property({ type: 'number', nullable: true })
+  nonce!: number
 }

@@ -7,7 +7,7 @@ import { AssetManagerEventMigration } from "./migrations/asset-manager-migration
 import { EVENTS } from '../../config/constants'
 import type { EntityManager } from "@mikro-orm/knex"
 import type { ORM } from "../../orm/interface"
-import type { Event } from "./event-scraper"
+import type { Event } from "./types"
 import type * as AssetManager from "../../../chain/typechain/assetManager/IAssetManager__latest"
 import type * as CollateralPool from "../../../chain/typechain/collateralPool/ICollateralPool__latest"
 import type * as CollateralPoolPreUpgrade  from "../../../chain/typechain/collateralPool/ICollateralPool__initial"
@@ -313,8 +313,8 @@ export class EventStorer {
   }
 
   protected async logExists(em: EntityManager, log: Event): Promise<boolean> {
-    const { blockNumber, logIndex } = log
-    const evmLog = await em.findOne(Entities.EvmLog, { index: logIndex, block: { index: blockNumber }})
+    const { block: { index: blockIndex }, index } = log
+    const evmLog = await em.findOne(Entities.EvmLog, { index, block: { index: blockIndex }})
     return evmLog !== null
   }
 
@@ -1520,19 +1520,16 @@ export class EventStorer {
   // will not persist new transactions, blocks, and events if the latter will not be successfully processed
   // we do have to persist addresses as they can be refereced during event processing
   private async createLogEntity(em: EntityManager, log: Event): Promise<Entities.EvmLog> {
-    const transactionSource = await findOrCreateEntity(em, Entities.EvmAddress, { hex: log.transactionSource })
-    const transactionTarget = log.transactionTarget === null ? undefined
-      : await findOrCreateEntity(em, Entities.EvmAddress, { hex: log.transactionTarget })
+    const source = await findOrCreateEntity(em, Entities.EvmAddress, { hex: log.transaction.source })
+    const target = log.transaction.target === null ? undefined
+      : await findOrCreateEntity(em, Entities.EvmAddress, { hex: log.transaction.target })
     const block = await findOrCreateEntity(em, Entities.EvmBlock,
-      { index: log.blockNumber }, { persist: false }, { timestamp: log.blockTimestamp })
+      { index: log.block.index }, { persist: false }, { timestamp: log.block.timestamp })
     const transaction = await findOrCreateEntity(em, Entities.EvmTransaction,
-      { hash: log.transactionHash }, { persist: false },
-      { block, index: log.transactionIndex, source: transactionSource, target: transactionTarget }
-    )
-    const eventSource = await findOrCreateEntity(em, Entities.EvmAddress, { hex: log.source })
-    return em.create(Entities.EvmLog, {
-      index: log.logIndex, name: log.name, address: eventSource, transaction, block
-    }, { persist: false })
+      { hash: log.transaction.hash }, { persist: false }, { block, ...log.transaction, source, target })
+    const address = await findOrCreateEntity(em, Entities.EvmAddress, { hex: log.source })
+    return em.create(Entities.EvmLog,
+      { index: log.index, name: log.name, address, transaction, block }, { persist: false })
   }
 
   private async changeTokenBalance(

@@ -19,7 +19,7 @@ import {
   randomUnderlyingAddress
 } from "../utils"
 import { AGENT_SETTINGS, ASSET_MANAGERS, WNAT_TOKEN } from "../constants"
-import type { Event } from "../../../src/indexer/eventlib/event-scraper"
+import type { Event } from "../../../src/indexer/eventlib/types"
 import type {
   AgentVaultCreatedEvent,
   CollateralTypeAddedEvent,
@@ -83,17 +83,27 @@ export class EventGeneration {
 
   constructor(public readonly orm: ORM) { }
 
-  protected generateEventWithoutArgs(source?: string): Omit<Event, 'name' | 'args'> {
+  protected generateEventWithoutArgs(topic: string, source?: string): Omit<Event, 'name' | 'args'> {
       return {
-        topic: '0x',
-        blockNumber: randomNumber(1, 1e6),
-        transactionIndex: randomNumber(1, 1e6),
-        logIndex: randomNumber(1, 1e6),
+        topic,
+        index: randomNumber(1, 1e6),
         source: source ?? randomChoice(ASSET_MANAGERS),
-        blockTimestamp: Math.floor(Date.now() / 1000),
-        transactionHash: randomHash(),
-        transactionSource: randomNativeAddress(),
-        transactionTarget: randomNativeAddress()
+        block: {
+          index: randomNumber(1, 1e6),
+          timestamp: Math.floor(Date.now() / 1000)
+        },
+        transaction: {
+          index: randomNumber(1, 1e6),
+          source: randomNativeAddress(),
+          hash: randomHash(),
+          target: randomNativeAddress(),
+          value: BigInt(randomNumber(1, 1e20)),
+          gasUsed: BigInt(randomNumber(1, 1e8)),
+          gasPrice: BigInt(randomNumber(1, 1e13)),
+          gasLimit: BigInt(1e13),
+          nonce: randomNumber(1, 1000),
+          type: 1
+        }
       }
     }
 

@@ -8,7 +8,7 @@ import { CoreVaultManagerSettings } from "../../../src/orm/entities/state/settin
 import { randomNativeAddress, randomString, randomUnderlyingAddress } from "../utils"
 import { EventGeneration } from "./generate"
 import { EVENTS } from "../../../src/config"
-import type { Event } from "../../../src/indexer/eventlib/event-scraper"
+import type { Event } from "../../../src/indexer/eventlib/types"
 import type { EventNameToEventArgs } from "./types"
 
 
@@ -75,7 +75,7 @@ export class EventFixture extends EventGeneration {
 
   async generateEvent(name: keyof EventNameToEventArgs, source?: string, args: any[] = []): Promise<Event> {
     const topic = this.events.getEventTopics(name, Object.values(this.events.interfaces).flat())[0]
-    return { name, args: await this.generateEventArgs(name, args), ...this.generateEventWithoutArgs(source), topic }
+    return { name, args: await this.generateEventArgs(name, args), ...this.generateEventWithoutArgs(topic, source) }
   }
 
   protected async generateEventArgs<T extends keyof EventNameToEventArgs>(name: T, args: any[]): Promise<EventNameToEventArgs[T]>

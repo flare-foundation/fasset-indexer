@@ -2,20 +2,10 @@ import { AgentVault } from "../../orm/entities/agent"
 import { Context } from "../../context/context"
 import type { EntityManager } from "@mikro-orm/knex"
 import type { Log } from "ethers"
-import type { Event } from "./event-scraper"
 import type { FAssetIface } from "../../shared"
+import type { Block, Transaction, Event } from "./types"
 
 
-interface Block {
-  index: number
-  timestamp: number
-}
-
-interface Transaction {
-  hash: string
-  source: string
-  target: string | null
-}
 
 export class EventParser {
   private topicToIface = new Map<string, FAssetIface>()
@@ -27,7 +17,8 @@ export class EventParser {
   }
 
   async logToEvent(log: Log): Promise<Event | null> {
-    const iface = this.topicToIface.get(log.topics[0])
+    const topic = log.topics[0]
+    const iface = this.topicToIface.get(topic)
     if (iface == null) return null
     const valid = await this.validLogSource(iface, log.address)
     if (!valid) return null
@@ -37,16 +28,12 @@ export class EventParser {
     const transaction = await this.getTransaction(log.transactionHash)
     return {
       name: parsed.name,
+      topic,
       args: parsed.args,
-      blockNumber: log.blockNumber,
-      transactionIndex: log.transactionIndex,
-      logIndex: log.index,
       source: log.address,
-      blockTimestamp: block.timestamp,
-      transactionHash: log.transactionHash,
-      transactionSource: transaction.source,
-      transactionTarget: transaction.target,
-      topic: log.topics[0]
+      index: log.index,
+      transaction: transaction,
+      block: block,
     }
   }
 
@@ -107,7 +94,7 @@ export class EventParser {
         throw new Error(`Failed to fetch block ${blockNumber}`)
       }
       this.blockCache = {
-        index: blockNumber,
+        index: block.number,
         timestamp: block.timestamp
       }
     }
@@ -117,13 +104,21 @@ export class EventParser {
   protected async getTransaction(transactionHash: string): Promise<Transaction> {
     if (this.transactionCache === null || this.transactionCache.hash !== transactionHash) {
       const transaction = await this.context.provider.getTransaction(transactionHash)
-      if (transaction === null) {
+      const receipt = await this.context.provider.getTransactionReceipt(transactionHash)
+      if (transaction == null || receipt == null) {
         throw new Error(`Failed to fetch transaction ${transactionHash}`)
       }
       this.transactionCache = {
         hash: transactionHash,
         source: transaction.from,
-        target: transaction.to
+        target: transaction.to ?? receipt.to,
+        gasUsed: receipt.gasUsed,
+        gasPrice: transaction.gasPrice,
+        gasLimit: transaction.gasLimit,
+        type: transaction.type,
+        value: transaction.value,
+        nonce: transaction.nonce,
+        index: transaction.index
       }
     }
     return this.transactionCache
