@@ -1,4 +1,4 @@
-import { Controller, Get, ParseIntPipe, Query, UseInterceptors } from '@nestjs/common'
+import { Controller, Get, ParseBoolPipe, ParseIntPipe, Query, UseInterceptors } from '@nestjs/common'
 import { CacheInterceptor } from '@nestjs/cache-manager'
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { ExplorerService } from '../services/explorer.service'
@@ -35,7 +35,7 @@ export class ExplorerController {
     @Query('offset', ParseIntPipe) offset: number,
     @Query('user') user?: string,
     @Query('agent') agent?: string,
-    @Query('asc') asc?: boolean,
+    @Query('asc', new ParseBoolPipe({ optional: true })) asc?: boolean,
     @Query('start', new ParseIntPipe({ optional: true })) start?: number,
     @Query('end', new ParseIntPipe({ optional: true })) end?: number,
     @Query('types') types?: string | string[]

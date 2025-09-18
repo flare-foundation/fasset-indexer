@@ -11,7 +11,6 @@ class TxParser extends EventParser {
   }
 }
 
-
 async function updateTransactions(context: Context) {
   const eventParser = new TxParser(context, [])
   const em = context.orm.em.fork()
