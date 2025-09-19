@@ -4,6 +4,14 @@ import * as ExplorerType from "./interface"
 import * as SQL from "./utils/raw-sql"
 import type { EntityManager, ORM } from "fasset-indexer-core/orm"
 import { unixnow } from "src/shared/utils"
+import { EVENTS } from "fasset-indexer-core/config"
+
+const TRANSACTION_TYPE_EVENTS = [
+  EVENTS.ASSET_MANAGER.REDEMPTION_REQUESTED,
+  EVENTS.ASSET_MANAGER.COLLATERAL_RESERVED,
+  EVENTS.ASSET_MANAGER.TRANSFER_TO_CORE_VAULT_STARTED,
+  EVENTS.ASSET_MANAGER.RETURN_FROM_CORE_VAULT_REQUESTED
+]
 
 const ALL_TRANSACTION_TYPES = Object.values(ExplorerType.TransactionType)
   .filter(v => typeof v === "number")
@@ -291,8 +299,75 @@ export class ExplorerAnalytics {
   }
 
   protected async nativeTransactionClassification(em: EntityManager, hash: string): Promise<ExplorerType.GenericTransactionClassification> {
+    const ret: ExplorerType.GenericTransactionClassification = []
     const logs = await em.find(Entities.EvmLog, { transaction: { hash } })
-    return logs.map(log => ({ transactionHash: hash, eventName: log.name }))
+    for (const log of logs) {
+      let oglog: Entities.EvmLog | null = null
+      if (
+           log.name == EVENTS.ASSET_MANAGER.REDEMPTION_REQUESTED
+        || log.name == EVENTS.ASSET_MANAGER.COLLATERAL_RESERVED
+        || log.name == EVENTS.ASSET_MANAGER.TRANSFER_TO_CORE_VAULT_STARTED
+        || log.name == EVENTS.ASSET_MANAGER.RETURN_FROM_CORE_VAULT_REQUESTED
+      ) {
+        oglog = log
+      // core vault transfers
+      } else if (log.name == EVENTS.ASSET_MANAGER.TRANSFER_TO_CORE_VAULT_SUCCESSFUL) {
+        oglog = await em.findOneOrFail(Entities.TransferToCoreVaultSuccessful,
+          { evmLog: log }, { populate: [ 'transferToCoreVaultStarted.evmLog.transaction' ]}
+        ).then(x => x.transferToCoreVaultStarted.evmLog)
+      } else if (log.name == EVENTS.ASSET_MANAGER.TRANSFER_TO_CORE_VAULT_DEFAULTED) {
+        oglog = await em.findOneOrFail(Entities.TransferToCoreVaultDefaulted,
+          { evmLog: log }, { populate: [ 'transferToCoreVaultStarted.evmLog.transaction' ]}
+        ).then(x => x.transferToCoreVaultStarted.evmLog)
+      // core vault returns
+      } else if (log.name == EVENTS.ASSET_MANAGER.RETURN_FROM_CORE_VAULT_CONFIRMED) {
+        oglog = await em.findOneOrFail(Entities.ReturnFromCoreVaultConfirmed,
+          { evmLog: log }, { populate: [ 'returnFromCoreVaultRequested.evmLog.transaction' ] }
+        ).then(x => x.returnFromCoreVaultRequested.evmLog)
+      } else if (log.name == EVENTS.ASSET_MANAGER.RETURN_FROM_CORE_VAULT_CANCELLED) {
+        oglog = await em.findOneOrFail(Entities.ReturnFromCoreVaultCancelled,
+          { evmLog: log }, { populate: [ 'returnFromCoreVaultRequested.evmLog.transaction' ] }
+        ).then(x => x.returnFromCoreVaultRequested.evmLog)
+      // mintings
+      } else if (log.name == EVENTS.ASSET_MANAGER.MINTING_EXECUTED) {
+        oglog = await em.findOneOrFail(Entities.MintingExecuted,
+          { evmLog: log }, { populate: [ 'collateralReserved.evmLog.transaction' ] }
+        ).then(x => x.collateralReserved.evmLog)
+      } else if (log.name == EVENTS.ASSET_MANAGER.MINTING_PAYMENT_DEFAULT) {
+        oglog = await em.findOneOrFail(Entities.MintingPaymentDefault,
+           { evmLog: log }, { populate: [ 'collateralReserved.evmLog.transaction' ] }
+        ).then(x => x.collateralReserved.evmLog)
+      } else if (log.name == EVENTS.ASSET_MANAGER.COLLATERAL_RESERVATION_DELETED) {
+        oglog = await em.findOneOrFail(Entities.CollateralReservationDeleted,
+           { evmLog: log }, { populate: [ 'collateralReserved.evmLog.transaction' ] }
+        ).then(x => x.collateralReserved.evmLog)
+      // redemptions
+      } else if (log.name == EVENTS.ASSET_MANAGER.REDEMPTION_PERFORMED) {
+        oglog = await em.findOneOrFail(Entities.RedemptionPerformed,
+          { evmLog: log }, { populate: [ 'redemptionRequested.evmLog.transaction' ] }
+        ).then(x => x.redemptionRequested.evmLog)
+      } else if (log.name == EVENTS.ASSET_MANAGER.REDEMPTION_DEFAULT) {
+        oglog = await em.findOneOrFail(Entities.RedemptionDefault,
+          { evmLog: log }, { populate: [ 'redemptionRequested.evmLog.transaction' ] }
+        ).then(x => x.redemptionRequested.evmLog)
+      } else if (log.name == EVENTS.ASSET_MANAGER.REDEMPTION_REJECTED) {
+        oglog = await em.findOneOrFail(Entities.RedemptionRejected,
+          { evmLog: log }, { populate: [ 'redemptionRequested.evmLog.transaction' ] }
+        ).then(x => x.redemptionRequested.evmLog)
+      } else if (log.name == EVENTS.ASSET_MANAGER.REDEMPTION_PAYMENT_FAILED) {
+        oglog = await em.findOneOrFail(Entities.RedemptionPaymentFailed,
+          { evmLog: log }, { populate: [ 'redemptionRequested.evmLog.transaction' ] }
+        ).then(x => x.redemptionRequested.evmLog)
+      } else if (log.name == EVENTS.ASSET_MANAGER.REDEMPTION_PAYMENT_BLOCKED) {
+        oglog = await em.findOneOrFail(Entities.RedemptionPaymentBlocked,
+          { evmLog: log }, { populate: [ 'redemptionRequested.evmLog.transaction' ] }
+        ).then(x => x.redemptionRequested.evmLog)
+      } else {
+        continue
+      }
+      ret.push({ eventName: log.name, transactionHash: oglog.transaction.hash })
+    }
+    return ret
   }
 
   protected async rippleTransactionClassification(em: EntityManager, hash: string): Promise<ExplorerType.GenericTransactionClassification> {
