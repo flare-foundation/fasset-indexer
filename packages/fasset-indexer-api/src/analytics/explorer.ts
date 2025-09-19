@@ -339,7 +339,7 @@ export class ExplorerAnalytics {
         ).then(x => x.collateralReserved.evmLog)
       } else if (log.name == EVENTS.ASSET_MANAGER.COLLATERAL_RESERVATION_DELETED) {
         oglog = await em.findOneOrFail(Entities.CollateralReservationDeleted,
-           { evmLog: log }, { populate: [ 'collateralReserved.evmLog.transaction' ] }
+          { evmLog: log }, { populate: [ 'collateralReserved.evmLog.transaction' ] }
         ).then(x => x.collateralReserved.evmLog)
       // redemptions
       } else if (log.name == EVENTS.ASSET_MANAGER.REDEMPTION_PERFORMED) {
