@@ -29,12 +29,14 @@ async function updateTransactions(context: Context) {
     tx.type = metadata.type
     await em.persistAndFlush(tx)
   }
+
+  return txs.length == TX_LIMIT
 }
 
 async function main() {
   const config = new ConfigLoader()
   const context = await Context.create(config)
-  await updateTransactions(context)
+  while (await updateTransactions(context)) {}
   await context.orm.close()
 }
 
