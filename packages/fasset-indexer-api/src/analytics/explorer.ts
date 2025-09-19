@@ -63,24 +63,9 @@ export class ExplorerAnalytics {
   ): Promise<ExplorerType.GenericTransactionClassification> {
     const em = this.orm.em.fork()
     if (this.isNativeTransactionHash(hash)) {
-      const logs = await em.find(Entities.EvmLog, {
-        transaction: { hash },
-        name: { $in: VALID_EVENTS }
-      })
-      return logs.map(log => ({
-        transactionHash: hash,
-        eventName: ExplorerType.TransactionType[
-          this.eventNameToTransactionType(log.name)]
-      }))
+      return this.nativeTransactionClassification(em, hash)
     } else if (this.isRippleTransactionHash(hash)) {
-      const resp = await em.getConnection('read').execute(
-        SQL.EVENT_FROM_UNDERLYING_HASH, [hash]
-      ) as { hash: string, name: string }[]
-      return resp.map(({ hash, name }) => ({
-        transactionHash: hash,
-        eventName:ExplorerType.TransactionType[
-          this.eventNameToTransactionType(name)]
-      }))
+      return this.rippleTransactionClassification(em, hash)
     }
     throw new Error(`don't recognize transaction hash ${hash} format`)
   }
@@ -311,6 +296,16 @@ export class ExplorerAnalytics {
       { fasset, reference, transaction: { target: { text: target }, ...obj } },
       { populate: [ 'transaction.block', 'transaction.source', 'transaction.target' ] }
     )
+  }
+
+  protected async nativeTransactionClassification(em: EntityManager, hash: string): Promise<ExplorerType.GenericTransactionClassification> {
+    const logs = await em.find(Entities.EvmLog, { transaction: { hash }, name: { $in: VALID_EVENTS } })
+    return logs.map(log => ({ transactionHash: hash, eventName: log.name }))
+  }
+
+  protected async rippleTransactionClassification(em: EntityManager, hash: string): Promise<ExplorerType.GenericTransactionClassification> {
+    const resp = await em.getConnection('read').execute(SQL.EVENT_FROM_UNDERLYING_HASH, [hash]) as { hash: string, name: string }[]
+    return resp.map(({ hash, name }) => ({ transactionHash: hash, eventName: name }))
   }
 
   protected eventNameToTransactionType(name: string): ExplorerType.TransactionType {
