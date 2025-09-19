@@ -3,15 +3,7 @@ import * as Entities from "fasset-indexer-core/entities"
 import * as ExplorerType from "./interface"
 import * as SQL from "./utils/raw-sql"
 import type { EntityManager, ORM } from "fasset-indexer-core/orm"
-import { EVENTS } from "fasset-indexer-core/config"
 import { unixnow } from "src/shared/utils"
-
-const VALID_EVENTS = [
-  EVENTS.ASSET_MANAGER.COLLATERAL_RESERVED,
-  EVENTS.ASSET_MANAGER.REDEMPTION_REQUESTED,
-  EVENTS.ASSET_MANAGER.TRANSFER_TO_CORE_VAULT_STARTED,
-  EVENTS.ASSET_MANAGER.RETURN_FROM_CORE_VAULT_REQUESTED
-]
 
 const ALL_TRANSACTION_TYPES = Object.values(ExplorerType.TransactionType)
   .filter(v => typeof v === "number")
@@ -299,7 +291,7 @@ export class ExplorerAnalytics {
   }
 
   protected async nativeTransactionClassification(em: EntityManager, hash: string): Promise<ExplorerType.GenericTransactionClassification> {
-    const logs = await em.find(Entities.EvmLog, { transaction: { hash }, name: { $in: VALID_EVENTS } })
+    const logs = await em.find(Entities.EvmLog, { transaction: { hash } })
     return logs.map(log => ({ transactionHash: hash, eventName: log.name }))
   }
 
