@@ -16,7 +16,7 @@ import type {
   AmountResult, TimeSeries, Timespan, TokenPortfolio,
   FAssetCollateralPoolScore, FAssetValueResult,
   FAssetAmountResult, FAssetTimespan
-} from '../analytics/interface'
+} from '../analytics/types'
 
 
 @ApiTags('Dashboard')

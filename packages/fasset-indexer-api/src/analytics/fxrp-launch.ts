@@ -2,7 +2,7 @@ import { FAssetType } from "fasset-indexer-core"
 import { EntityManager, raw } from "fasset-indexer-core/orm"
 import * as Entities from "fasset-indexer-core/entities"
 import { DashboardAnalytics } from "./dashboard"
-import type { FAssetValueResult } from "./interface"
+import type { FAssetValueResult } from "./types"
 
 export class FxrpLaunchAnalytics extends DashboardAnalytics {
 

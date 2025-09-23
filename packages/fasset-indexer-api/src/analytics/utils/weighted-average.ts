@@ -5,7 +5,7 @@
  */
 
 import { MAX_BIPS } from "../../config/constants"
-import type { Timespan } from "../interface"
+import type { Timespan } from "../types"
 
 export function weightedAverage(timespan: Timespan<bigint>, T: number, d: number): bigint {
   const fun = (t: bigint) => weightFun(Number(t), T, d)

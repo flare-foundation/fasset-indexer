@@ -13,7 +13,7 @@ import type {
   TimeSeries, Timespan, FAssetTimeSeries, FAssetTimespan,
   TokenPortfolio, FAssetCollateralPoolScore,
   FAssetValueResult, FAssetAmountResult
-} from "./interface"
+} from "./types"
 
 
 const add = (x: bigint, y: bigint) => x + y

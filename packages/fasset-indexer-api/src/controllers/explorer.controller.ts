@@ -6,12 +6,13 @@ import { apiResponse, ApiResponse } from '../shared/api-response'
 import {
   type MintTransactionDetails,
   type RedeemTransactionDetails,
-  type RetrunFromCoreVaultTransactionDetails,
+  type ReturnFromCoreVaultTransactionDetails,
   type TransferToCoreVaultTransactionDetails,
   type TransactionsInfo,
   type GenericTransactionClassification,
-  TransactionType
-} from '../analytics/interface'
+  TransactionType,
+  SelfMintTransactionDetails
+} from '../analytics/types'
 
 
 @ApiTags('FAsset Explorer')
@@ -41,7 +42,9 @@ export class ExplorerController {
     @Query('types') types?: string | string[]
   ): Promise<ApiResponse<TransactionsInfo>> {
     if (types != null && typeof types == 'string') types = [types]
+    console.log(types)
     const transactionTypes = types != null ? this.parseTransactionTypes(types as string[]) : undefined
+    console.log(transactionTypes)
     return apiResponse(this.service.transactions(limit, offset, user, agent, start, end, asc, transactionTypes), 200)
   }
 
@@ -86,8 +89,17 @@ export class ExplorerController {
   @ApiQuery({ name: 'hash', type: String })
   getReturnFromCoreVaultTransactionDetails(
     @Query('hash') hash: string,
-  ): Promise<ApiResponse<RetrunFromCoreVaultTransactionDetails>> {
+  ): Promise<ApiResponse<ReturnFromCoreVaultTransactionDetails>> {
     return apiResponse(this.service.returnFromCoreVaultTransactionDetails(hash), 200)
+  }
+
+  @Get('transaction-details/self-mint')
+  @ApiOperation({ summary: 'Progression details for the given self mint' })
+  @ApiQuery({ name: 'hash', type: String })
+  getSelfMintTransactionDetails(
+    @Query('hash') hash: string
+  ): Promise<ApiResponse<SelfMintTransactionDetails>> {
+    return apiResponse(this.service.selfMintTransactionDetails(hash), 200)
   }
 
   private parseTransactionTypes(types: string[]): TransactionType[] {

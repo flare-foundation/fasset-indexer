@@ -3,7 +3,7 @@ import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger"
 import { Controller, Get, Param, UseInterceptors } from "@nestjs/common"
 import { FxrpLaunchService } from "../services/fxrp-launch.service"
 import { ApiResponse, apiResponse } from "../shared/api-response"
-import { FAssetValueResult } from "../analytics/interface"
+import { FAssetValueResult } from "../analytics/types"
 
 @ApiTags('FXRP Launch')
 @UseInterceptors(CacheInterceptor)

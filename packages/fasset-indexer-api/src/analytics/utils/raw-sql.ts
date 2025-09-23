@@ -1,5 +1,5 @@
 import { FAssetType } from "fasset-indexer-core"
-import { TransactionType } from "../interface"
+import { TransactionType } from "../types"
 
 
 export const COLLATERAL_POOL_PORTFOLIO_SQL = `
@@ -105,7 +105,8 @@ const transactions = new Map([
     FULL JOIN transfer_to_core_vault_started tc ON rr.fasset = tc.fasset AND rr.request_id = tc.transfer_redemption_request_id
     WHERE tc.evm_log_id IS NULL`],
   [TransactionType.TransferToCV, `SELECT tc.evm_log_id, tc.agent_vault_address_id, tc.value_uba, NULL::integer as user_id FROM transfer_to_core_vault_started tc`],
-  [TransactionType.ReturnFromCV, `SELECT rc.evm_log_id, rc.agent_vault_address_id, rc.value_uba, NULL::integer as user_id FROM return_from_core_vault_requested rc`]
+  [TransactionType.ReturnFromCV, `SELECT rc.evm_log_id, rc.agent_vault_address_id, rc.value_uba, NULL::integer as user_id FROM return_from_core_vault_requested rc`],
+  [TransactionType.SelfMint, `SELECT sm.evm_log_id, sm.agent_vault_address_id, sm.minted_uba as value_uba, NULL::integer as user_id FROM self_mint sm`]
 ])
 
 // psql specific query

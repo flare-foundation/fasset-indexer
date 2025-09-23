@@ -1,17 +1,14 @@
 import { ContractLookup, FAssetType } from "fasset-indexer-core"
 import * as Entities from "fasset-indexer-core/entities"
-import * as ExplorerType from "./interface"
+import * as ExplorerType from "./types"
 import * as SQL from "./utils/raw-sql"
-import type { EntityManager, ORM } from "fasset-indexer-core/orm"
-import { unixnow } from "src/shared/utils"
+import { PaymentReference } from "fasset-indexer-core/utils"
 import { EVENTS } from "fasset-indexer-core/config"
+import { unixnow } from "../shared/utils"
+import type { EntityManager, ORM } from "fasset-indexer-core/orm"
+import type { FilterQuery } from "@mikro-orm/core"
 
-const TRANSACTION_TYPE_EVENTS = [
-  EVENTS.ASSET_MANAGER.REDEMPTION_REQUESTED,
-  EVENTS.ASSET_MANAGER.COLLATERAL_RESERVED,
-  EVENTS.ASSET_MANAGER.TRANSFER_TO_CORE_VAULT_STARTED,
-  EVENTS.ASSET_MANAGER.RETURN_FROM_CORE_VAULT_REQUESTED
-]
+const SELF_MINT_CONFIRMATION_OFFSET = 15 * 60
 
 const ALL_TRANSACTION_TYPES = Object.values(ExplorerType.TransactionType)
   .filter(v => typeof v === "number")
@@ -132,7 +129,7 @@ export class ExplorerAnalytics {
 
   async returnFromCoreVaultTransactionDetails(
     hash: string
-  ): Promise<ExplorerType.RetrunFromCoreVaultTransactionDetails> {
+  ): Promise<ExplorerType.ReturnFromCoreVaultTransactionDetails> {
     const em = this.orm.em.fork()
     const returnFromCoreVaultRequests = await em.find(Entities.ReturnFromCoreVaultRequested,
       { evmLog: { transaction: { hash }} }, { populate: [
@@ -148,13 +145,31 @@ export class ExplorerAnalytics {
     return { flows }
   }
 
+  async selfMintTransactionDetails(
+    hash: string
+  ): Promise<ExplorerType.SelfMintTransactionDetails> {
+    const em = this.orm.em.fork()
+    const selfMints = await em.find(Entities.SelfMint,
+      { evmLog: { transaction: { hash }} }, { populate: [
+        'evmLog.block', 'evmLog.transaction.source',
+        'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
+      ]}
+    )
+    const flows: ExplorerType.SelfMintEventDetails[] = []
+    for (const selfMint of selfMints) {
+      const details = await this.selfMintEventDetails(em, selfMint)
+      flows.push(details)
+    }
+    return { flows }
+  }
+
   protected async mintingEventDetails(
     em: EntityManager, collateralReserved: Entities.CollateralReserved
   ): Promise<ExplorerType.MintEventDetails> {
     const underlyingTransaction = await this.getUnderlyingTransaction(
       em, collateralReserved.fasset,
       collateralReserved.paymentReference,
-      collateralReserved.paymentAddress.text
+      { transaction: { target: collateralReserved.paymentAddress }}
     )
     const resp: ExplorerType.MintEventDetails = {
       events: { original: collateralReserved }, underlyingTransaction
@@ -187,8 +202,10 @@ export class ExplorerAnalytics {
     const underlyingTransaction = await this.getUnderlyingTransaction(
       em, redemptionRequested.fasset,
       redemptionRequested.paymentReference,
-      redemptionRequested.paymentAddress.text,
-      redemptionRequested.agentVault.underlyingAddress.text
+      { transaction: {
+        source: redemptionRequested.agentVault.underlyingAddress,
+        target: redemptionRequested.paymentAddress
+      }}
     )
     const resp: ExplorerType.RedeemEventDetails = {
       events: { original: redemptionRequested }, underlyingTransaction
@@ -237,8 +254,10 @@ export class ExplorerAnalytics {
     const underlyingTransaction = await this.getUnderlyingTransaction(
       em, transferToCoreVaultStarted.fasset,
       redemptionRequested.paymentReference,
-      redemptionRequested.paymentAddress.text,
-      transferToCoreVaultStarted.agentVault.underlyingAddress.text
+      { transaction: {
+        source: transferToCoreVaultStarted.agentVault.underlyingAddress,
+        target: redemptionRequested.paymentAddress
+      }}
     )
     const resp: ExplorerType.TransferToCoreVaultEventDetails = {
       events: { original: transferToCoreVaultStarted }, underlyingTransaction
@@ -266,8 +285,10 @@ export class ExplorerAnalytics {
     const underlyingTransaction = await this.getUnderlyingTransaction(
       em, returnFromCoreVaultRequested.fasset,
       returnFromCoreVaultRequested.paymentReference,
-      returnFromCoreVaultRequested.agentVault.underlyingAddress.text,
-      coreVault
+      { transaction: {
+        source: { text: coreVault },
+        target: returnFromCoreVaultRequested.agentVault.underlyingAddress
+      }}
     )
     const resp: ExplorerType.ReturnFromCoreVaultEventDetails = {
       events: { original: returnFromCoreVaultRequested }, underlyingTransaction
@@ -288,14 +309,20 @@ export class ExplorerAnalytics {
     return resp
   }
 
-  protected async getUnderlyingTransaction(
-    em: EntityManager, fasset: FAssetType, reference: string, target: string, source?: string
-  ): Promise<Entities.UnderlyingVoutReference | null> {
-    const obj = source == null ? {} : { source: { text: source } }
-    return em.findOne(Entities.UnderlyingVoutReference,
-      { fasset, reference, transaction: { target: { text: target }, ...obj } },
-      { populate: [ 'transaction.block', 'transaction.source', 'transaction.target' ] }
+  protected async selfMintEventDetails(
+    em: EntityManager, selfMint: Entities.SelfMint
+  ): Promise<ExplorerType.SelfMintEventDetails> {
+    const lastTs = selfMint.evmLog.block.timestamp
+    const firstTs = lastTs - SELF_MINT_CONFIRMATION_OFFSET
+    const underlyingTransaction = await this.getUnderlyingTransaction(
+      em, selfMint.fasset,
+      PaymentReference.selfMint(selfMint.agentVault.address.hex),
+      {
+        transaction: { value: selfMint.depositedUBA, target: selfMint.agentVault.underlyingAddress },
+        block: { timestamp: { $gte: firstTs, $lte: lastTs } }
+      }
     )
+    return { events: { original: selfMint }, underlyingTransaction }
   }
 
   protected async nativeTransactionClassification(em: EntityManager, hash: string): Promise<ExplorerType.GenericTransactionClassification> {
@@ -308,6 +335,7 @@ export class ExplorerAnalytics {
         || log.name == EVENTS.ASSET_MANAGER.COLLATERAL_RESERVED
         || log.name == EVENTS.ASSET_MANAGER.TRANSFER_TO_CORE_VAULT_STARTED
         || log.name == EVENTS.ASSET_MANAGER.RETURN_FROM_CORE_VAULT_REQUESTED
+        || log.name == EVENTS.ASSET_MANAGER.SELF_MINT
       ) {
         oglog = log
       // core vault transfers
@@ -375,6 +403,18 @@ export class ExplorerAnalytics {
     return resp.map(({ hash, name }) => ({ transactionHash: hash, eventName: name }))
   }
 
+  protected async getUnderlyingTransaction(
+    em: EntityManager,
+    fasset: FAssetType,
+    reference: string,
+    filters: FilterQuery<Entities.UnderlyingVoutReference> = {}
+  ): Promise<Entities.UnderlyingVoutReference | null> {
+    return em.findOne(Entities.UnderlyingVoutReference,
+      { fasset, reference, ...filters as object },
+      { populate: [ 'transaction.block', 'transaction.source', 'transaction.target' ] }
+    )
+  }
+
   protected eventNameToTransactionType(name: string): ExplorerType.TransactionType {
     switch (name) {
       case 'CollateralReserved':
@@ -385,6 +425,8 @@ export class ExplorerAnalytics {
         return ExplorerType.TransactionType.TransferToCV
       case 'ReturnFromCoreVaultRequested':
         return ExplorerType.TransactionType.ReturnFromCV
+      case 'SelfMint':
+        return ExplorerType.TransactionType.SelfMint
       default:
         throw new Error(`event name ${name} cannot be mapped to transaction type`)
     }

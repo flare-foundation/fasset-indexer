@@ -39,7 +39,8 @@ export enum TransactionType {
   Mint = 0,
   Redeem = 1,
   TransferToCV = 2,
-  ReturnFromCV = 3
+  ReturnFromCV = 3,
+  SelfMint = 4
 }
 
 export interface TransactionsInfo {
@@ -66,7 +67,8 @@ export type GenericTransactionClassification = {
 export type MintTransactionDetails = TransactionDetails<MintEventDetails, void>
 export type RedeemTransactionDetails = TransactionDetails<RedeemEventDetails, Entities.RedemptionRequestIncomplete[]>
 export type TransferToCoreVaultTransactionDetails = TransactionDetails<TransferToCoreVaultEventDetails, void>
-export type RetrunFromCoreVaultTransactionDetails = TransactionDetails<ReturnFromCoreVaultEventDetails, void>
+export type ReturnFromCoreVaultTransactionDetails = TransactionDetails<ReturnFromCoreVaultEventDetails, void>
+export type SelfMintTransactionDetails = TransactionDetails<SelfMintEventDetails, void>
 
 export type MintEventDetails = EventDetails<
   Entities.CollateralReserved,
@@ -93,6 +95,8 @@ export type ReturnFromCoreVaultEventDetails = EventDetails<
   Entities.ReturnFromCoreVaultConfirmed
     | Entities.ReturnFromCoreVaultCancelled
 >
+
+export type SelfMintEventDetails = EventDetails<Entities.SelfMint, void>
 
 interface TransactionDetails<T,U> {
   flows: T[]

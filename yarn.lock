@@ -3606,6 +3606,7 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "fasset-indexer-api@workspace:packages/fasset-indexer-api"
   dependencies:
+    "@mikro-orm/core": 6.3.6
     "@nestjs/cache-manager": ^2.3.0
     "@nestjs/cli": ^10.0.0
     "@nestjs/common": ^10.0.0

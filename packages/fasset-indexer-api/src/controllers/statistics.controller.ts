@@ -3,7 +3,7 @@ import { ApiQuery, ApiTags } from "@nestjs/swagger"
 import { ApiResponse, apiResponse } from "../shared/api-response"
 import { StatisticsService } from "../services/statistics.service"
 import { unixnow } from "../shared/utils"
-import type { StatisticAverage } from "../analytics/interface"
+import type { StatisticAverage } from "../analytics/types"
 
 const STAT_LIMIT = 100
 const DELTA = 60 * 60 * 24 * 7 // one week
