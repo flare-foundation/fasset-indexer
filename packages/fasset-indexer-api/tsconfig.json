@@ -16,6 +16,9 @@
   "references": [
     {
       "path": "../fasset-indexer-core"
+    },
+    {
+      "path": "../fasset-indexer-xrp"
     }
   ]
 }

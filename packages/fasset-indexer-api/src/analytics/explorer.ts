@@ -4,6 +4,7 @@ import * as ExplorerType from "./types"
 import * as SQL from "./utils/raw-sql"
 import { PaymentReference } from "fasset-indexer-core/utils"
 import { EVENTS } from "fasset-indexer-core/config"
+import { XRP_TRANSACTION_SUCCESS_CODE } from 'fasset-indexer-xrp/constants'
 import { unixnow } from "../shared/utils"
 import type { EntityManager, ORM } from "fasset-indexer-core/orm"
 import type { FilterQuery } from "@mikro-orm/core"
@@ -409,10 +410,14 @@ export class ExplorerAnalytics {
     reference: string,
     filters: FilterQuery<Entities.UnderlyingVoutReference> = {}
   ): Promise<Entities.UnderlyingVoutReference | null> {
-    return em.findOne(Entities.UnderlyingVoutReference,
+    const transactions = await em.find(Entities.UnderlyingVoutReference,
       { fasset, reference, ...filters as object },
       { populate: [ 'transaction.block', 'transaction.source', 'transaction.target' ] }
     )
+    if (transactions.length == 0) return null
+    const successful = transactions.filter(x => x.transaction.result == XRP_TRANSACTION_SUCCESS_CODE)
+    if (successful.length > 0) return successful[0]
+    return transactions[0]
   }
 
   protected eventNameToTransactionType(name: string): ExplorerType.TransactionType {

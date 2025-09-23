@@ -3618,6 +3618,7 @@ __metadata:
     "@types/supertest": ^6.0.0
     cache-manager: ^5.1.0
     fasset-indexer-core: "workspace:*"
+    fasset-indexer-xrp: "workspace:*"
     helmet: ^7.1.0
     reflect-metadata: ^0.2.0
     rxjs: ^7.8.1
@@ -3674,7 +3675,7 @@ __metadata:
   languageName: unknown
   linkType: soft
 
-"fasset-indexer-xrp@workspace:packages/fasset-indexer-xrp":
+"fasset-indexer-xrp@workspace:*, fasset-indexer-xrp@workspace:packages/fasset-indexer-xrp":
   version: 0.0.0-use.local
   resolution: "fasset-indexer-xrp@workspace:packages/fasset-indexer-xrp"
   dependencies:

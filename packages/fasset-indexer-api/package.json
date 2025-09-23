@@ -20,6 +20,7 @@
     "@nestjs/swagger": "^7.3.1",
     "cache-manager": "^5.1.0",
     "fasset-indexer-core": "workspace:*",
+    "fasset-indexer-xrp": "workspace:*",
     "helmet": "^7.1.0",
     "reflect-metadata": "^0.2.0",
     "rxjs": "^7.8.1"
