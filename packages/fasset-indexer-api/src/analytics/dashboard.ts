@@ -394,6 +394,12 @@ export class DashboardAnalytics extends SharedAnalytics {
         .groupBy('me.fasset'),
       'me', undefined, undefined, timestamp
     ).execute() as { fasset: number, fees: bigint }[]
+    const selfMintFees = await this.filterEnterOrExitQueryBy(
+      em.createQueryBuilder(Entities.SelfMint, 'sm')
+        .select(['sm.fasset', raw('sum(sm.pool_fee_uba) as fees')])
+        .groupBy('sm.fasset'),
+      'sm', undefined, undefined, timestamp
+    ).execute() as { fasset: number, fees: bigint }[]
     const redeemPoolFees = await this.filterEnterOrExitQueryBy(
       em.createQueryBuilder(Entities.RedemptionPoolFeeMintedEvent, 'rpfme')
         .select(['rpfme.fasset', raw('sum(rpfme.pool_fee_uba) as fees')])
@@ -402,7 +408,11 @@ export class DashboardAnalytics extends SharedAnalytics {
     ).execute() as { fasset: number, fees: bigint }[]
     return this.transformFAssetValueResults(
       this.convertOrmResultToFAssetValueResult(mintPoolFees, 'fees'),
-      this.convertOrmResultToFAssetValueResult(redeemPoolFees, 'fees'),
+      this.transformFAssetValueResults(
+        this.convertOrmResultToFAssetValueResult(selfMintFees, 'fees'),
+        this.convertOrmResultToFAssetValueResult(redeemPoolFees, 'fees'),
+        add
+      ),
       add
     )
   }
