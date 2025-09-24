@@ -40,8 +40,10 @@ export class XrpIndexer {
     await this.updateTrackedAddresses()
     await this.processBlockBatch(startBlock, endBlock, false)
     // process new blocks but reprocess them again later
+    if (this.lastGreedyBlockToHandle > startBlock) {
+      startBlock = this.lastGreedyBlockToHandle
+    }
     endBlock = await this.latestBlockToHandle()
-    startBlock = Math.max(this.lastGreedyBlockToHandle, endBlock)
     await this.processBlockBatch(startBlock, endBlock, true)
   }
 
