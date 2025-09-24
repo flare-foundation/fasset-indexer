@@ -41,7 +41,8 @@ export class XrpIndexer {
     await this.processBlockBatch(startBlock, endBlock, false)
     // process new blocks but reprocess them again later
     endBlock = await this.latestBlockToHandle()
-    await this.processBlockBatch(this.lastGreedyBlockToHandle, endBlock, true)
+    startBlock = Math.max(this.lastGreedyBlockToHandle, endBlock)
+    await this.processBlockBatch(startBlock, endBlock, true)
   }
 
   async processBlockBatch(startBlock: number, endBlock: number, greedy: boolean) {
