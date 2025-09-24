@@ -53,6 +53,7 @@
         "UnderlyingBalanceChanged",
         "RedemptionTicketCreated",
         "RedemptionTicketUpdated",
-        "RedemptionTicketDeleted"
+        "RedemptionTicketDeleted",
+        "RedemptionPoolFeeMinted"
       ]
 }
