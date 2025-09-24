@@ -4,13 +4,14 @@ import { findOrCreateEntity, getVar, setVar, type EntityManager } from "fasset-i
 import { PaymentReference } from "fasset-indexer-core/utils"
 import { logger } from "fasset-indexer-core/logger"
 import { IXrpMemo, IXrpBlock, IXrpTransaction } from "../client/interface"
-import { XRP_TIMESTAMP_UNIX_OFFSET } from "../config/constants"
+import { XRP_BLOCK_HEIGHT_OFFSET, XRP_TIMESTAMP_UNIX_OFFSET } from "../config/constants"
 import type { XrpContext } from "../context"
 
 
 export class XrpIndexer {
   private tracked = new Set<string>()
   private coreVaultLoaded: boolean = false
+  private lastGreedyBlockToHandle: number = 0
 
   constructor(
     public readonly context: XrpContext,
@@ -37,10 +38,18 @@ export class XrpIndexer {
       endBlock = lastBlockToHandle
     }
     await this.updateTrackedAddresses()
+    await this.processBlockBatch(startBlock, endBlock, false)
+    // process new blocks but reprocess them again later
+    endBlock = await this.latestBlockToHandle()
+    await this.processBlockBatch(this.lastGreedyBlockToHandle, endBlock, true)
+  }
+
+  async processBlockBatch(startBlock: number, endBlock: number, greedy: boolean) {
     for (let i = startBlock; i <= endBlock; i += 1) {
       const block = await this.context.provider.block(i)
       await this.processBlock(block)
-      await this.setFirstUnhandledBlock(i + 1)
+      if (!greedy) await this.setFirstUnhandledBlock(i + 1)
+      this.lastGreedyBlockToHandle = i
       logger.info(`${this.context.chainName} indexer processed block height ${i}`)
     }
   }
@@ -52,12 +61,15 @@ export class XrpIndexer {
 
   // note: this is so new agent vault creation events are indexed before
   //       the xrp indexer skips the associated agent vault underlying addresses
-  // opt: return await this.context.provider.blockHeight() - BLOCK_HEIGHT_OFFSET
   async lastBlockToHandle(): Promise<number> {
     const blocks = await this.context.orm.em.fork().find(
       Entities.CurrentUnderlyingBlockUpdated, {},
       { limit: 1, orderBy: { underlyingBlockNumber: 'desc' } })
     return blocks[0]?.underlyingBlockNumber ?? 0
+  }
+
+  async latestBlockToHandle(): Promise<number> {
+    return await this.context.provider.blockHeight() - XRP_BLOCK_HEIGHT_OFFSET
   }
 
   async minBlock(): Promise<number> {
