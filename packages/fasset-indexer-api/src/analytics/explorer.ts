@@ -9,7 +9,7 @@ import { unixnow } from "../shared/utils"
 import type { EntityManager, ORM } from "fasset-indexer-core/orm"
 import type { FilterQuery } from "@mikro-orm/core"
 
-const SELF_MINT_CONFIRMATION_OFFSET = 15 * 60
+
 
 const ALL_TRANSACTION_TYPES = Object.values(ExplorerType.TransactionType)
   .filter(v => typeof v === "number")
@@ -313,14 +313,12 @@ export class ExplorerAnalytics {
   protected async selfMintEventDetails(
     em: EntityManager, selfMint: Entities.SelfMint
   ): Promise<ExplorerType.SelfMintEventDetails> {
-    const lastTs = selfMint.evmLog.block.timestamp
-    const firstTs = lastTs - SELF_MINT_CONFIRMATION_OFFSET
     const underlyingTransaction = await this.getUnderlyingTransaction(
       em, selfMint.fasset,
       PaymentReference.selfMint(selfMint.agentVault.address.hex),
       {
         transaction: { value: selfMint.depositedUBA, target: selfMint.agentVault.underlyingAddress },
-        block: { timestamp: { $gte: firstTs, $lte: lastTs } }
+        block: { timestamp: { $lte: selfMint.evmLog.block.timestamp } }
       }
     )
     return { events: { original: selfMint }, underlyingTransaction }
@@ -412,7 +410,10 @@ export class ExplorerAnalytics {
   ): Promise<Entities.UnderlyingVoutReference | null> {
     const transactions = await em.find(Entities.UnderlyingVoutReference,
       { fasset, reference, ...filters as object },
-      { populate: [ 'transaction.block', 'transaction.source', 'transaction.target' ] }
+      {
+        populate: [ 'transaction.block', 'transaction.source', 'transaction.target' ],
+        orderBy: { block: { timestamp: 'DESC' } }
+      }
     )
     if (transactions.length == 0) return null
     const successful = transactions.filter(x => x.transaction.result == XRP_TRANSACTION_SUCCESS_CODE)

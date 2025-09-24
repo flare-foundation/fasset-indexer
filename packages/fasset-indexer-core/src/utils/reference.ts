@@ -22,6 +22,10 @@ export namespace PaymentReference {
     return toHex(combined, 32)
   }
 
+  export function isSelfMint(reference: string): boolean {
+    return reference.startsWith('0x4642505266410012')
+  }
+
   function toHex(value: bigint, length: number): string {
     return "0x" + value.toString(16).padStart(length * 2, "0");
   }

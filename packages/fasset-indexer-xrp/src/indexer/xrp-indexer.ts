@@ -53,7 +53,8 @@ export class XrpIndexer {
       await this.processBlock(block)
       if (!greedy) await this.setFirstUnhandledBlock(i + 1)
       this.lastGreedyBlockToHandle = i
-      logger.info(`${this.context.chainName} indexer processed block height ${i}`)
+      const name = greedy ? 'greedy-' : ''
+      logger.info(`${this.context.chainName} ${name}indexer processed block height ${i}`)
     }
   }
 
