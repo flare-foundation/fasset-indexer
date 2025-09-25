@@ -69,6 +69,8 @@ export type RedeemTransactionDetails = TransactionDetails<RedeemEventDetails, En
 export type TransferToCoreVaultTransactionDetails = TransactionDetails<TransferToCoreVaultEventDetails, void>
 export type ReturnFromCoreVaultTransactionDetails = TransactionDetails<ReturnFromCoreVaultEventDetails, void>
 export type SelfMintTransactionDetails = TransactionDetails<SelfMintEventDetails, void>
+export type BalanceTopupTransactionDetails = TransactionDetails<BalanceTopupEventDetails, void>
+export type WithdrawalTransactionDetails = TransactionDetails<WithdrawalEventDetails, void>
 
 export type MintEventDetails = EventDetails<
   Entities.CollateralReserved,
@@ -97,6 +99,13 @@ export type ReturnFromCoreVaultEventDetails = EventDetails<
 >
 
 export type SelfMintEventDetails = EventDetails<Entities.SelfMint, void>
+export type BalanceTopupEventDetails = EventDetails<Entities.UnderlyingBalanceToppedUp, void>
+export type WithdrawalEventDetails = EventDetails<
+  Entities.UnderlyingWithdrawalAnnounced,
+  Entities.UnderlyingWithdrawalConfirmed
+    | Entities.UnderlyingWithdrawalCancelled
+>
+
 
 interface TransactionDetails<T,U> {
   flows: T[]

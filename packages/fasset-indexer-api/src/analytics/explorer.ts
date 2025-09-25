@@ -164,6 +164,41 @@ export class ExplorerAnalytics {
     return { flows }
   }
 
+  async underlyingBalanceToppedUpTransactionDetails(
+    hash: string
+  ): Promise<ExplorerType.BalanceTopupTransactionDetails> {
+    const em = this.orm.em.fork()
+    const topups = await em.find(Entities.UnderlyingBalanceToppedUp,
+      { evmLog: { transaction: { hash }}}, { populate: [
+        'evmLog.block', 'evmLog.transaction.source',
+        'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
+      ]}
+    )
+    const flows: ExplorerType.BalanceTopupEventDetails[] = []
+    for (const topup of topups) {
+      const details = await this.underlyingBalanceToppedUpEventDetails(em, topup)
+      flows.push(details)
+    }
+    return { flows }
+  }
+
+  async underlyingWithdrawalTransactionDetails(
+    hash: string
+  ): Promise<ExplorerType.WithdrawalTransactionDetails> {
+    const em = this.orm.em.fork()
+    const withdrawals = await em.find(Entities.UnderlyingWithdrawalAnnounced,
+      { evmLog: { transaction: { hash }} }, { populate: [
+        'evmLog.block', 'evmLog.transaction.source',
+        'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
+      ]})
+    const flows: ExplorerType.WithdrawalEventDetails[] = []
+    for (const withdrawal of withdrawals) {
+      const details = await this.underlyingWithdrawalEventDetails(em, withdrawal)
+      flows.push(details)
+    }
+    return { flows }
+  }
+
   protected async mintingEventDetails(
     em: EntityManager, collateralReserved: Entities.CollateralReserved
   ): Promise<ExplorerType.MintEventDetails> {
@@ -324,9 +359,47 @@ export class ExplorerAnalytics {
     return { events: { original: selfMint }, underlyingTransaction }
   }
 
+  protected async underlyingBalanceToppedUpEventDetails(
+    em: EntityManager, underlyingTopup: Entities.UnderlyingBalanceToppedUp
+  ): Promise<ExplorerType.BalanceTopupEventDetails> {
+    const hash = underlyingTopup.transactionHash.slice(2).toUpperCase()
+    const underlyingTransaction = await em.findOneOrFail(Entities.UnderlyingVoutReference,
+      { transaction: { hash }}, { populate: [ 'transaction.block', 'transaction.source', 'transaction.target' ] })
+    return { events: { original: underlyingTopup }, underlyingTransaction }
+  }
+
+  protected async underlyingWithdrawalEventDetails(
+    em: EntityManager, underlyingWithdrawalAnnounced: Entities.UnderlyingWithdrawalAnnounced
+  ): Promise<ExplorerType.WithdrawalEventDetails> {
+    const underlyingTransaction = await this.getUnderlyingTransaction(
+      em, underlyingWithdrawalAnnounced.fasset,
+      underlyingWithdrawalAnnounced.paymentReference,
+      { transaction: {
+        source: underlyingWithdrawalAnnounced.agentVault.underlyingAddress
+      }}
+    )
+    const resp: ExplorerType.WithdrawalEventDetails = {
+      events: { original: underlyingWithdrawalAnnounced }, underlyingTransaction
+    }
+    // find resolution event
+    const withdrawalConfirmed = await em.findOne(Entities.UnderlyingWithdrawalConfirmed,
+      { underlyingWithdrawalAnnounced }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
+    if (withdrawalConfirmed != null) {
+      resp.events.resolution = withdrawalConfirmed
+      return resp
+    }
+    const withdrawalCancelled = await em.findOne(Entities.UnderlyingWithdrawalCancelled,
+      { underlyingWithdrawalAnnounced }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
+    if (withdrawalCancelled != null) {
+      resp.events.resolution = withdrawalCancelled
+      return resp
+    }
+    return resp
+  }
+
   protected async nativeTransactionClassification(em: EntityManager, hash: string): Promise<ExplorerType.GenericTransactionClassification> {
     const ret: ExplorerType.GenericTransactionClassification = []
-    const logs = await em.find(Entities.EvmLog, { transaction: { hash } })
+    const logs = await em.find(Entities.EvmLog, { transaction: { hash } }, { populate: [ 'transaction' ]})
     for (const log of logs) {
       let oglog: Entities.EvmLog | null = null
       if (
@@ -335,6 +408,8 @@ export class ExplorerAnalytics {
         || log.name == EVENTS.ASSET_MANAGER.TRANSFER_TO_CORE_VAULT_STARTED
         || log.name == EVENTS.ASSET_MANAGER.RETURN_FROM_CORE_VAULT_REQUESTED
         || log.name == EVENTS.ASSET_MANAGER.SELF_MINT
+        || log.name == EVENTS.ASSET_MANAGER.UNDERLYING_BALANCE_TOPPED_UP
+        || log.name == EVENTS.ASSET_MANAGER.UNDERLYING_WITHDRAWAL_ANNOUNCED
       ) {
         oglog = log
       // core vault transfers
@@ -389,6 +464,15 @@ export class ExplorerAnalytics {
         oglog = await em.findOneOrFail(Entities.RedemptionPaymentBlocked,
           { evmLog: log }, { populate: [ 'redemptionRequested.evmLog.transaction' ] }
         ).then(x => x.redemptionRequested.evmLog)
+      // agent withdrawal
+      } else if (log.name == EVENTS.ASSET_MANAGER.UNDERLYING_WITHDRAWAL_CONFIRMED) {
+        oglog = await em.findOneOrFail(Entities.UnderlyingWithdrawalConfirmed,
+          { evmLog: log }, { populate: [ 'underlyingWithdrawalAnnounced.evmLog.transaction' ] }
+        ).then(x => x.underlyingWithdrawalAnnounced.evmLog)
+      } else if (log.name == EVENTS.ASSET_MANAGER.UNDERLYING_WITHDRAWAL_CANCELLED) {
+        oglog = await em.findOneOrFail(Entities.UnderlyingWithdrawalCancelled,
+          { evmLog: log }, { populate: [ 'underlyingWithdrawalAnnounced.evmLog.transaction' ] }
+        ).then(x => x.underlyingWithdrawalAnnounced.evmLog)
       } else {
         continue
       }
@@ -403,7 +487,7 @@ export class ExplorerAnalytics {
     const reference = await em.findOneOrFail(Entities.UnderlyingVoutReference,
       { transaction: { hash } }, { populate: [ 'transaction.block' ] })
     if (PaymentReference.isMint(reference.reference)) {
-      const oglog = await em.findOneOrFail(Entities.CollateralReserved,
+      oglog = await em.findOneOrFail(Entities.CollateralReserved,
         { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ] })
     } else if (PaymentReference.isRedeem(reference.reference)) {
       const requestId = PaymentReference.decodeId(reference.reference)
@@ -423,8 +507,9 @@ export class ExplorerAnalytics {
       oglog = await em.findOneOrFail(Entities.UnderlyingWithdrawalAnnounced,
         { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ]})
     } else if (PaymentReference.isTopup(reference.reference)) {
+      const transactionHash = '0x' + hash.toLowerCase()
       oglog = await em.findOneOrFail(Entities.UnderlyingBalanceToppedUp,
-        { transactionHash: hash, fasset }, { populate: [ 'evmLog.transaction' ]})
+        { transactionHash, fasset }, { populate: [ 'evmLog.transaction' ]})
     } else if (PaymentReference.isSelfMint(reference.reference)) {
       const hex = PaymentReference.decodeAddress(reference.reference)
       const resp = await em.createQueryBuilder(Entities.SelfMint, 'sm')
@@ -439,9 +524,8 @@ export class ExplorerAnalytics {
           'eb.timestamp': { $gte: reference.transaction.block.timestamp }
         })
         .orderBy({ 'eb.timestamp': 'asc' })
-        .execute()
-      //@ts-ignore
-      return resp
+        .execute() as [ { name: string, hash: string }]
+      return resp.map(({ name, hash}) => ({ eventName: name, transactionHash: hash }))
     }
     return [{ eventName: oglog.evmLog.name, transactionHash: oglog.evmLog.transaction.hash }]
   }

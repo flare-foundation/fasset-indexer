@@ -11,8 +11,11 @@ import {
   type TransactionsInfo,
   type GenericTransactionClassification,
   TransactionType,
-  SelfMintTransactionDetails
+  SelfMintTransactionDetails,
+  BalanceTopupTransactionDetails,
+  WithdrawalTransactionDetails
 } from '../analytics/types'
+import { get } from 'http'
 
 
 @ApiTags('FAsset Explorer')
@@ -92,12 +95,30 @@ export class ExplorerController {
   }
 
   @Get('transaction-details/self-mint')
-  @ApiOperation({ summary: 'Progression details for the given self mint' })
+  @ApiOperation({ summary: 'Progression details for the given self mint transaction' })
   @ApiQuery({ name: 'hash', type: String })
   getSelfMintTransactionDetails(
     @Query('hash') hash: string
   ): Promise<ApiResponse<SelfMintTransactionDetails>> {
     return apiResponse(this.service.selfMintTransactionDetails(hash), 200)
+  }
+
+  @Get('transaction-details/agent-balance-topup')
+  @ApiOperation({ summary: 'Progression details for the given agent balance topup transaction' })
+  @ApiQuery({ name: 'hash', type: String })
+  getUnderlyingBalanceTopupTransactionDetails(
+    @Query('hash') hash: string
+  ): Promise<ApiResponse<BalanceTopupTransactionDetails>> {
+    return apiResponse(this.service.underlyingBalanceToppedUpTransactionDetails(hash), 200)
+  }
+
+  @Get('transaction-details/agent-balance-withdrawal')
+  @ApiOperation({ summary: 'Progression details for the given agent balance topup transaction' })
+  @ApiQuery({ name: 'hash', type: String })
+  getAgentBalanceWithdrawalTransactionDetails(
+    @Query('hash') hash: string
+  ): Promise<ApiResponse<WithdrawalTransactionDetails>> {
+    return apiResponse(this.service.underlyingWithdrawalTransactionDetails(hash), 200)
   }
 
   private parseTransactionTypes(types: string[]): TransactionType[] {
