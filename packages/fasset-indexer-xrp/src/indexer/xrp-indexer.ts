@@ -44,7 +44,7 @@ export class XrpIndexer {
       startBlock = this.lastGreedyBlockToHandle
     }
     endBlock = await this.latestBlockToHandle()
-    await this.processBlockBatch(startBlock, endBlock, true)
+    await this.processBlockBatch(startBlock + 1, endBlock, true)
   }
 
   async processBlockBatch(startBlock: number, endBlock: number, greedy: boolean) {

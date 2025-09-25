@@ -398,8 +398,52 @@ export class ExplorerAnalytics {
   }
 
   protected async rippleTransactionClassification(em: EntityManager, hash: string): Promise<ExplorerType.GenericTransactionClassification> {
-    const resp = await em.getConnection('read').execute(SQL.EVENT_FROM_UNDERLYING_HASH, [hash]) as { hash: string, name: string }[]
-    return resp.map(({ hash, name }) => ({ transactionHash: hash, eventName: name }))
+    let oglog: { evmLog: Entities.EvmLog | null } = null
+    const fasset = FAssetType.FXRP
+    const reference = await em.findOneOrFail(Entities.UnderlyingVoutReference,
+      { transaction: { hash } }, { populate: [ 'transaction.block' ] })
+    if (PaymentReference.isMint(reference.reference)) {
+      const oglog = await em.findOneOrFail(Entities.CollateralReserved,
+        { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ] })
+    } else if (PaymentReference.isRedeem(reference.reference)) {
+      const requestId = PaymentReference.decodeId(reference.reference)
+      oglog = await em.findOne(Entities.TransferToCoreVaultStarted,
+        { transferRedemptionRequestId: Number(requestId), fasset }, { populate: [ 'evmLog.transaction' ] })
+      if (oglog == null) {
+        oglog = await em.findOneOrFail(Entities.RedemptionRequested,
+          { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ] })
+      }
+    } else if (PaymentReference.isReturnFromCoreVault(reference.reference)) {
+      oglog = await em.findOneOrFail(Entities.ReturnFromCoreVaultRequested,
+        { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ] })
+    } else if (PaymentReference.isRedeemFromCoreVault(reference.reference)) {
+      oglog = await em.findOneOrFail(Entities.CoreVaultRedemptionRequested,
+        { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ]})
+    } else if (PaymentReference.isWithdrawal(reference.reference)) {
+      oglog = await em.findOneOrFail(Entities.UnderlyingWithdrawalAnnounced,
+        { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ]})
+    } else if (PaymentReference.isTopup(reference.reference)) {
+      oglog = await em.findOneOrFail(Entities.UnderlyingBalanceToppedUp,
+        { transactionHash: hash, fasset }, { populate: [ 'evmLog.transaction' ]})
+    } else if (PaymentReference.isSelfMint(reference.reference)) {
+      const hex = PaymentReference.decodeAddress(reference.reference)
+      const resp = await em.createQueryBuilder(Entities.SelfMint, 'sm')
+        .select(['el.name', 'et.hash'])
+        .join('sm.evmLog', 'el')
+        .join('el.block', 'eb')
+        .join('el.transaction', 'et')
+        .join('sm.agentVault', 'av')
+        .join('av.address', 'ea')
+        .where({
+          'ea.hex': hex,
+          'eb.timestamp': { $gte: reference.transaction.block.timestamp }
+        })
+        .orderBy({ 'eb.timestamp': 'asc' })
+        .execute()
+      //@ts-ignore
+      return resp
+    }
+    return [{ eventName: oglog.evmLog.name, transactionHash: oglog.evmLog.transaction.hash }]
   }
 
   protected async getUnderlyingTransaction(
