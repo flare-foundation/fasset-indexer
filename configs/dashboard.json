@@ -1,4 +1,12 @@
 {
+    "events": {
+        "logFetchBlockBatchSize": 29,
+        "logFetchCycleSleepMs": 20000,
+        "logFetchBlockHeightOffset": 10
+    },
+    "watchdog": {
+        "cycleSleepMs": 60000
+    },
     "indexEvents": [
         "AgentVaultCreated",
         "AgentSettingChanged",

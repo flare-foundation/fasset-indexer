@@ -4,18 +4,8 @@ import { SqliteDriver } from "@mikro-orm/sqlite"
 import { PostgreSqlDriver } from "@mikro-orm/postgresql"
 import { getContractInfo } from "./contracts"
 import { SchemaUpdate } from "../orm/interface"
-import type { ContractInfo } from "./interface"
+import type { ContractInfo, ConfigJson, ReindexConfig } from "./interface"
 
-
-interface ConfigJson {
-  indexEvents: string[]
-}
-
-interface ReindexConfig {
-  type: "back" | "race"
-  diff: string[]
-  name: string
-}
 
 export class ConfigLoader {
   private _configJson: ConfigJson | undefined

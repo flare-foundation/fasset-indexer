@@ -3,19 +3,7 @@ import { CacheInterceptor } from '@nestjs/cache-manager'
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { ExplorerService } from '../services/explorer.service'
 import { apiResponse, ApiResponse } from '../shared/api-response'
-import {
-  type MintTransactionDetails,
-  type RedeemTransactionDetails,
-  type ReturnFromCoreVaultTransactionDetails,
-  type TransferToCoreVaultTransactionDetails,
-  type TransactionsInfo,
-  type GenericTransactionClassification,
-  TransactionType,
-  SelfMintTransactionDetails,
-  BalanceTopupTransactionDetails,
-  WithdrawalTransactionDetails
-} from '../analytics/types'
-import { get } from 'http'
+import * as Types from '../analytics/types'
 
 
 @ApiTags('FAsset Explorer')
@@ -43,7 +31,7 @@ export class ExplorerController {
     @Query('start', new ParseIntPipe({ optional: true })) start?: number,
     @Query('end', new ParseIntPipe({ optional: true })) end?: number,
     @Query('types') types?: string | string[]
-  ): Promise<ApiResponse<TransactionsInfo>> {
+  ): Promise<ApiResponse<Types.TransactionsInfo>> {
     if (types != null && typeof types == 'string') types = [types]
     const transactionTypes = types != null ? this.parseTransactionTypes(types as string[]) : undefined
     return apiResponse(this.service.transactions(limit, offset, user, agent, start, end, asc, transactionTypes), 200)
@@ -54,7 +42,7 @@ export class ExplorerController {
   @ApiQuery({ name: 'hash', type: String })
   getTransactionClassification(
     @Query('hash') hash: string
-  ): Promise<ApiResponse<GenericTransactionClassification>> {
+  ): Promise<ApiResponse<Types.GenericTransactionClassification>> {
     return apiResponse(this.service.transactionClassification(hash), 200)
   }
 
@@ -63,7 +51,7 @@ export class ExplorerController {
   @ApiQuery({ name: 'hash', type: String })
   getMintingTransactionDetails(
     @Query('hash') hash: string,
-  ): Promise<ApiResponse<MintTransactionDetails>> {
+  ): Promise<ApiResponse<Types.MintTransactionDetails>> {
     return apiResponse(this.service.mintingTransactionDetails(hash), 200)
   }
 
@@ -72,7 +60,7 @@ export class ExplorerController {
   @ApiQuery({ name: 'hash', type: String })
   getRedemptionTransactionDetails(
     @Query('hash') hash: string,
-  ): Promise<ApiResponse<RedeemTransactionDetails>> {
+  ): Promise<ApiResponse<Types.RedeemTransactionDetails>> {
     return apiResponse(this.service.redemptionTransactionDetails(hash), 200)
   }
 
@@ -81,7 +69,7 @@ export class ExplorerController {
   @ApiQuery({ name: 'hash', type: String })
   getCoreVaultTransferTransactionDetails(
     @Query('hash') hash: string,
-  ): Promise<ApiResponse<TransferToCoreVaultTransactionDetails>> {
+  ): Promise<ApiResponse<Types.TransferToCoreVaultTransactionDetails>> {
     return apiResponse(this.service.transferToCoreVaultTransactionDetails(hash), 200)
   }
 
@@ -90,7 +78,7 @@ export class ExplorerController {
   @ApiQuery({ name: 'hash', type: String })
   getReturnFromCoreVaultTransactionDetails(
     @Query('hash') hash: string,
-  ): Promise<ApiResponse<ReturnFromCoreVaultTransactionDetails>> {
+  ): Promise<ApiResponse<Types.ReturnFromCoreVaultTransactionDetails>> {
     return apiResponse(this.service.returnFromCoreVaultTransactionDetails(hash), 200)
   }
 
@@ -99,7 +87,7 @@ export class ExplorerController {
   @ApiQuery({ name: 'hash', type: String })
   getSelfMintTransactionDetails(
     @Query('hash') hash: string
-  ): Promise<ApiResponse<SelfMintTransactionDetails>> {
+  ): Promise<ApiResponse<Types.SelfMintTransactionDetails>> {
     return apiResponse(this.service.selfMintTransactionDetails(hash), 200)
   }
 
@@ -108,7 +96,7 @@ export class ExplorerController {
   @ApiQuery({ name: 'hash', type: String })
   getUnderlyingBalanceTopupTransactionDetails(
     @Query('hash') hash: string
-  ): Promise<ApiResponse<BalanceTopupTransactionDetails>> {
+  ): Promise<ApiResponse<Types.BalanceTopupTransactionDetails>> {
     return apiResponse(this.service.underlyingBalanceToppedUpTransactionDetails(hash), 200)
   }
 
@@ -117,11 +105,11 @@ export class ExplorerController {
   @ApiQuery({ name: 'hash', type: String })
   getAgentBalanceWithdrawalTransactionDetails(
     @Query('hash') hash: string
-  ): Promise<ApiResponse<WithdrawalTransactionDetails>> {
+  ): Promise<ApiResponse<Types.WithdrawalTransactionDetails>> {
     return apiResponse(this.service.underlyingWithdrawalTransactionDetails(hash), 200)
   }
 
-  private parseTransactionTypes(types: string[]): TransactionType[] {
-    return types.map(t => TransactionType[t])
+  private parseTransactionTypes(types: string[]): Types.TransactionType[] {
+    return types.map(t => Types.TransactionType[t])
   }
 }

@@ -49,7 +49,8 @@ export class EventIndexer {
 
   async lastBlockToHandle(): Promise<number> {
     const blockHeight = await this.context.provider.getBlockNumber()
-    return blockHeight - EVM_BLOCK_HEIGHT_OFFSET
+    const offset = this.context.config.json?.events.logFetchBlockHeightOffset ?? EVM_BLOCK_HEIGHT_OFFSET
+    return blockHeight - offset
   }
 
   async firstUnhandledBlock(startBlock?: number): Promise<number> {

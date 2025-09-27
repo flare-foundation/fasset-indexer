@@ -1,6 +1,6 @@
 import { sleep } from "../utils/general"
 import { logger } from "../logger"
-import { SLEEP_AFTER_ERROR_MS, EVM_LOG_FETCH_SLEEP_MS } from "../config/constants"
+import { SLEEP_AFTER_ERROR_MS } from "../config/constants"
 
 
 interface Indexer {
@@ -14,7 +14,7 @@ export class IndexerRunner {
     public name: string
   ) { }
 
-  async run(startBlock?: number, layered: boolean = false) {
+  async run(cyclesleep: number, startBlock?: number, layered: boolean = false) {
     while (true) {
       try {
         const resp = await this.indexer.run(startBlock)
@@ -30,7 +30,7 @@ export class IndexerRunner {
         continue
       }
       if (!layered) {
-        await sleep(EVM_LOG_FETCH_SLEEP_MS)
+        await sleep(cyclesleep)
       }
     }
   }

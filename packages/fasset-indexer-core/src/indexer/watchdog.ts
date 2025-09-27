@@ -24,7 +24,7 @@ export class EvmStateWatchdog {
       } catch (e: any) {
         logger.error(`error in top-level Flare watchdog: ${e}`)
       }
-      await sleep(EVM_STATE_UPDATE_SLEEP_MS)
+      await sleep(this.context.config.json?.watchdog.cycleSleepMs ?? EVM_STATE_UPDATE_SLEEP_MS)
     }
   }
 

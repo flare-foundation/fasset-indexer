@@ -401,84 +401,91 @@ export class ExplorerAnalytics {
     const ret: ExplorerType.GenericTransactionClassification = []
     const logs = await em.find(Entities.EvmLog, { transaction: { hash } }, { populate: [ 'transaction' ]})
     for (const log of logs) {
-      let oglog: Entities.EvmLog | null = null
-      if (
-           log.name == EVENTS.ASSET_MANAGER.REDEMPTION_REQUESTED
-        || log.name == EVENTS.ASSET_MANAGER.COLLATERAL_RESERVED
-        || log.name == EVENTS.ASSET_MANAGER.TRANSFER_TO_CORE_VAULT_STARTED
-        || log.name == EVENTS.ASSET_MANAGER.RETURN_FROM_CORE_VAULT_REQUESTED
-        || log.name == EVENTS.ASSET_MANAGER.SELF_MINT
-        || log.name == EVENTS.ASSET_MANAGER.UNDERLYING_BALANCE_TOPPED_UP
-        || log.name == EVENTS.ASSET_MANAGER.UNDERLYING_WITHDRAWAL_ANNOUNCED
-      ) {
-        oglog = log
-      // core vault transfers
-      } else if (log.name == EVENTS.ASSET_MANAGER.TRANSFER_TO_CORE_VAULT_SUCCESSFUL) {
-        oglog = await em.findOneOrFail(Entities.TransferToCoreVaultSuccessful,
-          { evmLog: log }, { populate: [ 'transferToCoreVaultStarted.evmLog.transaction' ]}
-        ).then(x => x.transferToCoreVaultStarted.evmLog)
-      } else if (log.name == EVENTS.ASSET_MANAGER.TRANSFER_TO_CORE_VAULT_DEFAULTED) {
-        oglog = await em.findOneOrFail(Entities.TransferToCoreVaultDefaulted,
-          { evmLog: log }, { populate: [ 'transferToCoreVaultStarted.evmLog.transaction' ]}
-        ).then(x => x.transferToCoreVaultStarted.evmLog)
-      // core vault returns
-      } else if (log.name == EVENTS.ASSET_MANAGER.RETURN_FROM_CORE_VAULT_CONFIRMED) {
-        oglog = await em.findOneOrFail(Entities.ReturnFromCoreVaultConfirmed,
-          { evmLog: log }, { populate: [ 'returnFromCoreVaultRequested.evmLog.transaction' ] }
-        ).then(x => x.returnFromCoreVaultRequested.evmLog)
-      } else if (log.name == EVENTS.ASSET_MANAGER.RETURN_FROM_CORE_VAULT_CANCELLED) {
-        oglog = await em.findOneOrFail(Entities.ReturnFromCoreVaultCancelled,
-          { evmLog: log }, { populate: [ 'returnFromCoreVaultRequested.evmLog.transaction' ] }
-        ).then(x => x.returnFromCoreVaultRequested.evmLog)
-      // mintings
-      } else if (log.name == EVENTS.ASSET_MANAGER.MINTING_EXECUTED) {
-        oglog = await em.findOneOrFail(Entities.MintingExecuted,
-          { evmLog: log }, { populate: [ 'collateralReserved.evmLog.transaction' ] }
-        ).then(x => x.collateralReserved.evmLog)
-      } else if (log.name == EVENTS.ASSET_MANAGER.MINTING_PAYMENT_DEFAULT) {
-        oglog = await em.findOneOrFail(Entities.MintingPaymentDefault,
-           { evmLog: log }, { populate: [ 'collateralReserved.evmLog.transaction' ] }
-        ).then(x => x.collateralReserved.evmLog)
-      } else if (log.name == EVENTS.ASSET_MANAGER.COLLATERAL_RESERVATION_DELETED) {
-        oglog = await em.findOneOrFail(Entities.CollateralReservationDeleted,
-          { evmLog: log }, { populate: [ 'collateralReserved.evmLog.transaction' ] }
-        ).then(x => x.collateralReserved.evmLog)
-      // redemptions
-      } else if (log.name == EVENTS.ASSET_MANAGER.REDEMPTION_PERFORMED) {
-        oglog = await em.findOneOrFail(Entities.RedemptionPerformed,
-          { evmLog: log }, { populate: [ 'redemptionRequested.evmLog.transaction' ] }
-        ).then(x => x.redemptionRequested.evmLog)
-      } else if (log.name == EVENTS.ASSET_MANAGER.REDEMPTION_DEFAULT) {
-        oglog = await em.findOneOrFail(Entities.RedemptionDefault,
-          { evmLog: log }, { populate: [ 'redemptionRequested.evmLog.transaction' ] }
-        ).then(x => x.redemptionRequested.evmLog)
-      } else if (log.name == EVENTS.ASSET_MANAGER.REDEMPTION_REJECTED) {
-        oglog = await em.findOneOrFail(Entities.RedemptionRejected,
-          { evmLog: log }, { populate: [ 'redemptionRequested.evmLog.transaction' ] }
-        ).then(x => x.redemptionRequested.evmLog)
-      } else if (log.name == EVENTS.ASSET_MANAGER.REDEMPTION_PAYMENT_FAILED) {
-        oglog = await em.findOneOrFail(Entities.RedemptionPaymentFailed,
-          { evmLog: log }, { populate: [ 'redemptionRequested.evmLog.transaction' ] }
-        ).then(x => x.redemptionRequested.evmLog)
-      } else if (log.name == EVENTS.ASSET_MANAGER.REDEMPTION_PAYMENT_BLOCKED) {
-        oglog = await em.findOneOrFail(Entities.RedemptionPaymentBlocked,
-          { evmLog: log }, { populate: [ 'redemptionRequested.evmLog.transaction' ] }
-        ).then(x => x.redemptionRequested.evmLog)
-      // agent withdrawal
-      } else if (log.name == EVENTS.ASSET_MANAGER.UNDERLYING_WITHDRAWAL_CONFIRMED) {
-        oglog = await em.findOneOrFail(Entities.UnderlyingWithdrawalConfirmed,
-          { evmLog: log }, { populate: [ 'underlyingWithdrawalAnnounced.evmLog.transaction' ] }
-        ).then(x => x.underlyingWithdrawalAnnounced.evmLog)
-      } else if (log.name == EVENTS.ASSET_MANAGER.UNDERLYING_WITHDRAWAL_CANCELLED) {
-        oglog = await em.findOneOrFail(Entities.UnderlyingWithdrawalCancelled,
-          { evmLog: log }, { populate: [ 'underlyingWithdrawalAnnounced.evmLog.transaction' ] }
-        ).then(x => x.underlyingWithdrawalAnnounced.evmLog)
-      } else {
-        continue
-      }
-      ret.push({ eventName: log.name, transactionHash: oglog.transaction.hash })
+      const oglog = await this.nativeEventClassification(em, log)
+      if (oglog == null) continue
+      ret.push({
+        eventName: log.name,
+        transactionHash: oglog.transaction.hash
+      })
     }
     return ret
+  }
+
+  protected async nativeEventClassification(em: EntityManager, log: Entities.EvmLog): Promise<Entities.EvmLog | null> {
+    switch (log.name) {
+      case EVENTS.ASSET_MANAGER.COLLATERAL_RESERVED:
+        return log
+      case EVENTS.ASSET_MANAGER.REDEMPTION_REQUESTED:
+        return log
+      case EVENTS.ASSET_MANAGER.TRANSFER_TO_CORE_VAULT_STARTED:
+        return log
+      case EVENTS.ASSET_MANAGER.RETURN_FROM_CORE_VAULT_REQUESTED:
+        return log
+      case EVENTS.ASSET_MANAGER.SELF_MINT:
+        return log
+      case EVENTS.ASSET_MANAGER.UNDERLYING_BALANCE_TOPPED_UP:
+        return log
+      case EVENTS.ASSET_MANAGER.UNDERLYING_WITHDRAWAL_ANNOUNCED:
+        return log
+      case EVENTS.ASSET_MANAGER.TRANSFER_TO_CORE_VAULT_SUCCESSFUL:
+        return em.findOneOrFail(Entities.TransferToCoreVaultSuccessful,
+          { evmLog: log }, { populate: [ 'transferToCoreVaultStarted.evmLog.transaction' ]}
+        ).then(x => x.transferToCoreVaultStarted.evmLog)
+      case EVENTS.ASSET_MANAGER.TRANSFER_TO_CORE_VAULT_DEFAULTED:
+        return em.findOneOrFail(Entities.TransferToCoreVaultDefaulted,
+          { evmLog: log }, { populate: [ 'transferToCoreVaultStarted.evmLog.transaction' ]}
+        ).then(x => x.transferToCoreVaultStarted.evmLog)
+      case EVENTS.ASSET_MANAGER.RETURN_FROM_CORE_VAULT_CONFIRMED:
+        return em.findOneOrFail(Entities.ReturnFromCoreVaultConfirmed,
+          { evmLog: log }, { populate: [ 'returnFromCoreVaultRequested.evmLog.transaction' ] }
+        ).then(x => x.returnFromCoreVaultRequested.evmLog)
+      case EVENTS.ASSET_MANAGER.RETURN_FROM_CORE_VAULT_CANCELLED:
+        return em.findOneOrFail(Entities.ReturnFromCoreVaultCancelled,
+          { evmLog: log }, { populate: [ 'returnFromCoreVaultRequested.evmLog.transaction' ] }
+        ).then(x => x.returnFromCoreVaultRequested.evmLog)
+      case EVENTS.ASSET_MANAGER.MINTING_EXECUTED:
+        return em.findOneOrFail(Entities.MintingExecuted,
+          { evmLog: log }, { populate: [ 'collateralReserved.evmLog.transaction' ] }
+        ).then(x => x.collateralReserved.evmLog)
+      case EVENTS.ASSET_MANAGER.MINTING_PAYMENT_DEFAULT:
+        return em.findOneOrFail(Entities.MintingPaymentDefault,
+           { evmLog: log }, { populate: [ 'collateralReserved.evmLog.transaction' ] }
+        ).then(x => x.collateralReserved.evmLog)
+      case EVENTS.ASSET_MANAGER.COLLATERAL_RESERVATION_DELETED:
+        return em.findOneOrFail(Entities.CollateralReservationDeleted,
+          { evmLog: log }, { populate: [ 'collateralReserved.evmLog.transaction' ] }
+        ).then(x => x.collateralReserved.evmLog)
+      case EVENTS.ASSET_MANAGER.REDEMPTION_PERFORMED:
+        return em.findOneOrFail(Entities.RedemptionPerformed,
+          { evmLog: log }, { populate: [ 'redemptionRequested.evmLog.transaction' ] }
+        ).then(x => x.redemptionRequested.evmLog)
+      case EVENTS.ASSET_MANAGER.REDEMPTION_DEFAULT:
+        return em.findOneOrFail(Entities.RedemptionDefault,
+          { evmLog: log }, { populate: [ 'redemptionRequested.evmLog.transaction' ] }
+        ).then(x => x.redemptionRequested.evmLog)
+      case EVENTS.ASSET_MANAGER.REDEMPTION_REJECTED:
+        return em.findOneOrFail(Entities.RedemptionRejected,
+          { evmLog: log }, { populate: [ 'redemptionRequested.evmLog.transaction' ] }
+        ).then(x => x.redemptionRequested.evmLog)
+      case EVENTS.ASSET_MANAGER.REDEMPTION_PAYMENT_FAILED:
+        return em.findOneOrFail(Entities.RedemptionPaymentFailed,
+          { evmLog: log }, { populate: [ 'redemptionRequested.evmLog.transaction' ] }
+        ).then(x => x.redemptionRequested.evmLog)
+      case EVENTS.ASSET_MANAGER.REDEMPTION_PAYMENT_BLOCKED:
+        return em.findOneOrFail(Entities.RedemptionPaymentBlocked,
+          { evmLog: log }, { populate: [ 'redemptionRequested.evmLog.transaction' ] }
+        ).then(x => x.redemptionRequested.evmLog)
+      case EVENTS.ASSET_MANAGER.UNDERLYING_WITHDRAWAL_CONFIRMED:
+        return em.findOneOrFail(Entities.UnderlyingWithdrawalConfirmed,
+          { evmLog: log }, { populate: [ 'underlyingWithdrawalAnnounced.evmLog.transaction' ] }
+        ).then(x => x.underlyingWithdrawalAnnounced.evmLog)
+      case EVENTS.ASSET_MANAGER.UNDERLYING_WITHDRAWAL_CANCELLED:
+        return em.findOneOrFail(Entities.UnderlyingWithdrawalCancelled,
+          { evmLog: log }, { populate: [ 'underlyingWithdrawalAnnounced.evmLog.transaction' ] }
+        ).then(x => x.underlyingWithdrawalAnnounced.evmLog)
+      default:
+        return null
+    }
   }
 
   protected async rippleTransactionClassification(em: EntityManager, hash: string): Promise<ExplorerType.GenericTransactionClassification> {

@@ -1,9 +1,8 @@
 // chain call config
-export const CHAIN_FETCH_RETRY_LIMIT = 20
-export const SLEEP_AFTER_ERROR_MS = 100
+export const SLEEP_AFTER_ERROR_MS = 3000
 
 // evm event scrape config
-export const EVM_LOG_FETCH_SLEEP_MS = 30 * 1000 // collect logs every 30 seconds
+export const EVM_LOG_FETCH_SLEEP_MS = 10 * 1000 // collect logs every 10 seconds
 export const EVM_STATE_UPDATE_SLEEP_MS = 60 * 1000 // collect state every one minute
 export const EVM_BLOCK_HEIGHT_OFFSET = 10 // log collection offset from the current block height
 

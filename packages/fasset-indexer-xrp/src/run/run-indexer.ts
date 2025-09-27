@@ -8,6 +8,7 @@ import {
   MIN_XRP_BLOCK_NUMBER_DB_KEY
 } from "../config/constants"
 
+const SLEEP_MS = 5000
 
 async function runIndexer() {
   const config = new XrpConfigLoader()
@@ -21,7 +22,7 @@ async function runIndexer() {
   const runner = new IndexerRunner(indexer, 'xrp')
   await Promise.all([
     monitor(config, context),
-    runner.run(config.xrpMinBlockNumber)
+    runner.run(SLEEP_MS, config.xrpMinBlockNumber)
   ])
 }
 
