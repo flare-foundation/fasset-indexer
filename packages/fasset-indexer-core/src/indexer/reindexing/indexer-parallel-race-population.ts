@@ -40,7 +40,7 @@ export class EventIndexerParallelRacePopulation {
       await this.backIndexer.runHistoric(firstUnhandledBlockBack, endblock - 1)
     }
     firstUnhandledBlockBack = await this.backIndexer.firstUnhandledBlock()
-    if (firstUnhandledBlockBack == firstUnhandledBlockFront) {
+    if (firstUnhandledBlockBack >= firstUnhandledBlockFront) {
       await setVar(this.frontIndexer.context.orm.em.fork(), this.updateSynced, 'true')
       return this.indexer
     }
