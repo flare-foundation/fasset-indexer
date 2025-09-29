@@ -7,7 +7,6 @@ import { IndexerRunner } from "../indexer/runner"
 import { EventIndexerParallelBackPopulation } from "../indexer/reindexing/indexer-parallel-back-population"
 import { EventIndexerParallelRacePopulation } from "../indexer/reindexing/indexer-parallel-race-population"
 import { migrateCollateralPoolEvents } from "../scripts/migrate-collateral-pool-events"
-import { EVENT_NAMES, EVM_LOG_FETCH_SLEEP_MS } from "../config/constants"
 import { logger } from "../logger"
 
 
@@ -17,7 +16,7 @@ async function runIndexer() {
 
   // define indexer by configured type
   let indexer: EventIndexer | EventIndexerParallelBackPopulation | EventIndexerParallelRacePopulation
-  const allEvents = config.json?.indexEvents ?? EVENT_NAMES
+  const allEvents = config.indexEvents
   if (config.reindexing == null) {
     indexer = new EventIndexer(context, allEvents)
   } else if (config.reindexing.type == 'back') {
@@ -44,10 +43,9 @@ async function runIndexer() {
 
   logger.info(`starting ${context.chain} event indexer...`)
   const runner = new IndexerRunner(indexer, 'native')
-  const sleepms = config.json?.events.logFetchCycleSleepMs ?? EVM_LOG_FETCH_SLEEP_MS
   await Promise.all([
     migrateCollateralPoolEvents(context.orm.em.fork()),
-    runner.run(sleepms, undefined, config.reindexing != null)
+    runner.run(config.evmLogFetchCycleSleepMs, undefined, config.reindexing != null)
   ])
 }
 

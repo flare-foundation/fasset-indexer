@@ -26,7 +26,6 @@ services:
       RPC_URL: ${RPC_URL}
       RPC_API_KEY: ${RPC_API_KEY:-}
       CONFIG_PATH: /usr/src/app/config.json
-      LOG_QUERY_BATCH_SIZE: ${LOG_QUERY_BATCH_SIZE:-}
       REINDEX_TYPE: ${REINDEX_TYPE:-}
       REINDEX_DIFF: ${REINDEX_DIFF:-}
       REINDEX_NAME: ${REINDEX_NAME:-}

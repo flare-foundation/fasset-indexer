@@ -4,6 +4,13 @@ import { SqliteDriver } from "@mikro-orm/sqlite"
 import { PostgreSqlDriver } from "@mikro-orm/postgresql"
 import { getContractInfo } from "./contracts"
 import { SchemaUpdate } from "../orm/interface"
+import {
+  EVENT_NAMES,
+  DEFAULT_EVM_BLOCK_HEIGHT_OFFSET,
+  DEFAULT_EVM_LOG_FETCH_BLOCK_BATCH_SIZE,
+  DEFAULT_EVM_LOG_FETCH_SLEEP_MS,
+  DEFAULT_EVM_STATE_UPDATE_SLEEP_MS
+} from "./constants"
 import type { ContractInfo, ConfigJson, ReindexConfig } from "./interface"
 
 
@@ -84,20 +91,32 @@ export class ConfigLoader {
     return this.isNull(minBlock) ? undefined : parseInt(minBlock!)
   }
 
-  get logQueryBatchSize(): number {
-    const size = process.env.LOG_QUERY_BATCH_SIZE
-    return this.isNull(size) ? 28 : parseInt(size!)
+  get evmLogFetchBlockBatchSize(): number {
+    const def = DEFAULT_EVM_LOG_FETCH_BLOCK_BATCH_SIZE
+    const val = this.json?.events.logFetchBlockBatchSize
+    return val == null ? def : val
   }
 
-  get json(): ConfigJson | undefined {
-    if (this._configJson == null) {
-      const configPath = process.env.CONFIG_PATH
-      if (configPath != null) {
-        const file = readFileSync(configPath)
-        this._configJson = JSON.parse(file.toString())
-      }
-    }
-    return this._configJson
+  get evmLogFetchCycleSleepMs(): number {
+    const def = DEFAULT_EVM_LOG_FETCH_SLEEP_MS
+    const val = this.json?.events.logFetchCycleSleepMs
+    return val == null ? def : val
+  }
+
+  get evmLogFetchBlockHeightOffset(): number {
+    const def = DEFAULT_EVM_BLOCK_HEIGHT_OFFSET
+    const val = this.json?.events.logFetchBlockHeightOffset
+    return val == null ? def : val
+  }
+
+  get stateFetchCycleSleepMs(): number {
+    const def = DEFAULT_EVM_STATE_UPDATE_SLEEP_MS
+    const val = this.json?.watchdog.cycleSleepMs
+    return val == null ? def : val
+  }
+
+  get indexEvents(): string[] {
+    return this.json?.indexEvents ?? EVENT_NAMES
   }
 
   get reindexing(): ReindexConfig | null {
@@ -109,6 +128,17 @@ export class ConfigLoader {
     const diff = this.required('REINDEX_DIFF')
     const name = this.required('REINDEX_NAME')
     return { type, diff: diff.split(','), name }
+  }
+
+  protected get json(): ConfigJson | undefined {
+    if (this._configJson == null) {
+      const configPath = process.env.CONFIG_PATH
+      if (configPath != null) {
+        const file = readFileSync(configPath)
+        this._configJson = JSON.parse(file.toString())
+      }
+    }
+    return this._configJson
   }
 
   protected get dbType(): string {

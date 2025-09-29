@@ -4,7 +4,6 @@ import { AgentVault } from "../orm/entities/agent"
 import { FtsoPrice } from "../orm/entities/state/price"
 import { isUntrackedAgentVault, updateAgentVaultInfo } from "./utils"
 import { Context } from "../context/context"
-import { EVM_STATE_UPDATE_SLEEP_MS } from "../config/constants"
 import { logger } from "../logger"
 import type { EntityManager } from "@mikro-orm/knex"
 import type { FAssetType } from "../shared"
@@ -24,7 +23,7 @@ export class EvmStateWatchdog {
       } catch (e: any) {
         logger.error(`error in top-level Flare watchdog: ${e}`)
       }
-      await sleep(this.context.config.json?.watchdog.cycleSleepMs ?? EVM_STATE_UPDATE_SLEEP_MS)
+      await sleep(this.context.config.stateFetchCycleSleepMs)
     }
   }
 

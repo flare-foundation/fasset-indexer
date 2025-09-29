@@ -33,7 +33,6 @@ If new events want to be added to tracking without stopping the indexer, you sho
 Additional optional dev settings:
 - **CONFIG_PATH**: should be set to a json file containing a list of indexed event names, see `./configs/everything.json`;
 - **ADDRESSES_JSON**: path to file with the FAsset deployment contracts (when indexing non-official test deployments);
-- **LOG_QUERY_BATCH_SIZE**: the size of the log batch requested by indexer to the rpc node (should be strictly less than 30);
 - **MIN_BLOCK_NUMBER**: the block number that the indexer will start with. If empty, it is set to the block at which the FAsset contracts were deployed. Other values can lead to errors due to event gaps.
 
 To run the indexer, run `yarn run-indexer`.
