@@ -106,7 +106,6 @@ export type WithdrawalEventDetails = EventDetails<
     | Entities.UnderlyingWithdrawalCancelled
 >
 
-
 interface TransactionDetails<T,U> {
   flows: T[]
   flags?: U

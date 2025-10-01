@@ -1,4 +1,5 @@
-import { Entity, ManyToOne, Property, OneToOne, Unique } from "@mikro-orm/core"
+import { Entity, ManyToOne, Property, OneToOne, Unique, Enum } from "@mikro-orm/core"
+import { RedemptionResolution } from "../../../shared"
 import { uint256 } from "../../custom/uint"
 import { EvmAddress } from "../evm/address"
 import { UnderlyingAddress } from "../underlying/address"
@@ -43,6 +44,9 @@ export class RedemptionRequested extends AgentEventBound {
 
   @Property({ type: new uint256() })
   executorFeeNatWei!: bigint
+
+  @Enum({ type: () => RedemptionResolution, nullable: true, index: true })
+  resolution!: RedemptionResolution
 }
 
 @Entity()

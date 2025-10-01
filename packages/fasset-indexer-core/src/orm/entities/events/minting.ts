@@ -1,4 +1,5 @@
-import { Entity, Property, ManyToOne, OneToOne, Unique } from '@mikro-orm/core'
+import { Entity, Property, ManyToOne, OneToOne, Unique, Enum } from '@mikro-orm/core'
+import { CollateralReservationResolution } from '../../../shared'
 import { uint256 } from '../../custom/uint'
 import { EvmAddress } from '../evm/address'
 import { UnderlyingAddress } from '../underlying/address'
@@ -43,6 +44,9 @@ export class CollateralReserved extends AgentEventBound {
 
   @Property({ type: new uint256() })
   executorFeeNatWei!: bigint
+
+  @Enum({ type: () => CollateralReservationResolution, nullable: true, index: true })
+  resolution!: CollateralReservationResolution
 }
 
 @Entity()

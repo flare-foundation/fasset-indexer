@@ -11,4 +11,11 @@ export { StateUpdater } from "./indexer/eventlib/state-updater"
 export { EventStorer } from "./indexer/eventlib/event-storer"
 export { IndexerRunner } from "./indexer/runner"
 // core types
-export { FAssetType, FAsset, FASSETS } from "./shared"
+export {
+  FAssetType, FAsset, FASSETS,
+  RedemptionResolution,
+  CollateralReservationResolution,
+  ReturnFromCoreVaultResolution,
+  TransferToCoreVaultResolution,
+  UnderlyingWithdrawalResolution
+} from "./shared"

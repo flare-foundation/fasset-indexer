@@ -1,6 +1,7 @@
-import { Entity, OneToOne, Property } from "@mikro-orm/core"
+import { Entity, Enum, OneToOne, Property } from "@mikro-orm/core"
 import { uint256, uint64 } from "../../custom/uint"
 import { AgentEventBound, FAssetEventBound } from "./_bound"
+import { UnderlyingWithdrawalResolution } from "../../../shared"
 
 
 @Entity()
@@ -61,6 +62,9 @@ export class UnderlyingWithdrawalAnnounced extends AgentEventBound {
 
   @Property({ type: 'string', index: true })
   paymentReference!: string
+
+  @Enum({ type: () => UnderlyingWithdrawalResolution, nullable: true, index: true })
+  resolution!: UnderlyingWithdrawalResolution
 }
 
 @Entity()

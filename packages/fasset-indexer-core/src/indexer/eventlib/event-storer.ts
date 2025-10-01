@@ -1,4 +1,5 @@
 import * as Entities from '../../orm/entities'
+import * as shared from '../../shared'
 import { findOrCreateEntity } from "../../orm/utils"
 import { isUntrackedAgentVault } from "../utils"
 import { ContractLookup } from "../../context/lookup"
@@ -567,7 +568,7 @@ export class EventStorer {
       minter: _minter, valueUBA, feeUBA,
       firstUnderlyingBlock: Number(firstUnderlyingBlock), lastUnderlyingBlock: Number(lastUnderlyingBlock),
       lastUnderlyingTimestamp: Number(lastUnderlyingTimestamp),  paymentAddress: _paymentAddress, paymentReference,
-      executor: _executor, executorFeeNatWei
+      executor: _executor, executorFeeNatWei, resolution: shared.CollateralReservationResolution.NONE
     })
   }
 
@@ -580,6 +581,7 @@ export class EventStorer {
     const [ , collateralReservationId,,, poolFeeUBA ] = logArgs
     const collateralReserved = await em.findOneOrFail(Entities.CollateralReserved,
       { collateralReservationId: Number(collateralReservationId), fasset })
+    collateralReserved.resolution = shared.CollateralReservationResolution.EXECUTED
     return em.create(Entities.MintingExecuted, { evmLog, fasset, collateralReserved, poolFeeUBA })
   }
 
@@ -592,6 +594,7 @@ export class EventStorer {
     const [ ,, collateralReservationId, ] = logArgs
     const collateralReserved = await em.findOneOrFail(Entities.CollateralReserved,
       { collateralReservationId: Number(collateralReservationId), fasset })
+    collateralReserved.resolution = shared.CollateralReservationResolution.DEFAULTED
     return em.create(Entities.MintingPaymentDefault, { evmLog, fasset, collateralReserved })
   }
 
@@ -604,6 +607,7 @@ export class EventStorer {
     const [ ,, collateralReservationId, ] = logArgs
     const collateralReserved = await em.findOneOrFail(Entities.CollateralReserved,
       { collateralReservationId: Number(collateralReservationId), fasset })
+    collateralReserved.resolution = shared.CollateralReservationResolution.DELETED
     return em.create(Entities.CollateralReservationDeleted, { evmLog, fasset, collateralReserved })
   }
 
@@ -643,7 +647,8 @@ export class EventStorer {
       evmLog, fasset, agentVault: _agentVault, redeemer: _redeemer, requestId: Number(requestId),
       paymentAddress: _paymentAddress, valueUBA, feeUBA,
       firstUnderlyingBlock: Number(firstUnderlyingBlock), lastUnderlyingBlock: Number(lastUnderlyingBlock),
-      lastUnderlyingTimestamp: Number(lastUnderlyingTimestamp), paymentReference, executor: _executor, executorFeeNatWei
+      lastUnderlyingTimestamp: Number(lastUnderlyingTimestamp), paymentReference, executor: _executor, executorFeeNatWei,
+      resolution: shared.RedemptionResolution.NONE
     })
   }
 
@@ -655,6 +660,7 @@ export class EventStorer {
     const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
     const [ ,, requestId, transactionHash,, spentUnderlyingUBA ] = logArgs
     const redemptionRequested = await em.findOneOrFail(Entities.RedemptionRequested, { requestId: Number(requestId), fasset })
+    redemptionRequested.resolution = shared.RedemptionResolution.PERFORMED
     return em.create(Entities.RedemptionPerformed, { evmLog, fasset, redemptionRequested, transactionHash, spentUnderlyingUBA })
   }
 
@@ -667,6 +673,7 @@ export class EventStorer {
     const [ ,, requestId,, redeemedVaultCollateralWei, redeemedPoolCollateralWei ] = logArgs
     const redemptionRequested = await em.findOneOrFail(Entities.RedemptionRequested,
       { requestId: Number(requestId), fasset })
+    redemptionRequested.resolution = shared.RedemptionResolution.DEFAULTED
     return em.create(Entities.RedemptionDefault, {
       evmLog, fasset, redemptionRequested, redeemedVaultCollateralWei, redeemedPoolCollateralWei
     })
@@ -683,6 +690,7 @@ export class EventStorer {
     const [ ,, requestId, transactionHash,, spentUnderlyingUBA ] = logArgs
     const redemptionRequested = await em.findOneOrFail(Entities.RedemptionRequested,
       { requestId: Number(requestId), fasset })
+    redemptionRequested.resolution = shared.RedemptionResolution.BLOCKED
     return em.create(Entities.RedemptionPaymentBlocked, {
       evmLog, fasset, redemptionRequested, transactionHash, spentUnderlyingUBA
     })
@@ -697,6 +705,7 @@ export class EventStorer {
     const [ ,, requestId, transactionHash, spentUnderlyingUBA, failureReason ] = logArgs
     const redemptionRequested = await em.findOneOrFail(Entities.RedemptionRequested,
       { requestId: Number(requestId), fasset })
+    redemptionRequested.resolution = shared.RedemptionResolution.FAILED
     return em.create(Entities.RedemptionPaymentFailed, {
       evmLog, fasset, redemptionRequested, transactionHash, spentUnderlyingUBA, failureReason
     })
@@ -711,6 +720,7 @@ export class EventStorer {
     const [ ,, requestId, ] = logArgs
     const redemptionRequested = await em.findOneOrFail(Entities.RedemptionRequested,
       { requestId: Number(requestId), fasset })
+    redemptionRequested.resolution = shared.RedemptionResolution.REJECTED
     return em.create(Entities.RedemptionRejected, { evmLog, fasset, redemptionRequested })
   }
 
@@ -1111,7 +1121,8 @@ export class EventStorer {
     const [ agentVault, announcementId, paymentReference ] = logArgs
     const _agentVault = await em.findOneOrFail(Entities.AgentVault, { address: { hex: agentVault }})
     return em.create(Entities.UnderlyingWithdrawalAnnounced, {
-      evmLog, fasset,agentVault: _agentVault, announcementId, paymentReference
+      evmLog, fasset,agentVault: _agentVault, announcementId, paymentReference,
+      resolution: shared.UnderlyingWithdrawalResolution.NONE
     })
   }
 
@@ -1124,6 +1135,7 @@ export class EventStorer {
     const [ , announcementId, spentUBA, transactionHash ] = logArgs
     const underlyingWithdrawalAnnounced = await em.findOneOrFail(Entities.UnderlyingWithdrawalAnnounced,
       { announcementId , fasset })
+    underlyingWithdrawalAnnounced.resolution = shared.UnderlyingWithdrawalResolution.CONFIRMED
     return em.create(Entities.UnderlyingWithdrawalConfirmed, {
       evmLog, fasset, underlyingWithdrawalAnnounced, spendUBA: spentUBA, transactionHash
     })
@@ -1138,6 +1150,7 @@ export class EventStorer {
     const [ agentVault, announcementId ] = logArgs
     const underlyingWithdrawalAnnounced = await em.findOneOrFail(Entities.UnderlyingWithdrawalAnnounced,
       { announcementId , fasset })
+    underlyingWithdrawalAnnounced.resolution = shared.UnderlyingWithdrawalResolution.CANCELLED
     return em.create(Entities.UnderlyingWithdrawalCancelled, { evmLog, fasset, underlyingWithdrawalAnnounced })
   }
 
@@ -1235,7 +1248,8 @@ export class EventStorer {
     const [ agentVault, transferRedemptionRequestId, valueUBA ] = logArgs
     const _agentVault = await em.findOneOrFail(Entities.AgentVault, { address: { hex: agentVault }})
     return em.create(Entities.TransferToCoreVaultStarted, {
-      evmLog, fasset, agentVault: _agentVault, transferRedemptionRequestId: Number(transferRedemptionRequestId), valueUBA
+      evmLog, fasset, agentVault: _agentVault, transferRedemptionRequestId: Number(transferRedemptionRequestId), valueUBA,
+      resolution: shared.TransferToCoreVaultResolution.NONE
     })
   }
 
@@ -1248,6 +1262,7 @@ export class EventStorer {
     const [ agentVault, transferRedemptionRequestId, valueUBA ] = logArgs
     const transferToCoreVaultStarted = await em.findOneOrFail(Entities.TransferToCoreVaultStarted,
       { transferRedemptionRequestId: Number(transferRedemptionRequestId), fasset })
+    transferToCoreVaultStarted.resolution = shared.TransferToCoreVaultResolution.SUCCESSFUL
     return em.create(Entities.TransferToCoreVaultSuccessful, { evmLog, fasset, transferToCoreVaultStarted, valueUBA })
   }
 
@@ -1260,6 +1275,7 @@ export class EventStorer {
     const [ agentVault, transferRedemptionRequestId, remintedUBA ] = logArgs
     const transferToCoreVaultStarted = await em.findOneOrFail(Entities.TransferToCoreVaultStarted,
       { transferRedemptionRequestId: Number(transferRedemptionRequestId), fasset })
+    transferToCoreVaultStarted.resolution = shared.TransferToCoreVaultResolution.DEFAULTED
     return em.create(Entities.TransferToCoreVaultDefaulted, { evmLog, fasset, transferToCoreVaultStarted, remintedUBA })
   }
 
@@ -1272,7 +1288,8 @@ export class EventStorer {
     const [ agentVault, requestId, paymentReference, valueUBA ] = logArgs
     const _agentVault = await em.findOneOrFail(Entities.AgentVault, { address: { hex: agentVault }})
     return em.create(Entities.ReturnFromCoreVaultRequested, {
-      evmLog, fasset, agentVault: _agentVault, requestId: Number(requestId), paymentReference, valueUBA
+      evmLog, fasset, agentVault: _agentVault, requestId: Number(requestId), paymentReference, valueUBA,
+      resolution: shared.ReturnFromCoreVaultResolution.NONE
     })
   }
 
@@ -1285,6 +1302,7 @@ export class EventStorer {
     const [ agentVault, requestId, receivedUnderlyingUBA, remintedUBA ] = logArgs
     const returnFromCoreVaultRequested = await em.findOneOrFail(Entities.ReturnFromCoreVaultRequested,
       { requestId: Number(requestId), fasset })
+    returnFromCoreVaultRequested.resolution = shared.ReturnFromCoreVaultResolution.CONFIRMED
     return em.create(Entities.ReturnFromCoreVaultConfirmed, {
       evmLog, fasset, returnFromCoreVaultRequested, receivedUnderlyingUBA, remintedUBA
     })
@@ -1299,6 +1317,7 @@ export class EventStorer {
     const [ agentVault, requestId ] = logArgs
     const returnFromCoreVaultRequested = await em.findOneOrFail(Entities.ReturnFromCoreVaultRequested,
       { requestId: Number(requestId), fasset })
+    returnFromCoreVaultRequested.resolution = shared.ReturnFromCoreVaultResolution.CANCELLED
     return em.create(Entities.ReturnFromCoreVaultCancelled, {
       evmLog, fasset, returnFromCoreVaultRequested
     })

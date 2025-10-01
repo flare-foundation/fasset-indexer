@@ -1,4 +1,5 @@
-import { Entity, ManyToOne, OneToOne, Property, Unique } from "@mikro-orm/core"
+import { Entity, Enum, ManyToOne, OneToOne, Property, Unique } from "@mikro-orm/core"
+import { ReturnFromCoreVaultResolution, TransferToCoreVaultResolution } from "../../../shared"
 import { uint256, uint64 } from "../../custom/uint"
 import { AgentEventBound, FAssetEventBound } from "./_bound"
 import { EvmAddress } from "../evm/address"
@@ -15,6 +16,9 @@ export class TransferToCoreVaultStarted extends AgentEventBound {
 
   @Property({ type: new uint64() })
   valueUBA!: bigint
+
+  @Enum({ type: () => TransferToCoreVaultResolution, index: true, nullable: true})
+  resolution!: TransferToCoreVaultResolution
 }
 
 @Entity()
@@ -49,6 +53,9 @@ export class ReturnFromCoreVaultRequested extends AgentEventBound {
 
   @Property({ type: new uint256() })
   valueUBA!: bigint
+
+  @Enum({ type: () => ReturnFromCoreVaultResolution, index: true, nullable: true })
+  resolution!: ReturnFromCoreVaultResolution
 }
 
 @Entity()
