@@ -1,5 +1,5 @@
-export const CACHE_TTL_MS = 60000
-export const CACHE_MAX_ENTRIES = 200
+export const CACHE_TTL_MS = 30_000
+export const CACHE_MAX_ENTRIES = 300
 
 export const MAX_TIMESERIES_PTS = 100
 export const MAX_RETURNED_OBJECTS = 100
