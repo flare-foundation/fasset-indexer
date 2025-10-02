@@ -1,8 +1,8 @@
 {
     "events": {
         "logFetchBlockBatchSize": 29,
-        "logFetchCycleSleepMs": 10000,
-        "logFetchBlockHeightOffset": 10
+        "logFetchCycleSleepMs": 5000,
+        "logFetchBlockHeightOffset": 5
     },
     "watchdog": {
         "cycleSleepMs": 30000

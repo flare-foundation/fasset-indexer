@@ -40,7 +40,9 @@ export enum TransactionType {
   Redeem = 1,
   TransferToCV = 2,
   ReturnFromCV = 3,
-  SelfMint = 4
+  SelfMint = 4,
+  Withdrawal = 5,
+  Topup = 6
 }
 
 export interface TransactionsInfo {
@@ -57,6 +59,7 @@ export interface TransactionInfo {
   value: bigint
   agentVault: string
   agentName: string
+  resolution?: string
 }
 
 export type GenericTransactionClassification = {
