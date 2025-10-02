@@ -30,10 +30,16 @@ export class ExplorerAnalytics extends SharedAnalytics {
     this.lookup = lookup
   }
 
-  async statistics(): Promise<ExplorerType.ExplorerAggregateStatistics> {
+  async statistics(start?: number, end?: number): Promise<ExplorerType.ExplorerAggregateStatistics> {
     const em = this.orm.em.fork()
-    const mint = await this.mintStats(em)
-    const redeem = await this.redeemStats(em)
+    if (start == null) {
+      start = 0
+    }
+    if (end == null) {
+      end = Date.now() / 1000
+    }
+    const mint = await this.mintStats(em, start, end)
+    const redeem = await this.redeemStats(em, start, end)
     return { mint, redeem }
   }
 
@@ -512,7 +518,7 @@ export class ExplorerAnalytics extends SharedAnalytics {
     return [{ eventName: oglog.evmLog.name, transactionHash: oglog.evmLog.transaction.hash }]
   }
 
-  protected async mintStats(em: EntityManager): Promise<ExplorerType.ExplorerStatistics> {
+  protected async mintStats(em: EntityManager, start: number, end: number): Promise<ExplorerType.ExplorerStatistics> {
     const resp = await em.createQueryBuilder(Entities.MintingExecuted, 'me')
       .select([
         'cr.fasset',
@@ -525,6 +531,7 @@ export class ExplorerAnalytics extends SharedAnalytics {
       .join('cr.evmLog', 'crel')
       .join('meel.block', 'meeb')
       .join('crel.block', 'creb')
+      .where({ 'meeb.timestamp': { $gte: start, $lt: end } })
       .groupBy('cr.fasset')
       .execute() as { fasset: core.FAssetType, count: number, value: string, time: number }[]
     return {
@@ -534,7 +541,7 @@ export class ExplorerAnalytics extends SharedAnalytics {
     }
   }
 
-  protected async redeemStats(em: EntityManager): Promise<ExplorerType.ExplorerStatistics> {
+  protected async redeemStats(em: EntityManager, start: number, end: number): Promise<ExplorerType.ExplorerStatistics> {
     const resp = await em.createQueryBuilder(Entities.RedemptionPerformed, 'rp')
       .select([
         'rr.fasset',
@@ -547,6 +554,7 @@ export class ExplorerAnalytics extends SharedAnalytics {
       .join('rr.evmLog', 'rrel')
       .join('rpel.block', 'rpeb')
       .join('rrel.block', 'rreb')
+      .where({ 'rpeb.timestamp': { $gte: start, $lt: end } })
       .groupBy('rr.fasset')
       .execute() as { fasset: core.FAssetType, count: number, value: string, time: number }[]
     return {

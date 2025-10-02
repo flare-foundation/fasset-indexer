@@ -14,8 +14,13 @@ export class ExplorerController {
 
   @Get('statistics')
   @ApiOperation({ summary: 'Explorer Statistics' })
-  getStatistics(): Promise<ApiResponse<Types.ExplorerAggregateStatistics>> {
-    return apiResponse(this.service.statistics(), 200)
+  @ApiQuery({ name: 'start', type: Number, required: false })
+  @ApiQuery({ name: 'end', type: Number, required: false })
+  getStatistics(
+    @Query('start', new ParseIntPipe({ optional: true })) start?: number,
+    @Query('end', new ParseIntPipe({ optional: true })) end?: number,
+  ): Promise<ApiResponse<Types.ExplorerAggregateStatistics>> {
+    return apiResponse(this.service.statistics(start, end), 200)
   }
 
   @Get('transactions')
