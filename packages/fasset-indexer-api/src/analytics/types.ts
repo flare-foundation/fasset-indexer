@@ -45,6 +45,17 @@ export enum TransactionType {
   Topup = 6
 }
 
+export interface ExplorerAggregateStatistics {
+  mint: ExplorerStatistics
+  redeem: ExplorerStatistics
+}
+
+export interface ExplorerStatistics {
+  count: FAssetAmountResult
+  value: FAssetValueResult
+  time: FAssetAmountResult
+}
+
 export interface TransactionsInfo {
   transactions: TransactionInfo[]
   count: number

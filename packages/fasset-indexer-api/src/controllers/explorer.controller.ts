@@ -12,6 +12,12 @@ import * as Types from '../analytics/types'
 export class ExplorerController {
   constructor(private readonly service: ExplorerService) {}
 
+  @Get('statistics')
+  @ApiOperation({ summary: 'Explorer Statistics' })
+  getStatistics(): Promise<ApiResponse<Types.ExplorerAggregateStatistics>> {
+    return apiResponse(this.service.statistics(), 200)
+  }
+
   @Get('transactions')
   @ApiOperation({ summary: 'Transactions tracked by the FAsset explorer' })
   @ApiQuery({ name: 'limit', type: Number })

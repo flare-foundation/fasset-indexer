@@ -1,10 +1,12 @@
+import { raw } from "fasset-indexer-core/orm"
 import * as core from "fasset-indexer-core"
 import * as Entities from "fasset-indexer-core/entities"
-import * as ExplorerType from "./types"
-import * as SQL from "./utils/raw-sql"
 import { PaymentReference } from "fasset-indexer-core/utils"
 import { EVENTS } from "fasset-indexer-core/config"
 import { XRP_TRANSACTION_SUCCESS_CODE } from 'fasset-indexer-xrp/constants'
+import * as ExplorerType from "./types"
+import * as SQL from "./utils/raw-sql"
+import { SharedAnalytics } from "./shared"
 import { unixnow } from "../shared/utils"
 import type { EntityManager, ORM } from "fasset-indexer-core/orm"
 import type { FilterQuery } from "@mikro-orm/core"
@@ -13,7 +15,7 @@ import type { FilterQuery } from "@mikro-orm/core"
 const ALL_TRANSACTION_TYPES = Object.values(ExplorerType.TransactionType)
   .filter(v => typeof v === "number")
 
-export class ExplorerAnalytics {
+export class ExplorerAnalytics extends SharedAnalytics {
   protected lookup: core.ContractLookup
   private coreVaultCache = new Map<core.FAssetType, string>()
 
@@ -22,7 +24,17 @@ export class ExplorerAnalytics {
     public readonly chain: string,
     addressesJson?: string
   ) {
-    this.lookup = new core.ContractLookup(chain, addressesJson)
+    const lookup = new core.ContractLookup(chain, addressesJson)
+    const fassets = core.FASSETS.filter(x => lookup.supportsFAsset(core.FAssetType[x]))
+    super(orm, fassets)
+    this.lookup = lookup
+  }
+
+  async statistics(): Promise<ExplorerType.ExplorerAggregateStatistics> {
+    const em = this.orm.em.fork()
+    const mint = await this.mintStats(em)
+    const redeem = await this.redeemStats(em)
+    return { mint, redeem }
   }
 
   async transactions(
@@ -498,6 +510,50 @@ export class ExplorerAnalytics {
       return resp.map(({ name, hash}) => ({ eventName: name, transactionHash: hash }))
     }
     return [{ eventName: oglog.evmLog.name, transactionHash: oglog.evmLog.transaction.hash }]
+  }
+
+  protected async mintStats(em: EntityManager): Promise<ExplorerType.ExplorerStatistics> {
+    const resp = await em.createQueryBuilder(Entities.MintingExecuted, 'me')
+      .select([
+        'cr.fasset',
+        raw('count(me.evm_log_id) as count'),
+        raw('sum(cr.value_uba) as value'),
+        raw('sum(meeb.timestamp - creb.timestamp) as time')
+      ])
+      .join('me.collateralReserved', 'cr')
+      .join('me.evmLog', 'meel')
+      .join('cr.evmLog', 'crel')
+      .join('meel.block', 'meeb')
+      .join('crel.block', 'creb')
+      .groupBy('cr.fasset')
+      .execute() as { fasset: core.FAssetType, count: number, value: string, time: number }[]
+    return {
+      count: this.convertOrmResultToFAssetAmountResult(resp, 'count'),
+      value: this.convertOrmResultToFAssetValueResult(resp, 'value'),
+      time: this.convertOrmResultToFAssetAmountResult(resp, 'time')
+    }
+  }
+
+  protected async redeemStats(em: EntityManager): Promise<ExplorerType.ExplorerStatistics> {
+    const resp = await em.createQueryBuilder(Entities.RedemptionPerformed, 'rp')
+      .select([
+        'rr.fasset',
+        raw('count(rp.evm_log_id) as count'),
+        raw('sum(rr.value_uba) as value'),
+        raw('sum(rpeb.timestamp - rreb.timestamp) as time')
+      ])
+      .join('rp.redemptionRequested', 'rr')
+      .join('rp.evmLog', 'rpel')
+      .join('rr.evmLog', 'rrel')
+      .join('rpel.block', 'rpeb')
+      .join('rrel.block', 'rreb')
+      .groupBy('rr.fasset')
+      .execute() as { fasset: core.FAssetType, count: number, value: string, time: number }[]
+    return {
+      count: this.convertOrmResultToFAssetAmountResult(resp, 'count'),
+      value: this.convertOrmResultToFAssetValueResult(resp, 'value'),
+      time: this.convertOrmResultToFAssetAmountResult(resp, 'time')
+    }
   }
 
   protected async getUnderlyingTransaction(

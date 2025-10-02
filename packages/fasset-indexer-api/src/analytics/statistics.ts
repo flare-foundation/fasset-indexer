@@ -1,3 +1,4 @@
+import { FASSETS } from "fasset-indexer-core"
 import { raw, type ORM } from "fasset-indexer-core/orm"
 import {
   AgentVault, MintingExecuted,
@@ -14,7 +15,7 @@ export class AgentStatistics extends SharedAnalytics {
   private price: FAssetPriceLoader
 
   constructor(public readonly orm: ORM) {
-    super(orm)
+    super(orm, FASSETS)
     this.price = new FAssetPriceLoader()
   }
 

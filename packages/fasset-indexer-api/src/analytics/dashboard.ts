@@ -30,14 +30,14 @@ export class DashboardAnalytics extends SharedAnalytics {
   private price: FAssetPriceLoader
   private statistics: AgentStatistics
   private zeroAddressId: number | null = null
-  private supportedFAssets: FAsset[]
 
   constructor(public readonly orm: ORM, public readonly chain: string, addressesJson?: string) {
-    super(orm)
-    this.lookup = new ContractLookup(chain, addressesJson)
+    const lookup = new ContractLookup(chain, addressesJson)
+    const fassets = FASSETS.filter(x => lookup.supportsFAsset(FAssetType[x]))
+    super(orm, fassets)
     this.price = new FAssetPriceLoader()
     this.statistics = new AgentStatistics(orm)
-    this.supportedFAssets = FASSETS.filter(x => this.lookup.supportsFAsset(FAssetType[x]))
+    this.lookup = lookup
   }
 
   //////////////////////////////////////////////////////////////////////
@@ -718,96 +718,6 @@ export class DashboardAnalytics extends SharedAnalytics {
       })
     }
     return res
-  }
-
-  protected transformFAssetValueResults(
-    res1: FAssetValueResult,
-    res2: FAssetValueResult,
-    transformer: (x: bigint, y: bigint) => bigint
-  ): FAssetValueResult {
-    const res = {} as FAssetValueResult
-    for (let fasset of this.supportedFAssets) {
-      const x = res1[fasset]?.value ?? BigInt(0)
-      const y = res2[fasset]?.value ?? BigInt(0)
-      res[fasset] = { value: transformer(x, y) }
-    }
-    return res
-  }
-
-  protected transformFAssetAmountResults(
-    res1: FAssetAmountResult,
-    res2: FAssetAmountResult,
-    transformer: (x: number, y: number) => number
-  ): FAssetAmountResult {
-    const res = {} as FAssetAmountResult
-    for (let fasset of this.supportedFAssets) {
-      const x = res1[fasset]?.amount ?? 0
-      const y = res2[fasset]?.amount ?? 0
-      res[fasset] = { amount: transformer(x, y) }
-    }
-    return res
-  }
-
-  protected convertFAssetValueResultToFAssetAmountResult(
-    result: FAssetValueResult
-  ): FAssetAmountResult {
-    return Object.fromEntries(Object.entries(result).map(
-      ([fasset, { value }]) => [ fasset, { amount: Number(value) }]
-    )) as FAssetAmountResult
-  }
-
-  protected convertOrmResultToFAssetValueResult<K extends string>(
-    result: ({ fasset: number } & { [key in K]: string | bigint })[], key: K
-  ): FAssetValueResult {
-    const ret = {} as FAssetValueResult
-    for (const x of result) {
-      ret[FAssetType[x.fasset] as FAsset] = { value: BigInt(x?.[key] ?? 0) }
-    }
-    return this.complementFAssetValueResult(ret)
-  }
-
-  protected convertOrmResultToFAssetAmountResult<K extends string>(
-    result: ({ fasset: number } & { [key in K]: string | number })[], key: K
-  ): FAssetAmountResult {
-    const ret = {} as FAssetAmountResult
-    for (const x of result) {
-      ret[FAssetType[x.fasset] as FAsset] = { amount: Number(x?.[key] ?? 0) }
-    }
-    return this.complementFAssetAmountResult(ret)
-  }
-
-  private convertFAssetTimeSeriesToFAssetTimespan(timeseries: FAssetTimeSeries<bigint>): FAssetTimespan<bigint> {
-    return Object.fromEntries(Object.entries(timeseries).map(
-      ([fasset, ts]) => [fasset, this.convertTimeSeriesToTimespan(ts)])
-    ) as FAssetTimespan<bigint>
-  }
-
-  private convertTimeSeriesToTimespan(timeseries: TimeSeries<bigint>): Timespan<bigint> {
-    const timespan: Timespan<bigint> = []
-    let pval = BigInt(0)
-    for (const { end, value } of timeseries) {
-      pval += value
-      timespan.push({ timestamp: end, value: pval })
-    }
-    return timespan
-  }
-
-  private complementFAssetValueResult(result: FAssetValueResult): FAssetValueResult {
-    for (const fasset of this.supportedFAssets) {
-      if (result[fasset] == null) {
-        result[fasset] = { value: BigInt(0) }
-      }
-    }
-    return result
-  }
-
-  private complementFAssetAmountResult(result: FAssetAmountResult): FAssetAmountResult {
-    for (const fasset of this.supportedFAssets) {
-      if (result[fasset] == null) {
-        result[fasset] = { amount: 0 }
-      }
-    }
-    return result
   }
 
 }
