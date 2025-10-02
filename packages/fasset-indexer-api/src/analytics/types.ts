@@ -60,6 +60,7 @@ export interface TransactionInfo {
   agentVault: string
   agentName: string
   resolution?: string
+  payment: boolean
 }
 
 export type GenericTransactionClassification = {

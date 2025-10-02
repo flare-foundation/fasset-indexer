@@ -99,16 +99,41 @@ GROUP BY t.fasset
 ORDER BY t.fasset
 `
 
-const transactions = new Map([
-  [TransactionType.Mint, `SELECT cr.evm_log_id, cr.agent_vault_address_id, cr.value_uba, cr.minter_id as user_id, cr.resolution FROM collateral_reserved cr`],
-  [TransactionType.Redeem, `SELECT rr.evm_log_id, rr.agent_vault_address_id, rr.value_uba, rr.redeemer_id as user_id, rr.resolution FROM redemption_requested rr
+const explorerQueryTransactions = new Map([
+  [TransactionType.Mint, `
+    SELECT cr.evm_log_id, cr.agent_vault_address_id, cr.value_uba, cr.minter_id as user_id, cr.resolution, cr.payment_reference
+    FROM collateral_reserved cr`
+  ],
+  [TransactionType.Redeem, `
+    SELECT rr.evm_log_id, rr.agent_vault_address_id, rr.value_uba, rr.redeemer_id as user_id, rr.resolution, rr.payment_reference
+    FROM redemption_requested rr
     FULL JOIN transfer_to_core_vault_started tc ON rr.fasset = tc.fasset AND rr.request_id = tc.transfer_redemption_request_id
-    WHERE tc.evm_log_id IS NULL`],
-  [TransactionType.TransferToCV, `SELECT tc.evm_log_id, tc.agent_vault_address_id, tc.value_uba, NULL::integer as user_id, tc.resolution FROM transfer_to_core_vault_started tc`],
-  [TransactionType.ReturnFromCV, `SELECT rc.evm_log_id, rc.agent_vault_address_id, rc.value_uba, NULL::integer as user_id, rc.resolution FROM return_from_core_vault_requested rc`],
-  [TransactionType.SelfMint, `SELECT sm.evm_log_id, sm.agent_vault_address_id, sm.minted_uba as value_uba, NULL::integer as user_id, NULL::integer FROM self_mint sm`],
-  [TransactionType.Withdrawal, `SELECT w.evm_log_id, w.agent_vault_address_id, NULL::integer as value_uba, NULL::integer as user_id, w.resolution FROM underlying_withdrawal_announced w`],
-  [TransactionType.Topup, `SELECT tp.evm_log_id, tp.agent_vault_address_id, tp.deposited_uba as value_uba, NULL::integer as user_id, tp.resolution FROM underlying_balance_topped_up tp`]
+    WHERE tc.evm_log_id IS NULL`
+  ],
+  [TransactionType.TransferToCV, `
+    SELECT tc.evm_log_id, tc.agent_vault_address_id, tc.value_uba, NULL::integer as user_id, tc.resolution, rr.payment_reference
+    FROM transfer_to_core_vault_started tc
+    JOIN redemption_requested rr
+    ON rr.fasset = tc.fasset AND rr.request_id = tc.transfer_redemption_request_id`
+  ],
+  [TransactionType.ReturnFromCV, `
+    SELECT rc.evm_log_id, rc.agent_vault_address_id, rc.value_uba, NULL::integer as user_id, rc.resolution, rc.payment_reference
+    FROM return_from_core_vault_requested rc`
+  ],
+  [TransactionType.SelfMint, `
+    SELECT sm.evm_log_id, sm.agent_vault_address_id, sm.minted_uba as value_uba, NULL::integer as user_id, NULL::integer as resolution, NULL::text as payment_reference
+    FROM self_mint sm`
+  ],
+  [TransactionType.Withdrawal, `
+    SELECT w.evm_log_id, w.agent_vault_address_id, wc.spend_uba::integer as value_uba, NULL::integer as user_id, w.resolution, w.payment_reference
+    FROM underlying_withdrawal_announced w
+    FULL JOIN underlying_withdrawal_confirmed wc
+    ON w.evm_log_id = wc.underlying_withdrawal_announced_evm_log_id`
+  ],
+  [TransactionType.Topup, `
+    SELECT tp.evm_log_id, tp.agent_vault_address_id, tp.deposited_uba as value_uba, NULL::integer as user_id, NULL::integer as resolution, NULL::text as payment_reference
+    FROM underlying_balance_topped_up tp`
+  ]
 ])
 
 // psql specific query
@@ -116,9 +141,10 @@ export const EXPLORER_TRANSACTIONS = (user: boolean, agent: boolean, asc: boolea
 SELECT
   et.hash, el.name, eb.timestamp, eaa.hex as agent_vault,
   am.name as agent_name, eau.hex as user, eao.hex as source,
-  t.value_uba, t.resolution, COUNT(*) OVER() as count
-FROM (${Array.from(transactions.entries()).filter(([k, _]) => methods.includes(k)).map(([_,v]) => v).join(' UNION ALL ')}) t
+  t.value_uba, t.resolution, ur.id as underlying_payment, COUNT(*) OVER() as count
+FROM (${Array.from(explorerQueryTransactions.entries()).filter(([k, _]) => methods.includes(k)).map(([_,v]) => v).join(' UNION ALL ')}) t
 FULL JOIN evm_address eau ON eau.id = t.user_id
+FULL JOIN underlying_reference ur ON ur.reference = t.payment_reference
 JOIN evm_log el ON el.id = t.evm_log_id
 JOIN evm_block eb ON eb.index = el.block_index
 JOIN evm_transaction et ON et.id = el.transaction_id
@@ -137,7 +163,7 @@ LIMIT ? OFFSET ?
 export type ExplorerTransactionsOrmResult = {
   name: string, timestamp: number, source: string, user: string,
   hash: string, agent_vault: string, agent_name: string, value_uba: string,
-  count: number, resolution: number
+  count: number, resolution: number, underlying_payment?: number
 }
 
 export const EVENT_FROM_UNDERLYING_HASH = `

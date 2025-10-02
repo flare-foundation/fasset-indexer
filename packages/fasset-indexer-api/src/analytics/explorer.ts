@@ -44,14 +44,14 @@ export class ExplorerAnalytics {
         : (window ? [start, end, limit, offset] : [limit, offset])
     ) as SQL.ExplorerTransactionsOrmResult[]
     const info: ExplorerType.TransactionInfo[] = []
-    for (const { name, timestamp, source, hash, agent_vault, agent_name, value_uba, user, resolution } of transactions) {
+    for (const { name, timestamp, source, hash, agent_vault, agent_name, value_uba, user, resolution, underlying_payment } of transactions) {
       const transactionType = this.eventNameToTransactionType(name)
       const resolutionString = this.resolutionFromTransactionType(transactionType, resolution)
       info.push({
         name: ExplorerType.TransactionType[transactionType] as any,
         agentVault: agent_vault, agentName: agent_name, user,
-        timestamp, origin: source, hash, value: BigInt(value_uba),
-        resolution: resolutionString
+        timestamp, origin: source, hash, value: BigInt(value_uba ?? 0),
+        resolution: resolutionString, payment: underlying_payment != null
       })
     }
     return { transactions: info, count: transactions[0]?.count ?? 0 }
@@ -531,6 +531,10 @@ export class ExplorerAnalytics {
         return ExplorerType.TransactionType.ReturnFromCV
       case 'SelfMint':
         return ExplorerType.TransactionType.SelfMint
+      case 'UnderlyingWithdrawalAnnounced':
+        return ExplorerType.TransactionType.Withdrawal
+      case 'UnderlyingBalanceToppedUp':
+        return ExplorerType.TransactionType.Topup
       default:
         throw new Error(`event name ${name} cannot be mapped to transaction type`)
     }
@@ -546,7 +550,11 @@ export class ExplorerAnalytics {
         return core.TransferToCoreVaultResolution[resolution]
       case ExplorerType.TransactionType.ReturnFromCV:
         return core.ReturnFromCoreVaultResolution[resolution]
+      case ExplorerType.TransactionType.Withdrawal:
+        return core.UnderlyingWithdrawalResolution[resolution]
       case ExplorerType.TransactionType.SelfMint:
+        return undefined
+      case ExplorerType.TransactionType.Topup:
         return undefined
       default:
         throw new Error(`invalid transaction type ${type}`)
