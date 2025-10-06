@@ -224,12 +224,6 @@ export class EventStorer {
       } case EVENTS.ASSET_MANAGER.EMERGENCY_PAUSE_CANCELLED: {
         await this.onEmergencyPauseCancelled(em, evmLog, log.args)
         break
-      } case EVENTS.ASSET_MANAGER.EMERGENCY_PAUSE_TRANSFERS_TRIGGERED: {
-        await this.onEmergencyPauseTransfersTriggered(em, evmLog, log.args)
-        break
-      } case EVENTS.ASSET_MANAGER.EMERGENCY_PAUSE_TRANSFERS_CANCELLED: {
-        await this.onEmergencyPauseTransfersCancelled(em, evmLog, log.args)
-        break
       } case EVENTS.COLLATERAL_POOL.ENTER: {
         const oldEnt = await this.onCollateralPoolEntered(em, evmLog, log.args)
         CollateralPoolEventMigration.migrateCollateralPoolEntered(em, oldEnt)
@@ -1347,9 +1341,11 @@ export class EventStorer {
     logArgs: AssetManager.EmergencyPauseTriggeredEvent.OutputTuple
   ): Promise<Entities.EmergencyPauseTriggered> {
     const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
-    const [ level, pausedUntil ] = logArgs
+    const [ externalLevel, externalPausedUntil, governanceLevel, governancePausedUntil ] = logArgs
     return em.create(Entities.EmergencyPauseTriggered, {
-      evmLog, fasset, level: Number(level), pausedUntil
+      evmLog, fasset,
+      externalLevel: Number(externalLevel), externalPausedUntil,
+      governanceLevel: Number(governanceLevel), governancePausedUntil
     })
   }
 
@@ -1360,25 +1356,6 @@ export class EventStorer {
   ): Promise<Entities.EmergencyPauseCancelled> {
     const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
     return em.create(Entities.EmergencyPauseCancelled, { evmLog, fasset })
-  }
-
-  protected async onEmergencyPauseTransfersTriggered(
-    em: EntityManager,
-    evmLog: Entities.EvmLog,
-    logArgs: AssetManager.EmergencyPauseTransfersTriggeredEvent.OutputTuple
-  ): Promise<Entities.EmergencyPauseTransfersTriggered> {
-    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
-    const [ pausedUntil ] = logArgs
-    return em.create(Entities.EmergencyPauseTransfersTriggered, { evmLog, fasset, pausedUntil })
-  }
-
-  protected async onEmergencyPauseTransfersCancelled(
-    em: EntityManager,
-    evmLog: Entities.EvmLog,
-    logArgs: AssetManager.EmergencyPauseTransfersCanceledEvent.OutputTuple
-  ): Promise<Entities.EmergencyPauseTransfersCancelled> {
-    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
-    return em.create(Entities.EmergencyPauseTransfersCancelled, { evmLog, fasset })
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////

@@ -7,21 +7,17 @@ import { uint64 } from "../../custom/uint"
 export class EmergencyPauseTriggered extends FAssetEventBound {
 
   @Property({ type: 'int8', nullable: true })
-  level!: number
+  externalLevel!: number
+
+  @Property({ type: 'int8', nullable: true })
+  governanceLevel!: number
 
   @Property({ type: new uint64() })
-  pausedUntil!: bigint
+  externalPausedUntil!: bigint
+
+  @Property({ type: new uint64() })
+  governancePausedUntil!: bigint
 }
 
 @Entity()
 export class EmergencyPauseCancelled extends FAssetEventBound {}
-
-@Entity()
-export class EmergencyPauseTransfersTriggered extends FAssetEventBound {
-
-  @Property({ type: new uint64() })
-  pausedUntil!: bigint
-}
-
-@Entity()
-export class EmergencyPauseTransfersCancelled extends FAssetEventBound {}

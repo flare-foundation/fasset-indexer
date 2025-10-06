@@ -734,7 +734,7 @@ export declare namespace AssetManagerSettings {
     minUpdateRepeatTimeSeconds: BigNumberish;
     __buybackCollateralFactorBIPS: BigNumberish;
     __announcedUnderlyingConfirmationMinSeconds: BigNumberish;
-    tokenInvalidationTimeMinSeconds: BigNumberish;
+    __tokenInvalidationTimeMinSeconds: BigNumberish;
     vaultCollateralBuyForFlareFactorBIPS: BigNumberish;
     agentExitAvailableTimelockSeconds: BigNumberish;
     agentFeeChangeTimelockSeconds: BigNumberish;
@@ -797,7 +797,7 @@ export declare namespace AssetManagerSettings {
     minUpdateRepeatTimeSeconds: bigint,
     __buybackCollateralFactorBIPS: bigint,
     __announcedUnderlyingConfirmationMinSeconds: bigint,
-    tokenInvalidationTimeMinSeconds: bigint,
+    __tokenInvalidationTimeMinSeconds: bigint,
     vaultCollateralBuyForFlareFactorBIPS: bigint,
     agentExitAvailableTimelockSeconds: bigint,
     agentFeeChangeTimelockSeconds: bigint,
@@ -858,7 +858,7 @@ export declare namespace AssetManagerSettings {
     minUpdateRepeatTimeSeconds: bigint;
     __buybackCollateralFactorBIPS: bigint;
     __announcedUnderlyingConfirmationMinSeconds: bigint;
-    tokenInvalidationTimeMinSeconds: bigint;
+    __tokenInvalidationTimeMinSeconds: bigint;
     vaultCollateralBuyForFlareFactorBIPS: bigint;
     agentExitAvailableTimelockSeconds: bigint;
     agentFeeChangeTimelockSeconds: bigint;
@@ -1058,12 +1058,12 @@ export interface IAssetManager__latestInterface extends Interface {
       | "confirmReturnFromCoreVault"
       | "confirmTopupPayment"
       | "confirmUnderlyingWithdrawal"
+      | "consolidateSmallTickets"
       | "controllerAttached"
       | "convertDustToTicket"
       | "coreVaultAvailableAmount"
       | "createAgentVault"
       | "currentUnderlyingBlock"
-      | "deprecateCollateralType"
       | "destroyAgent"
       | "diamondCut"
       | "doublePaymentChallenge"
@@ -1141,6 +1141,7 @@ export interface IAssetManager__latestInterface extends Interface {
       | "removeAlwaysAllowedMinterForAgent"
       | "requestReturnFromCoreVault"
       | "reserveCollateral"
+      | "resetEmergencyPauseTotalDuration"
       | "selfClose"
       | "selfMint"
       | "setAgentExitAvailableTimelockSeconds"
@@ -1184,13 +1185,11 @@ export interface IAssetManager__latestInterface extends Interface {
       | "setRedemptionFeeBips"
       | "setRedemptionPaymentExtensionSeconds"
       | "setTimeForPayment"
-      | "setTokenInvalidationTimeMinSeconds"
       | "setVaultCollateralBuyForFlareFactorBIPS"
       | "setWithdrawalOrDestroyWaitMinSeconds"
       | "startLiquidation"
       | "supportsInterface"
       | "switchToProductionMode"
-      | "switchVaultCollateral"
       | "transferToCoreVault"
       | "unpauseMinting"
       | "unstickMinting"
@@ -1220,7 +1219,6 @@ export interface IAssetManager__latestInterface extends Interface {
       | "CollateralReservationDeleted"
       | "CollateralReserved"
       | "CollateralTypeAdded"
-      | "CollateralTypeDeprecated"
       | "ContractChanged"
       | "CoreVaultRedemptionRequested"
       | "CurrentUnderlyingBlockUpdated"
@@ -1228,8 +1226,6 @@ export interface IAssetManager__latestInterface extends Interface {
       | "DuplicatePaymentConfirmed"
       | "DustChanged"
       | "EmergencyPauseCanceled"
-      | "EmergencyPauseTransfersCanceled"
-      | "EmergencyPauseTransfersTriggered"
       | "EmergencyPauseTriggered"
       | "FullLiquidationStarted"
       | "GovernanceCallTimelocked"
@@ -1254,6 +1250,7 @@ export interface IAssetManager__latestInterface extends Interface {
       | "RedemptionTicketCreated"
       | "RedemptionTicketDeleted"
       | "RedemptionTicketUpdated"
+      | "RedemptionTicketsConsolidated"
       | "ReturnFromCoreVaultCancelled"
       | "ReturnFromCoreVaultConfirmed"
       | "ReturnFromCoreVaultRequested"
@@ -1384,6 +1381,10 @@ export interface IAssetManager__latestInterface extends Interface {
     values: [IPayment.ProofStruct, AddressLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "consolidateSmallTickets",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "controllerAttached",
     values?: undefined
   ): string;
@@ -1402,10 +1403,6 @@ export interface IAssetManager__latestInterface extends Interface {
   encodeFunctionData(
     functionFragment: "currentUnderlyingBlock",
     values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "deprecateCollateralType",
-    values: [BigNumberish, AddressLike, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "destroyAgent",
@@ -1708,6 +1705,10 @@ export interface IAssetManager__latestInterface extends Interface {
     values: [AddressLike, BigNumberish, BigNumberish, AddressLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "resetEmergencyPauseTotalDuration",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "selfClose",
     values: [AddressLike, BigNumberish]
   ): string;
@@ -1880,10 +1881,6 @@ export interface IAssetManager__latestInterface extends Interface {
     values: [BigNumberish, BigNumberish]
   ): string;
   encodeFunctionData(
-    functionFragment: "setTokenInvalidationTimeMinSeconds",
-    values: [BigNumberish]
-  ): string;
-  encodeFunctionData(
     functionFragment: "setVaultCollateralBuyForFlareFactorBIPS",
     values: [BigNumberish]
   ): string;
@@ -1902,10 +1899,6 @@ export interface IAssetManager__latestInterface extends Interface {
   encodeFunctionData(
     functionFragment: "switchToProductionMode",
     values?: undefined
-  ): string;
-  encodeFunctionData(
-    functionFragment: "switchVaultCollateral",
-    values: [AddressLike, AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "transferToCoreVault",
@@ -1945,7 +1938,7 @@ export interface IAssetManager__latestInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "upgradeWNatContract",
-    values: [AddressLike]
+    values: [BigNumberish, BigNumberish]
   ): string;
 
   decodeFunctionResult(
@@ -2054,6 +2047,10 @@ export interface IAssetManager__latestInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "consolidateSmallTickets",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "controllerAttached",
     data: BytesLike
   ): Result;
@@ -2071,10 +2068,6 @@ export interface IAssetManager__latestInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "currentUnderlyingBlock",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "deprecateCollateralType",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -2358,6 +2351,10 @@ export interface IAssetManager__latestInterface extends Interface {
     functionFragment: "reserveCollateral",
     data: BytesLike
   ): Result;
+  decodeFunctionResult(
+    functionFragment: "resetEmergencyPauseTotalDuration",
+    data: BytesLike
+  ): Result;
   decodeFunctionResult(functionFragment: "selfClose", data: BytesLike): Result;
   decodeFunctionResult(functionFragment: "selfMint", data: BytesLike): Result;
   decodeFunctionResult(
@@ -2525,10 +2522,6 @@ export interface IAssetManager__latestInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "setTokenInvalidationTimeMinSeconds",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
     functionFragment: "setVaultCollateralBuyForFlareFactorBIPS",
     data: BytesLike
   ): Result;
@@ -2546,10 +2539,6 @@ export interface IAssetManager__latestInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "switchToProductionMode",
-    data: BytesLike
-  ): Result;
-  decodeFunctionResult(
-    functionFragment: "switchVaultCollateral",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -2944,28 +2933,6 @@ export namespace CollateralTypeAddedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace CollateralTypeDeprecatedEvent {
-  export type InputTuple = [
-    collateralClass: BigNumberish,
-    collateralToken: AddressLike,
-    validUntil: BigNumberish
-  ];
-  export type OutputTuple = [
-    collateralClass: bigint,
-    collateralToken: string,
-    validUntil: bigint
-  ];
-  export interface OutputObject {
-    collateralClass: bigint;
-    collateralToken: string;
-    validUntil: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
 export namespace ContractChangedEvent {
   export type InputTuple = [name: string, value: AddressLike];
   export type OutputTuple = [name: string, value: string];
@@ -3096,34 +3063,24 @@ export namespace EmergencyPauseCanceledEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace EmergencyPauseTransfersCanceledEvent {
-  export type InputTuple = [];
-  export type OutputTuple = [];
-  export interface OutputObject {}
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
-export namespace EmergencyPauseTransfersTriggeredEvent {
-  export type InputTuple = [pausedUntil: BigNumberish];
-  export type OutputTuple = [pausedUntil: bigint];
-  export interface OutputObject {
-    pausedUntil: bigint;
-  }
-  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
-  export type Filter = TypedDeferredTopicFilter<Event>;
-  export type Log = TypedEventLog<Event>;
-  export type LogDescription = TypedLogDescription<Event>;
-}
-
 export namespace EmergencyPauseTriggeredEvent {
-  export type InputTuple = [level: BigNumberish, pausedUntil: BigNumberish];
-  export type OutputTuple = [level: bigint, pausedUntil: bigint];
+  export type InputTuple = [
+    externalLevel: BigNumberish,
+    externalPausedUntil: BigNumberish,
+    governanceLevel: BigNumberish,
+    governancePausedUntil: BigNumberish
+  ];
+  export type OutputTuple = [
+    externalLevel: bigint,
+    externalPausedUntil: bigint,
+    governanceLevel: bigint,
+    governancePausedUntil: bigint
+  ];
   export interface OutputObject {
-    level: bigint;
-    pausedUntil: bigint;
+    externalLevel: bigint;
+    externalPausedUntil: bigint;
+    governanceLevel: bigint;
+    governancePausedUntil: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -3645,6 +3602,22 @@ export namespace RedemptionTicketUpdatedEvent {
     agentVault: string;
     redemptionTicketId: bigint;
     ticketValueUBA: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace RedemptionTicketsConsolidatedEvent {
+  export type InputTuple = [
+    firstTicketId: BigNumberish,
+    nextTicketId: BigNumberish
+  ];
+  export type OutputTuple = [firstTicketId: bigint, nextTicketId: bigint];
+  export interface OutputObject {
+    firstTicketId: bigint;
+    nextTicketId: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -4219,6 +4192,12 @@ export interface IAssetManager__latest extends BaseContract {
     "nonpayable"
   >;
 
+  consolidateSmallTickets: TypedContractMethod<
+    [_firstTicketId: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
   controllerAttached: TypedContractMethod<[], [boolean], "view">;
 
   convertDustToTicket: TypedContractMethod<
@@ -4259,16 +4238,6 @@ export interface IAssetManager__latest extends BaseContract {
     "view"
   >;
 
-  deprecateCollateralType: TypedContractMethod<
-    [
-      _collateralClass: BigNumberish,
-      _token: AddressLike,
-      _invalidationTimeSec: BigNumberish
-    ],
-    [void],
-    "nonpayable"
-  >;
-
   destroyAgent: TypedContractMethod<
     [_agentVault: AddressLike, _recipient: AddressLike],
     [void],
@@ -4304,11 +4273,12 @@ export interface IAssetManager__latest extends BaseContract {
   emergencyPauseDetails: TypedContractMethod<
     [],
     [
-      [bigint, bigint, bigint, boolean] & {
+      [bigint, bigint, bigint, bigint, bigint] & {
         _level: bigint;
         _pausedUntil: bigint;
         _totalPauseDuration: bigint;
-        _pausedByGovernance: boolean;
+        _governanceLevel: bigint;
+        _governancePausedUntil: bigint;
       }
     ],
     "view"
@@ -4723,6 +4693,12 @@ export interface IAssetManager__latest extends BaseContract {
     "payable"
   >;
 
+  resetEmergencyPauseTotalDuration: TypedContractMethod<
+    [],
+    [void],
+    "nonpayable"
+  >;
+
   selfClose: TypedContractMethod<
     [_agentVault: AddressLike, _amountUBA: BigNumberish],
     [bigint],
@@ -4952,7 +4928,7 @@ export interface IAssetManager__latest extends BaseContract {
   >;
 
   setPaymentChallengeReward: TypedContractMethod<
-    [_rewardNATWei: BigNumberish, _rewardBIPS: BigNumberish],
+    [_rewardUSD5: BigNumberish, _rewardBIPS: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -4993,12 +4969,6 @@ export interface IAssetManager__latest extends BaseContract {
     "nonpayable"
   >;
 
-  setTokenInvalidationTimeMinSeconds: TypedContractMethod<
-    [_value: BigNumberish],
-    [void],
-    "nonpayable"
-  >;
-
   setVaultCollateralBuyForFlareFactorBIPS: TypedContractMethod<
     [_value: BigNumberish],
     [void],
@@ -5024,12 +4994,6 @@ export interface IAssetManager__latest extends BaseContract {
   >;
 
   switchToProductionMode: TypedContractMethod<[], [void], "nonpayable">;
-
-  switchVaultCollateral: TypedContractMethod<
-    [_agentVault: AddressLike, _token: AddressLike],
-    [void],
-    "nonpayable"
-  >;
 
   transferToCoreVault: TypedContractMethod<
     [_agentVault: AddressLike, _amountUBA: BigNumberish],
@@ -5085,7 +5049,7 @@ export interface IAssetManager__latest extends BaseContract {
   >;
 
   upgradeWNatContract: TypedContractMethod<
-    [_agentVault: AddressLike],
+    [_start: BigNumberish, _end: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -5245,6 +5209,9 @@ export interface IAssetManager__latest extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "consolidateSmallTickets"
+  ): TypedContractMethod<[_firstTicketId: BigNumberish], [void], "nonpayable">;
+  getFunction(
     nameOrSignature: "controllerAttached"
   ): TypedContractMethod<[], [boolean], "view">;
   getFunction(
@@ -5284,17 +5251,6 @@ export interface IAssetManager__latest extends BaseContract {
       }
     ],
     "view"
-  >;
-  getFunction(
-    nameOrSignature: "deprecateCollateralType"
-  ): TypedContractMethod<
-    [
-      _collateralClass: BigNumberish,
-      _token: AddressLike,
-      _invalidationTimeSec: BigNumberish
-    ],
-    [void],
-    "nonpayable"
   >;
   getFunction(
     nameOrSignature: "destroyAgent"
@@ -5337,11 +5293,12 @@ export interface IAssetManager__latest extends BaseContract {
   ): TypedContractMethod<
     [],
     [
-      [bigint, bigint, bigint, boolean] & {
+      [bigint, bigint, bigint, bigint, bigint] & {
         _level: bigint;
         _pausedUntil: bigint;
         _totalPauseDuration: bigint;
-        _pausedByGovernance: boolean;
+        _governanceLevel: bigint;
+        _governancePausedUntil: bigint;
       }
     ],
     "view"
@@ -5740,6 +5697,9 @@ export interface IAssetManager__latest extends BaseContract {
     "payable"
   >;
   getFunction(
+    nameOrSignature: "resetEmergencyPauseTotalDuration"
+  ): TypedContractMethod<[], [void], "nonpayable">;
+  getFunction(
     nameOrSignature: "selfClose"
   ): TypedContractMethod<
     [_agentVault: AddressLike, _amountUBA: BigNumberish],
@@ -5898,7 +5858,7 @@ export interface IAssetManager__latest extends BaseContract {
   getFunction(
     nameOrSignature: "setPaymentChallengeReward"
   ): TypedContractMethod<
-    [_rewardNATWei: BigNumberish, _rewardBIPS: BigNumberish],
+    [_rewardUSD5: BigNumberish, _rewardBIPS: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -5925,9 +5885,6 @@ export interface IAssetManager__latest extends BaseContract {
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "setTokenInvalidationTimeMinSeconds"
-  ): TypedContractMethod<[_value: BigNumberish], [void], "nonpayable">;
-  getFunction(
     nameOrSignature: "setVaultCollateralBuyForFlareFactorBIPS"
   ): TypedContractMethod<[_value: BigNumberish], [void], "nonpayable">;
   getFunction(
@@ -5942,13 +5899,6 @@ export interface IAssetManager__latest extends BaseContract {
   getFunction(
     nameOrSignature: "switchToProductionMode"
   ): TypedContractMethod<[], [void], "nonpayable">;
-  getFunction(
-    nameOrSignature: "switchVaultCollateral"
-  ): TypedContractMethod<
-    [_agentVault: AddressLike, _token: AddressLike],
-    [void],
-    "nonpayable"
-  >;
   getFunction(
     nameOrSignature: "transferToCoreVault"
   ): TypedContractMethod<
@@ -6009,7 +5959,11 @@ export interface IAssetManager__latest extends BaseContract {
   >;
   getFunction(
     nameOrSignature: "upgradeWNatContract"
-  ): TypedContractMethod<[_agentVault: AddressLike], [void], "nonpayable">;
+  ): TypedContractMethod<
+    [_start: BigNumberish, _end: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
 
   getEvent(
     key: "AgentAvailable"
@@ -6117,13 +6071,6 @@ export interface IAssetManager__latest extends BaseContract {
     CollateralTypeAddedEvent.OutputObject
   >;
   getEvent(
-    key: "CollateralTypeDeprecated"
-  ): TypedContractEvent<
-    CollateralTypeDeprecatedEvent.InputTuple,
-    CollateralTypeDeprecatedEvent.OutputTuple,
-    CollateralTypeDeprecatedEvent.OutputObject
-  >;
-  getEvent(
     key: "ContractChanged"
   ): TypedContractEvent<
     ContractChangedEvent.InputTuple,
@@ -6171,20 +6118,6 @@ export interface IAssetManager__latest extends BaseContract {
     EmergencyPauseCanceledEvent.InputTuple,
     EmergencyPauseCanceledEvent.OutputTuple,
     EmergencyPauseCanceledEvent.OutputObject
-  >;
-  getEvent(
-    key: "EmergencyPauseTransfersCanceled"
-  ): TypedContractEvent<
-    EmergencyPauseTransfersCanceledEvent.InputTuple,
-    EmergencyPauseTransfersCanceledEvent.OutputTuple,
-    EmergencyPauseTransfersCanceledEvent.OutputObject
-  >;
-  getEvent(
-    key: "EmergencyPauseTransfersTriggered"
-  ): TypedContractEvent<
-    EmergencyPauseTransfersTriggeredEvent.InputTuple,
-    EmergencyPauseTransfersTriggeredEvent.OutputTuple,
-    EmergencyPauseTransfersTriggeredEvent.OutputObject
   >;
   getEvent(
     key: "EmergencyPauseTriggered"
@@ -6353,6 +6286,13 @@ export interface IAssetManager__latest extends BaseContract {
     RedemptionTicketUpdatedEvent.InputTuple,
     RedemptionTicketUpdatedEvent.OutputTuple,
     RedemptionTicketUpdatedEvent.OutputObject
+  >;
+  getEvent(
+    key: "RedemptionTicketsConsolidated"
+  ): TypedContractEvent<
+    RedemptionTicketsConsolidatedEvent.InputTuple,
+    RedemptionTicketsConsolidatedEvent.OutputTuple,
+    RedemptionTicketsConsolidatedEvent.OutputObject
   >;
   getEvent(
     key: "ReturnFromCoreVaultCancelled"
@@ -6654,17 +6594,6 @@ export interface IAssetManager__latest extends BaseContract {
       CollateralTypeAddedEvent.OutputObject
     >;
 
-    "CollateralTypeDeprecated(uint8,address,uint256)": TypedContractEvent<
-      CollateralTypeDeprecatedEvent.InputTuple,
-      CollateralTypeDeprecatedEvent.OutputTuple,
-      CollateralTypeDeprecatedEvent.OutputObject
-    >;
-    CollateralTypeDeprecated: TypedContractEvent<
-      CollateralTypeDeprecatedEvent.InputTuple,
-      CollateralTypeDeprecatedEvent.OutputTuple,
-      CollateralTypeDeprecatedEvent.OutputObject
-    >;
-
     "ContractChanged(string,address)": TypedContractEvent<
       ContractChangedEvent.InputTuple,
       ContractChangedEvent.OutputTuple,
@@ -6742,29 +6671,7 @@ export interface IAssetManager__latest extends BaseContract {
       EmergencyPauseCanceledEvent.OutputObject
     >;
 
-    "EmergencyPauseTransfersCanceled()": TypedContractEvent<
-      EmergencyPauseTransfersCanceledEvent.InputTuple,
-      EmergencyPauseTransfersCanceledEvent.OutputTuple,
-      EmergencyPauseTransfersCanceledEvent.OutputObject
-    >;
-    EmergencyPauseTransfersCanceled: TypedContractEvent<
-      EmergencyPauseTransfersCanceledEvent.InputTuple,
-      EmergencyPauseTransfersCanceledEvent.OutputTuple,
-      EmergencyPauseTransfersCanceledEvent.OutputObject
-    >;
-
-    "EmergencyPauseTransfersTriggered(uint256)": TypedContractEvent<
-      EmergencyPauseTransfersTriggeredEvent.InputTuple,
-      EmergencyPauseTransfersTriggeredEvent.OutputTuple,
-      EmergencyPauseTransfersTriggeredEvent.OutputObject
-    >;
-    EmergencyPauseTransfersTriggered: TypedContractEvent<
-      EmergencyPauseTransfersTriggeredEvent.InputTuple,
-      EmergencyPauseTransfersTriggeredEvent.OutputTuple,
-      EmergencyPauseTransfersTriggeredEvent.OutputObject
-    >;
-
-    "EmergencyPauseTriggered(uint8,uint256)": TypedContractEvent<
+    "EmergencyPauseTriggered(uint8,uint256,uint8,uint256)": TypedContractEvent<
       EmergencyPauseTriggeredEvent.InputTuple,
       EmergencyPauseTriggeredEvent.OutputTuple,
       EmergencyPauseTriggeredEvent.OutputObject
@@ -7026,6 +6933,17 @@ export interface IAssetManager__latest extends BaseContract {
       RedemptionTicketUpdatedEvent.InputTuple,
       RedemptionTicketUpdatedEvent.OutputTuple,
       RedemptionTicketUpdatedEvent.OutputObject
+    >;
+
+    "RedemptionTicketsConsolidated(uint256,uint256)": TypedContractEvent<
+      RedemptionTicketsConsolidatedEvent.InputTuple,
+      RedemptionTicketsConsolidatedEvent.OutputTuple,
+      RedemptionTicketsConsolidatedEvent.OutputObject
+    >;
+    RedemptionTicketsConsolidated: TypedContractEvent<
+      RedemptionTicketsConsolidatedEvent.InputTuple,
+      RedemptionTicketsConsolidatedEvent.OutputTuple,
+      RedemptionTicketsConsolidatedEvent.OutputObject
     >;
 
     "ReturnFromCoreVaultCancelled(address,uint256)": TypedContractEvent<

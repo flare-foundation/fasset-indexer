@@ -570,31 +570,6 @@ const _abi = [
     inputs: [
       {
         indexed: false,
-        internalType: "uint8",
-        name: "collateralClass",
-        type: "uint8",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "collateralToken",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "validUntil",
-        type: "uint256",
-      },
-    ],
-    name: "CollateralTypeDeprecated",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
         internalType: "string",
         name: "name",
         type: "string",
@@ -765,36 +740,29 @@ const _abi = [
   },
   {
     anonymous: false,
-    inputs: [],
-    name: "EmergencyPauseTransfersCanceled",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "pausedUntil",
-        type: "uint256",
-      },
-    ],
-    name: "EmergencyPauseTransfersTriggered",
-    type: "event",
-  },
-  {
-    anonymous: false,
     inputs: [
       {
         indexed: false,
         internalType: "enum EmergencyPause.Level",
-        name: "level",
+        name: "externalLevel",
         type: "uint8",
       },
       {
         indexed: false,
         internalType: "uint256",
-        name: "pausedUntil",
+        name: "externalPausedUntil",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "enum EmergencyPause.Level",
+        name: "governanceLevel",
+        type: "uint8",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "governancePausedUntil",
         type: "uint256",
       },
     ],
@@ -1476,6 +1444,25 @@ const _abi = [
       },
     ],
     name: "RedemptionTicketUpdated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "firstTicketId",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "nextTicketId",
+        type: "uint256",
+      },
+    ],
+    name: "RedemptionTicketsConsolidated",
     type: "event",
   },
   {
@@ -3067,6 +3054,19 @@ const _abi = [
     type: "function",
   },
   {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_firstTicketId",
+        type: "uint256",
+      },
+    ],
+    name: "consolidateSmallTickets",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [],
     name: "controllerAttached",
     outputs: [
@@ -3270,29 +3270,6 @@ const _abi = [
       },
     ],
     stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "enum CollateralType.Class",
-        name: "_collateralClass",
-        type: "uint8",
-      },
-      {
-        internalType: "contract IERC20",
-        name: "_token",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "_invalidationTimeSec",
-        type: "uint256",
-      },
-    ],
-    name: "deprecateCollateralType",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -3589,9 +3566,14 @@ const _abi = [
         type: "uint256",
       },
       {
-        internalType: "bool",
-        name: "_pausedByGovernance",
-        type: "bool",
+        internalType: "enum EmergencyPause.Level",
+        name: "_governanceLevel",
+        type: "uint8",
+      },
+      {
+        internalType: "uint256",
+        name: "_governancePausedUntil",
+        type: "uint256",
       },
     ],
     stateMutability: "view",
@@ -5107,7 +5089,7 @@ const _abi = [
           },
           {
             internalType: "uint64",
-            name: "tokenInvalidationTimeMinSeconds",
+            name: "__tokenInvalidationTimeMinSeconds",
             type: "uint64",
           },
           {
@@ -6318,6 +6300,13 @@ const _abi = [
     type: "function",
   },
   {
+    inputs: [],
+    name: "resetEmergencyPauseTotalDuration",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
     inputs: [
       {
         internalType: "address",
@@ -6958,7 +6947,7 @@ const _abi = [
     inputs: [
       {
         internalType: "uint256",
-        name: "_rewardNATWei",
+        name: "_rewardUSD5",
         type: "uint256",
       },
       {
@@ -7063,19 +7052,6 @@ const _abi = [
         type: "uint256",
       },
     ],
-    name: "setTokenInvalidationTimeMinSeconds",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
     name: "setVaultCollateralBuyForFlareFactorBIPS",
     outputs: [],
     stateMutability: "nonpayable",
@@ -7135,24 +7111,6 @@ const _abi = [
   {
     inputs: [],
     name: "switchToProductionMode",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_agentVault",
-        type: "address",
-      },
-      {
-        internalType: "contract IERC20",
-        name: "_token",
-        type: "address",
-      },
-    ],
-    name: "switchVaultCollateral",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -7457,9 +7415,14 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "address",
-        name: "_agentVault",
-        type: "address",
+        internalType: "uint256",
+        name: "_start",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_end",
+        type: "uint256",
       },
     ],
     name: "upgradeWNatContract",

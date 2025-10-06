@@ -581,8 +581,10 @@ describe("FAsset evm events", () => {
       await storer.processEvent(event)
       const em = context.orm.em.fork()
       const emergencyPauseTriggered = await em.findOneOrFail(EmergencyPauseTriggered, { fasset: FAssetType.FXRP })
-      expect(emergencyPauseTriggered.level).to.equal(1)
-      expect(emergencyPauseTriggered.pausedUntil).to.equal(event.args[1])
+      expect(emergencyPauseTriggered.externalLevel).to.equal(1)
+      expect(emergencyPauseTriggered.externalPausedUntil).to.equal(event.args[1])
+      expect(emergencyPauseTriggered.governanceLevel).to.equal(0)
+      expect(emergencyPauseTriggered.governancePausedUntil).to.equal(BigInt(0))
     })
   })
 

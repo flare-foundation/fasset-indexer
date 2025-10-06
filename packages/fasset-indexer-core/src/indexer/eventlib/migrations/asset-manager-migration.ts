@@ -38,6 +38,6 @@ export class AssetManagerEventMigration {
   }
 
   static migrateEmergencyPauseTriggered(args: EmergencyPauseTriggeredOld.OutputTuple): EmergencyPauseTriggeredEvent.OutputTuple {
-    return [ BigInt(1), args[0] ]
+    return [ BigInt(1), args[0], BigInt(0), BigInt(0) ]
   }
 }

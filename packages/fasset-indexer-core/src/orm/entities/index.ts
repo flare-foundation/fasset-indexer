@@ -49,10 +49,7 @@ export {
   ReturnFromCoreVaultRequested, ReturnFromCoreVaultConfirmed, ReturnFromCoreVaultCancelled,
   CoreVaultRedemptionRequested
 } from "./events/core-vault"
-export {
-  EmergencyPauseTriggered, EmergencyPauseCancelled,
-  EmergencyPauseTransfersTriggered, EmergencyPauseTransfersCancelled
-} from './events/emergency-pause'
+export { EmergencyPauseTriggered, EmergencyPauseCancelled } from './events/emergency-pause'
 export { AgentVaultInfo, AgentVaultSettings } from "./state/agent"
 export { AgentManager, AgentOwner, AgentVault } from "./agent"
 export { FtsoPrice } from "./state/price"
