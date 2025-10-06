@@ -125,7 +125,7 @@ const explorerQueryTransactions = new Map([
     FROM self_mint sm`
   ],
   [TransactionType.Withdrawal, `
-    SELECT w.evm_log_id, w.agent_vault_address_id, wc.spend_uba::integer as value_uba, NULL::integer as user_id, w.resolution, w.payment_reference
+    SELECT w.evm_log_id, w.agent_vault_address_id, wc.spend_uba::bigint as value_uba, NULL::integer as user_id, w.resolution, w.payment_reference
     FROM underlying_withdrawal_announced w
     FULL JOIN underlying_withdrawal_confirmed wc
     ON w.evm_log_id = wc.underlying_withdrawal_announced_evm_log_id`
