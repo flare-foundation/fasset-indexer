@@ -2,7 +2,9 @@ import { Controller, Get, ParseBoolPipe, ParseIntPipe, Query, UseInterceptors } 
 import { CacheInterceptor } from '@nestjs/cache-manager'
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { ExplorerService } from '../services/explorer.service'
+import { DashboardService } from '../services/dashboard.service'
 import { apiResponse, ApiResponse } from '../shared/api-response'
+import { MAX_TIMESERIES_PTS } from '../config/constants'
 import * as Types from '../analytics/types'
 
 
@@ -10,7 +12,10 @@ import * as Types from '../analytics/types'
 @UseInterceptors(CacheInterceptor)
 @Controller('api/explorer')
 export class ExplorerController {
-  constructor(private readonly service: ExplorerService) {}
+  constructor(
+    private readonly service: ExplorerService,
+    private readonly dashboard: DashboardService
+  ) { }
 
   @Get('statistics')
   @ApiOperation({ summary: 'Explorer Statistics' })
@@ -120,7 +125,40 @@ export class ExplorerController {
     return apiResponse(this.service.underlyingWithdrawalTransactionDetails(hash), 200)
   }
 
+  @Get('/timeseries/redeemed?')
+  @ApiOperation({ summary: 'Time series of the total $ value of redeemed FAssets' })
+  @ApiQuery({ name: "startTime", type: Number, required: false })
+  getTimeSeriesRedeemed(
+    @Query('endtime', ParseIntPipe) end: number,
+    @Query('npoints', ParseIntPipe) npoints: number,
+    @Query('startTime', new ParseIntPipe({ optional: true })) start?: number
+  ): Promise<ApiResponse<Types.TimeSeries<bigint>>> {
+    const err = this.restrictPoints(end, npoints, start)
+    if (err !== null) return apiResponse(Promise.reject(err), 400)
+    return apiResponse(this.dashboard.redeemedAggregateTimeSeries(end, npoints, start), 200)
+  }
+
+  @Get('/timeseries/minted?')
+  @ApiOperation({ summary: 'Time series of the total $ value of minted FAssets' })
+  @ApiQuery({ name: "startTime", type: Number, required: false })
+  getTimeSeriesMinted(
+    @Query('endtime', ParseIntPipe) end: number,
+    @Query('npoints', ParseIntPipe) npoints: number,
+    @Query('startTime', new ParseIntPipe({ optional: true })) start?: number
+  ): Promise<ApiResponse<Types.TimeSeries<bigint>>> {
+    const err = this.restrictPoints(end, npoints, start)
+    if (err !== null) return apiResponse(Promise.reject(err), 400)
+    return apiResponse(this.dashboard.mintedAggregateTimeSeries(end, npoints, start), 200)
+  }
+
   private parseTransactionTypes(types: string[]): Types.TransactionType[] {
     return types.map(t => Types.TransactionType[t])
+  }
+
+  private restrictPoints(end: number, npoints: number, start?: number): Error | null {
+    if (npoints > MAX_TIMESERIES_PTS) {
+      return new Error(`Cannot request more than ${MAX_TIMESERIES_PTS} points`)
+    }
+    return null
   }
 }
