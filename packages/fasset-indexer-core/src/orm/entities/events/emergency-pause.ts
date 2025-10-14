@@ -12,10 +12,10 @@ export class EmergencyPauseTriggered extends FAssetEventBound {
   @Property({ type: 'int8', nullable: true })
   governanceLevel!: number
 
-  @Property({ type: new uint64() })
+  @Property({ type: new uint64(), nullable: true })
   externalPausedUntil!: bigint
 
-  @Property({ type: new uint64() })
+  @Property({ type: new uint64(), nullable: true })
   governancePausedUntil!: bigint
 }
 
