@@ -15,7 +15,7 @@ export class StatisticsController {
   constructor(
     private readonly service: StatisticsService,
     private readonly dashboard: DashboardService
-  ) {}
+  ) { }
 
   @Get('/collateral-pool-score?')
   @ApiQuery({ name: 'pool', type: String, required: true })
@@ -71,30 +71,50 @@ export class StatisticsController {
   }
 
   @Get('/timeseries/user-minted?')
-    @ApiOperation({ summary: 'Time series of total user\'s minted FAssets' })
-    @ApiQuery({ name: 'startTime', type: Number, required: false })
-    getTimeSeriesUserMinted(
-      @Query('endtime', ParseIntPipe) end: number,
-      @Query('npoints', ParseIntPipe) npoints: number,
-      @Query('user') user: string,
-      @Query('startTime', new ParseIntPipe({ optional: true })) start?: number
-    ): Promise<ApiResponse<FAssetTimeSeries<bigint>>> {
-      if (npoints > 1) return apiResponse(Promise.reject('at most one point allowed'), 400)
-      return apiResponse(this.dashboard.mintedTimeSeries(end, npoints, start, user), 200)
-    }
+  @ApiOperation({ summary: 'Time series of total user\'s minted FAssets' })
+  @ApiQuery({ name: 'startTime', type: Number, required: false })
+  getTimeSeriesUserMinted(
+    @Query('endtime', ParseIntPipe) end: number,
+    @Query('npoints', ParseIntPipe) npoints: number,
+    @Query('user') user: string,
+    @Query('startTime', new ParseIntPipe({ optional: true })) start?: number
+  ): Promise<ApiResponse<FAssetTimeSeries<bigint>>> {
+    if (npoints > 1) return apiResponse(Promise.reject('at most one point allowed'), 400)
+    return apiResponse(this.dashboard.mintedTimeSeries(end, npoints, start, user), 200)
+  }
 
-    @Get('/timeseries/user-redeemed?')
-    @ApiOperation({ summary: 'Time series of total user\'s redeemed FAssets' })
-    @ApiQuery({ name: 'startTime', type: Number, required: false })
-    getTimeSeriesUserRedeemed(
-      @Query('endtime', ParseIntPipe) end: number,
-      @Query('npoints', ParseIntPipe) npoints: number,
-      @Query('user') user: string,
-      @Query('startTime', new ParseIntPipe({ optional: true })) start?: number
-    ): Promise<ApiResponse<FAssetTimeSeries<bigint>>> {
-      if (npoints > 1) return apiResponse(Promise.reject('at most one point allowed'), 400)
-      return apiResponse(this.dashboard.redeemedTimeSeries(end, npoints, start, user), 200)
-    }
+  @Get('/timeseries/user-redeemed?')
+  @ApiOperation({ summary: 'Time series of total user\'s redeemed FAssets' })
+  @ApiQuery({ name: 'startTime', type: Number, required: false })
+  getTimeSeriesUserRedeemed(
+    @Query('endtime', ParseIntPipe) end: number,
+    @Query('npoints', ParseIntPipe) npoints: number,
+    @Query('user') user: string,
+    @Query('startTime', new ParseIntPipe({ optional: true })) start?: number
+  ): Promise<ApiResponse<FAssetTimeSeries<bigint>>> {
+    if (npoints > 1) return apiResponse(Promise.reject('at most one point allowed'), 400)
+    return apiResponse(this.dashboard.redeemedTimeSeries(end, npoints, start, user), 200)
+  }
+
+  @Get('/underlying-user-minted?')
+  @ApiOperation({ summary: 'Minted amount of underlying user address' })
+  getUnderlyingUserMinted(
+    @Query('user') user: string,
+    @Query('startTime', ParseIntPipe) start: number,
+    @Query('endtime', ParseIntPipe) end: number,
+  ): Promise<ApiResponse<any>> {
+    return apiResponse(this.service.mintedByUnderlyingAddressDuring(user, start, end), 200)
+  }
+
+  @Get('/underlying-user-redeemed?')
+  @ApiOperation({ summary: 'Minted amount of underlying user address' })
+  getUnderlyingUserRedeemed(
+    @Query('user') user: string,
+    @Query('startTime', ParseIntPipe) start: number,
+    @Query('endtime', ParseIntPipe) end: number,
+  ): Promise<ApiResponse<any>> {
+    return apiResponse(this.service.redeemedByUnderlyingAddressDuring(user, start, end), 200)
+  }
 
   protected async structureReturn(prms: Promise<[bigint, number]>, now: number): Promise<StatisticAverage> {
     return prms.then(([avg, num]) => ({

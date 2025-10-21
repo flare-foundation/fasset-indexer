@@ -186,3 +186,25 @@ JOIN evm_transaction et ON et.id = el.transaction_id
 WHERE ut.hash = ?
 ORDER BY el.block_index DESC
 `
+
+export const MINTED_BY_UNDERLYING_ADDRESS = `
+SELECT me.fasset, SUM(ut.value) as val FROM minting_executed me
+  JOIN collateral_reserved cr ON cr.evm_log_id = me.collateral_reserved_evm_log_id
+  JOIN underlying_reference ur ON ur.reference = cr.payment_reference
+  JOIN underlying_transaction ut ON ut.id = ur.transaction_id
+  JOIN underlying_address ua ON ua.id = ut.source_id
+  JOIN underlying_block ub ON ub.height = ut.block_height
+  WHERE ua.text = ? AND ub.timestamp >= ? AND ub.timestamp < ?
+  GROUP BY me.fasset
+`
+
+export const REDEEMED_BY_UNDERLYING_ADDRESS = `
+SELECT rp.fasset, SUM(ut.value) as val FROM redemption_performed rp
+  JOIN redemption_requested rr ON rr.evm_log_id = rp.redemption_requested_evm_log_id
+  JOIN underlying_reference ur ON ur.reference = rr.payment_reference
+  JOIN underlying_transaction ut ON ut.id = ur.transaction_id
+  JOIN underlying_address ua ON ua.id = ut.target_id
+  JOIN underlying_block ub ON ub.height = ut.block_height
+  WHERE ua.text = ? AND ub.timestamp >= ? AND ub.timestamp < ?
+  GROUP BY rp.fasset
+`

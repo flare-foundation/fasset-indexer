@@ -1,4 +1,4 @@
-import { FASSETS } from "fasset-indexer-core"
+import { FASSETS, FAssetType } from "fasset-indexer-core"
 import { raw, type ORM } from "fasset-indexer-core/orm"
 import {
   AgentVault, MintingExecuted,
@@ -8,7 +8,8 @@ import {
 import { SharedAnalytics } from "./shared"
 import { weightedAverage } from "./utils/weighted-average"
 import { FAssetPriceLoader } from "./utils/prices"
-import { LIQUIDATION_DURATION_SQL } from "./utils/raw-sql"
+import { LIQUIDATION_DURATION_SQL, MINTED_BY_UNDERLYING_ADDRESS, REDEEMED_BY_UNDERLYING_ADDRESS } from "./utils/raw-sql"
+import { FAssetValueResult } from "./types"
 
 
 export class AgentStatistics extends SharedAnalytics {
@@ -148,5 +149,17 @@ export class AgentStatistics extends SharedAnalytics {
     // that stole collateral from users (this is a hard one)
     const timespan = receivedFAssets.map(r => ({ timestamp: r.timestamp, value: BigInt(r.poolFeeUBA) }))
     return weightedAverage(timespan, now, delta)
+  }
+
+  async mintedByUnderlyingAddressDuring(address: string, start: number, end: number): Promise<any> {
+    const em = this.orm.em.fork()
+    const r = await em.execute(MINTED_BY_UNDERLYING_ADDRESS, [address, start, end]) as { fasset: FAssetType, val: string }[]
+    return this.convertOrmResultToFAssetValueResult(r, 'val')
+  }
+
+  async redeemedByUnderlyingAddressDuring(address: string, start: number, end: number): Promise<any> {
+    const em = this.orm.em.fork()
+    const r = await em.execute(REDEEMED_BY_UNDERLYING_ADDRESS, [address, start, end]) as { fasset: FAssetType, val: string }[]
+    return this.convertOrmResultToFAssetValueResult(r, 'val')
   }
 }

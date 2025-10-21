@@ -23,7 +23,7 @@
     "run-xrp-indexer-debug": "ts-node packages/fasset-indexer-xrp/src/run/run-indexer.ts",
     "run-btc-indexer": "yarn build-base && node packages/fasset-indexer-btc/dist/src/run/run-indexer.js",
     "run-doge-indexer": "yarn build-base && node packages/fasset-indexer-doge/dist/src/run/run-indexer.js",
-    "run-api": "yarn build && node packages/fasset-indexer-api/dist/src/main",
+    "run-api": "ts-node packages/fasset-indexer-api/src/main.ts",
     "lint": "eslint . --ext .ts"
   },
   "license": "MIT",
