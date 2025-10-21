@@ -1,9 +1,10 @@
-import { Controller, Get, Query } from "@nestjs/common"
-import { ApiQuery, ApiTags } from "@nestjs/swagger"
+import { Controller, Get, ParseIntPipe, Query } from "@nestjs/common"
+import { ApiOperation, ApiQuery, ApiTags } from "@nestjs/swagger"
+import { unixnow } from "../shared/utils"
 import { ApiResponse, apiResponse } from "../shared/api-response"
 import { StatisticsService } from "../services/statistics.service"
-import { unixnow } from "../shared/utils"
-import type { StatisticAverage } from "../analytics/types"
+import { DashboardService } from "../services/dashboard.service"
+import type { FAssetTimeSeries, StatisticAverage } from "../analytics/types"
 
 const STAT_LIMIT = 100
 const DELTA = 60 * 60 * 24 * 7 // one week
@@ -11,7 +12,10 @@ const DELTA = 60 * 60 * 24 * 7 // one week
 @ApiTags("Statistics")
 @Controller("api/statistics")
 export class StatisticsController {
-  constructor(private readonly service: StatisticsService) {}
+  constructor(
+    private readonly service: StatisticsService,
+    private readonly dashboard: DashboardService
+  ) {}
 
   @Get('/collateral-pool-score?')
   @ApiQuery({ name: 'pool', type: String, required: true })
@@ -65,6 +69,32 @@ export class StatisticsController {
     const now = unixnow()
     return apiResponse(this.structureReturn(this.service.redemptionCountWA(vault, now, DELTA, STAT_LIMIT), now), 200)
   }
+
+  @Get('/timeseries/user-minted?')
+    @ApiOperation({ summary: 'Time series of total user\'s minted FAssets' })
+    @ApiQuery({ name: 'startTime', type: Number, required: false })
+    getTimeSeriesUserMinted(
+      @Query('endtime', ParseIntPipe) end: number,
+      @Query('npoints', ParseIntPipe) npoints: number,
+      @Query('user') user: string,
+      @Query('startTime', new ParseIntPipe({ optional: true })) start?: number
+    ): Promise<ApiResponse<FAssetTimeSeries<bigint>>> {
+      if (npoints > 1) return apiResponse(Promise.reject('at most one point allowed'), 400)
+      return apiResponse(this.dashboard.mintedTimeSeries(end, npoints, start, user), 200)
+    }
+
+    @Get('/timeseries/user-redeemed?')
+    @ApiOperation({ summary: 'Time series of total user\'s redeemed FAssets' })
+    @ApiQuery({ name: 'startTime', type: Number, required: false })
+    getTimeSeriesUserRedeemed(
+      @Query('endtime', ParseIntPipe) end: number,
+      @Query('npoints', ParseIntPipe) npoints: number,
+      @Query('user') user: string,
+      @Query('startTime', new ParseIntPipe({ optional: true })) start?: number
+    ): Promise<ApiResponse<FAssetTimeSeries<bigint>>> {
+      if (npoints > 1) return apiResponse(Promise.reject('at most one point allowed'), 400)
+      return apiResponse(this.dashboard.redeemedTimeSeries(end, npoints, start, user), 200)
+    }
 
   protected async structureReturn(prms: Promise<[bigint, number]>, now: number): Promise<StatisticAverage> {
     return prms.then(([avg, num]) => ({
