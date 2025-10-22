@@ -137,12 +137,17 @@ const explorerQueryTransactions = new Map([
 ])
 
 // psql specific query
-export const EXPLORER_TRANSACTIONS = (user: boolean, agent: boolean, asc: boolean, window: boolean, methods: TransactionType[]) => `
+export const EXPLORER_TRANSACTIONS = (
+  user: boolean, agent: boolean,
+  asc: boolean, window: boolean,
+  status: boolean,
+  methods: TransactionType[]
+) => `
 SELECT
   et.hash, el.name, eb.timestamp, eaa.hex as agent_vault,
   am.name as agent_name, eau.hex as user, eao.hex as source,
   t.value_uba, t.resolution, ur.id as underlying_payment, COUNT(*) OVER() as count
-FROM (${Array.from(explorerQueryTransactions.entries()).filter(([k, _]) => methods.includes(k)).map(([_,v]) => v).join(' UNION ALL ')}) t
+FROM (${Array.from(explorerQueryTransactions.entries()).filter(([k, _]) => methods.includes(k)).map(([_, v]) => v).join(' UNION ALL ')}) t
 FULL JOIN evm_address eau ON eau.id = t.user_id
 FULL JOIN underlying_reference ur ON ur.reference = t.payment_reference
 JOIN evm_log el ON el.id = t.evm_log_id
@@ -153,9 +158,11 @@ JOIN evm_address eao ON eao.id = et.source_id
 JOIN agent_vault av ON av.address_id = t.agent_vault_address_id
 JOIN agent_owner ao ON av.vaults = ao.id
 JOIN agent_manager am ON am.address_id = ao.agents
-${user ? 'WHERE eau.hex = ?' : ''}
-${agent ? 'WHERE eaa.hex = ?' : ''}
-${window ? ((agent || user ? 'AND' : 'WHERE') + ' eb.timestamp BETWEEN ? AND ?') : ''}
+WHERE 1=1
+${user ? 'AND eau.hex = ?' : ''}
+${agent ? 'AND eaa.hex = ?' : ''}
+${window ? 'AND eb.timestamp BETWEEN ? AND ?' : ''}
+${status ? 'AND t.resolution = ?' : ''}
 ORDER BY el.block_index ${asc ? 'ASC' : 'DESC'}
 LIMIT ? OFFSET ?
 `

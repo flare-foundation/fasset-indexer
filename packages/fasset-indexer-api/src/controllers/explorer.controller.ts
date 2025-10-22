@@ -37,6 +37,7 @@ export class ExplorerController {
   @ApiQuery({ name: 'start', type: Number, required: false })
   @ApiQuery({ name: 'end', type: Number, required: false })
   @ApiQuery({ name: 'asc', type: Boolean, required: false })
+  @ApiQuery({ name: 'status', type: Number, required: false })
   @ApiQuery({ name: 'types', type: String, isArray: true, required: false })
   getTransactions(
     @Query('limit', ParseIntPipe) limit: number,
@@ -46,11 +47,12 @@ export class ExplorerController {
     @Query('asc', new ParseBoolPipe({ optional: true })) asc?: boolean,
     @Query('start', new ParseIntPipe({ optional: true })) start?: number,
     @Query('end', new ParseIntPipe({ optional: true })) end?: number,
+    @Query('status', new ParseIntPipe({ optional: true })) status?: number,
     @Query('types') types?: string | string[]
   ): Promise<ApiResponse<Types.TransactionsInfo>> {
     if (types != null && typeof types == 'string') types = [types]
     const transactionTypes = types != null ? this.parseTransactionTypes(types as string[]) : undefined
-    return apiResponse(this.service.transactions(limit, offset, user, agent, start, end, asc, transactionTypes), 200)
+    return apiResponse(this.service.transactions(limit, offset, user, agent, start, end, asc, status, transactionTypes), 200)
   }
 
   @Get('transaction-classification')

@@ -48,18 +48,14 @@ export class ExplorerAnalytics extends SharedAnalytics {
     user?: string, agent?: string,
     start?: number, end?: number,
     asc: boolean = false,
+    status?: number,
     types: ExplorerType.TransactionType[] = ALL_TRANSACTION_TYPES
   ): Promise<ExplorerType.TransactionsInfo> {
     const em = this.orm.em.fork()
-    const isuser = user != null
-    const isagent = agent != null
     ;[start, end] = this.standardizeInterval(start, end)
-    const window = start != null || end != null
     const transactions = await em.getConnection('read').execute(
-      SQL.EXPLORER_TRANSACTIONS(isuser, isagent, asc, window, types),
-      (isuser || isagent)
-        ? (window ? [user ?? agent, start, end, limit, offset] : [user ?? agent, limit, offset])
-        : (window ? [start, end, limit, offset] : [limit, offset])
+      SQL.EXPLORER_TRANSACTIONS(user != null, agent != null, asc, start != null || end != null, status != null, types),
+      [user ?? agent, start, end, status, limit, offset].filter(x => x != null)
     ) as SQL.ExplorerTransactionsOrmResult[]
     const info: ExplorerType.TransactionInfo[] = []
     for (const { name, timestamp, source, hash, agent_vault, agent_name, value_uba, user, resolution, underlying_payment } of transactions) {
