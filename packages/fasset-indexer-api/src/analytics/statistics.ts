@@ -8,7 +8,7 @@ import {
 import { SharedAnalytics } from "./shared"
 import { weightedAverage } from "./utils/weighted-average"
 import { FAssetPriceLoader } from "./utils/prices"
-import { LIQUIDATION_DURATION_SQL, MINTED_BY_UNDERLYING_ADDRESS, REDEEMED_BY_UNDERLYING_ADDRESS } from "./utils/raw-sql"
+import * as SQL from "./utils/raw-sql"
 import { FAssetValueResult } from "./types"
 
 
@@ -74,7 +74,7 @@ export class AgentStatistics extends SharedAnalytics {
 
   async liquidationDurationWA(vault: string, now: number, delta: number, lim: number): Promise<[bigint, number]> {
     const result = await this.orm.em.getConnection('read')
-      .execute(LIQUIDATION_DURATION_SQL, [vault, vault, now - delta, lim]) as { timestamp: number, diff: string }[]
+      .execute(SQL.LIQUIDATION_DURATION_SQL, [vault, vault, now - delta, lim]) as { timestamp: number, diff: string }[]
     const timespan = result.map(r => ({ timestamp: r.timestamp, value: BigInt(r.diff) }))
     return [weightedAverage(timespan, now, delta), timespan.length]
   }
@@ -151,15 +151,21 @@ export class AgentStatistics extends SharedAnalytics {
     return weightedAverage(timespan, now, delta)
   }
 
-  async mintedByUnderlyingAddressDuring(address: string, start: number, end: number): Promise<any> {
+  async mintedByUnderlyingAddressDuring(address: string, start: number, end: number): Promise<FAssetValueResult> {
     const em = this.orm.em.fork()
-    const r = await em.execute(MINTED_BY_UNDERLYING_ADDRESS, [address, start, end]) as { fasset: FAssetType, val: string }[]
+    const r = await em.execute(SQL.MINTED_BY_UNDERLYING_ADDRESS, [address, start, end]) as { fasset: FAssetType, val: string }[]
     return this.convertOrmResultToFAssetValueResult(r, 'val')
   }
 
-  async redeemedByUnderlyingAddressDuring(address: string, start: number, end: number): Promise<any> {
+  async redeemedByUnderlyingAddressDuring(address: string, start: number, end: number): Promise<FAssetValueResult> {
     const em = this.orm.em.fork()
-    const r = await em.execute(REDEEMED_BY_UNDERLYING_ADDRESS, [address, start, end]) as { fasset: FAssetType, val: string }[]
+    const r = await em.execute(SQL.REDEEMED_BY_UNDERLYING_ADDRESS, [address, start, end]) as { fasset: FAssetType, val: string }[]
     return this.convertOrmResultToFAssetValueResult(r, 'val')
+  }
+
+  async underlyingMinterAddresses(address: string): Promise<string[]> {
+    const em = this.orm.em.fork()
+    const minters = await em.execute(SQL.UNDERLYING_MINTERS, [address]) as { address: string }[]
+    return minters.map(({ address }) => address)
   }
 }

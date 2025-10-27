@@ -215,3 +215,11 @@ SELECT rp.fasset, SUM(ut.value) as val FROM redemption_performed rp
   WHERE ua.text = ? AND ub.timestamp >= ? AND ub.timestamp < ?
   GROUP BY rp.fasset
 `
+
+export const UNDERLYING_MINTERS = `
+SELECT DISTINCT ua.text as address FROM minting_executed me
+  JOIN collateral_reserved cr ON cr.evm_log_id = me.collateral_reserved_evm_log_id
+  JOIN evm_address ea ON ea.id = cr.minter_id
+  JOIN underlying_reference ur ON ur.reference = cr.payment_reference
+  JOIN underlying_address ua ON ua.id = ur.address_id
+  WHERE ea.hex = ?`

@@ -4,7 +4,7 @@ import { unixnow } from "../shared/utils"
 import { ApiResponse, apiResponse } from "../shared/api-response"
 import { StatisticsService } from "../services/statistics.service"
 import { DashboardService } from "../services/dashboard.service"
-import type { FAssetTimeSeries, StatisticAverage } from "../analytics/types"
+import type { FAssetTimeSeries, FAssetValueResult, StatisticAverage } from "../analytics/types"
 
 const STAT_LIMIT = 100
 const DELTA = 60 * 60 * 24 * 7 // one week
@@ -102,7 +102,7 @@ export class StatisticsController {
     @Query('user') user: string,
     @Query('startTime', ParseIntPipe) start: number,
     @Query('endtime', ParseIntPipe) end: number,
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<FAssetValueResult>> {
     return apiResponse(this.service.mintedByUnderlyingAddressDuring(user, start, end), 200)
   }
 
@@ -112,8 +112,16 @@ export class StatisticsController {
     @Query('user') user: string,
     @Query('startTime', ParseIntPipe) start: number,
     @Query('endtime', ParseIntPipe) end: number,
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<FAssetValueResult>> {
     return apiResponse(this.service.redeemedByUnderlyingAddressDuring(user, start, end), 200)
+  }
+
+  @Get('/underlying-minter-addresses?')
+  @ApiOperation({ summary: 'Underlying addresses that the given user address minted from' })
+  getUnderlyingMinterAddresses(
+    @Query('user') user: string
+  ): Promise<ApiResponse<string[]>> {
+    return apiResponse(this.service.underlyingMinterAddresses(user), 200)
   }
 
   protected async structureReturn(prms: Promise<[bigint, number]>, now: number): Promise<StatisticAverage> {
