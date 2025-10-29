@@ -1,6 +1,7 @@
 import { Controller, Get, ParseBoolPipe, ParseIntPipe, Query, UseInterceptors } from '@nestjs/common'
 import { CacheInterceptor } from '@nestjs/cache-manager'
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
+import { FAssetType } from 'fasset-indexer-core'
 import { ExplorerService } from '../services/explorer.service'
 import { DashboardService } from '../services/dashboard.service'
 import { apiResponse, ApiResponse } from '../shared/api-response'
@@ -128,29 +129,31 @@ export class ExplorerController {
   }
 
   @Get('/timeseries/redeemed?')
-  @ApiOperation({ summary: 'Time series of the total $ value of redeemed FAssets' })
+  @ApiOperation({ summary: 'Time series of the total redeemed FXRP' })
   @ApiQuery({ name: "startTime", type: Number, required: false })
   getTimeSeriesRedeemed(
     @Query('endtime', ParseIntPipe) end: number,
     @Query('npoints', ParseIntPipe) npoints: number,
     @Query('startTime', new ParseIntPipe({ optional: true })) start?: number
-  ): Promise<ApiResponse<Types.TimeSeries<bigint>>> {
+  ): Promise<ApiResponse<Types.FAssetTimeSeries<bigint>>> {
     const err = this.restrictPoints(end, npoints, start)
     if (err !== null) return apiResponse(Promise.reject(err), 400)
-    return apiResponse(this.dashboard.redeemedAggregateTimeSeries(end, npoints, start), 200)
+    const key = FAssetType[FAssetType.FXRP]
+    return apiResponse(this.dashboard.redeemedTimeSeries(end, npoints, start).then(x => x[key]), 200)
   }
 
   @Get('/timeseries/minted?')
-  @ApiOperation({ summary: 'Time series of the total $ value of minted FAssets' })
+  @ApiOperation({ summary: 'Time series of the total minted FXRP' })
   @ApiQuery({ name: "startTime", type: Number, required: false })
   getTimeSeriesMinted(
     @Query('endtime', ParseIntPipe) end: number,
     @Query('npoints', ParseIntPipe) npoints: number,
     @Query('startTime', new ParseIntPipe({ optional: true })) start?: number
-  ): Promise<ApiResponse<Types.TimeSeries<bigint>>> {
+  ): Promise<ApiResponse<Types.FAssetTimeSeries<bigint>>> {
     const err = this.restrictPoints(end, npoints, start)
     if (err !== null) return apiResponse(Promise.reject(err), 400)
-    return apiResponse(this.dashboard.mintedAggregateTimeSeries(end, npoints, start), 200)
+    const key = FAssetType[FAssetType.FXRP]
+    return apiResponse(this.dashboard.mintedTimeSeries(end, npoints, start).then(x => x[key]), 200)
   }
 
   private parseTransactionTypes(types: string[]): Types.TransactionType[] {
