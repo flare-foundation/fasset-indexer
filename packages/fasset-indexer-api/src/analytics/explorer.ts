@@ -4,10 +4,11 @@ import * as Entities from "fasset-indexer-core/entities"
 import { PaymentReference } from "fasset-indexer-core/utils"
 import { EVENTS } from "fasset-indexer-core/config"
 import { XRP_TRANSACTION_SUCCESS_CODE } from 'fasset-indexer-xrp/constants'
+import { unixnow } from "../shared/utils"
+import { SharedAnalytics } from "./shared"
 import * as ExplorerType from "./types"
 import * as SQL from "./utils/raw-sql"
-import { SharedAnalytics } from "./shared"
-import { unixnow } from "../shared/utils"
+import { DEAD_ADDRESS } from "../config/constants"
 import type { EntityManager, ORM } from "fasset-indexer-core/orm"
 import type { FilterQuery } from "@mikro-orm/core"
 
@@ -550,7 +551,11 @@ export class ExplorerAnalytics extends SharedAnalytics {
       .join('rr.evmLog', 'rrel')
       .join('rpel.block', 'rpeb')
       .join('rrel.block', 'rreb')
-      .where({ 'rpeb.timestamp': { $gte: start, $lt: end } })
+      .join('rr.redeemer', 'rdmr')
+      .where({
+        'rdmr.hex': { $ne: DEAD_ADDRESS },
+        'rpeb.timestamp': { $gte: start, $lt: end }
+      })
       .groupBy('rr.fasset')
       .execute() as { fasset: core.FAssetType, count: number, value: string, time: number }[]
     return {
