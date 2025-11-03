@@ -1,0 +1,462 @@
+{
+    "abi": [
+        {
+            "type": "event",
+            "name": "Approved",
+            "inputs": [
+                {
+                    "name": "fxrp",
+                    "type": "address",
+                    "indexed": false,
+                    "internalType": "address"
+                },
+                {
+                    "name": "vault",
+                    "type": "address",
+                    "indexed": false,
+                    "internalType": "address"
+                },
+                {
+                    "name": "amount",
+                    "type": "uint256",
+                    "indexed": false,
+                    "internalType": "uint256"
+                }
+            ],
+            "anonymous": false
+        },
+        {
+            "type": "event",
+            "name": "CollateralReserved",
+            "inputs": [
+                {
+                    "name": "lots",
+                    "type": "uint256",
+                    "indexed": false,
+                    "internalType": "uint256"
+                },
+                {
+                    "name": "agentVault",
+                    "type": "address",
+                    "indexed": false,
+                    "internalType": "address"
+                },
+                {
+                    "name": "executor",
+                    "type": "address",
+                    "indexed": false,
+                    "internalType": "address"
+                },
+                {
+                    "name": "executorFee",
+                    "type": "uint256",
+                    "indexed": false,
+                    "internalType": "uint256"
+                },
+                {
+                    "name": "reservationId",
+                    "type": "uint256",
+                    "indexed": false,
+                    "internalType": "uint256"
+                }
+            ],
+            "anonymous": false
+        },
+        {
+            "type": "event",
+            "name": "Deposited",
+            "inputs": [
+                {
+                    "name": "vault",
+                    "type": "address",
+                    "indexed": false,
+                    "internalType": "address"
+                },
+                {
+                    "name": "amount",
+                    "type": "uint256",
+                    "indexed": false,
+                    "internalType": "uint256"
+                },
+                {
+                    "name": "actualAmount",
+                    "type": "uint256",
+                    "indexed": false,
+                    "internalType": "uint256"
+                }
+            ],
+            "anonymous": false
+        },
+        {
+            "type": "event",
+            "name": "Redeemed",
+            "inputs": [
+                {
+                    "name": "lots",
+                    "type": "uint256",
+                    "indexed": false,
+                    "internalType": "uint256"
+                },
+                {
+                    "name": "executor",
+                    "type": "address",
+                    "indexed": false,
+                    "internalType": "address"
+                },
+                {
+                    "name": "executorFee",
+                    "type": "uint256",
+                    "indexed": false,
+                    "internalType": "uint256"
+                }
+            ],
+            "anonymous": false
+        },
+        {
+            "type": "event",
+            "name": "WithdrawalClaimed",
+            "inputs": [
+                {
+                    "name": "vault",
+                    "type": "address",
+                    "indexed": false,
+                    "internalType": "address"
+                },
+                {
+                    "name": "rewardEpochId",
+                    "type": "uint256",
+                    "indexed": false,
+                    "internalType": "uint256"
+                },
+                {
+                    "name": "amount",
+                    "type": "uint256",
+                    "indexed": false,
+                    "internalType": "uint256"
+                }
+            ],
+            "anonymous": false
+        },
+        {
+            "type": "event",
+            "name": "Withdrawn",
+            "inputs": [
+                {
+                    "name": "vault",
+                    "type": "address",
+                    "indexed": false,
+                    "internalType": "address"
+                },
+                {
+                    "name": "amount",
+                    "type": "uint256",
+                    "indexed": false,
+                    "internalType": "uint256"
+                },
+                {
+                    "name": "actualAmount",
+                    "type": "uint256",
+                    "indexed": false,
+                    "internalType": "uint256"
+                }
+            ],
+            "anonymous": false
+        },
+        {
+            "type": "error",
+            "name": "AgentNotAvailable",
+            "inputs": []
+        },
+        {
+            "type": "error",
+            "name": "AlreadyInitialized",
+            "inputs": []
+        },
+        {
+            "type": "error",
+            "name": "ApprovalFailed",
+            "inputs": []
+        },
+        {
+            "type": "error",
+            "name": "CustomInstructionCallFailed",
+            "inputs": []
+        },
+        {
+            "type": "error",
+            "name": "FxrpAssetManagerNotSet",
+            "inputs": []
+        },
+        {
+            "type": "error",
+            "name": "InsufficientFundsForCollateralReservation",
+            "inputs": [
+                {
+                    "name": "collateralReservationFee",
+                    "type": "uint256",
+                    "internalType": "uint256"
+                }
+            ]
+        },
+        {
+            "type": "error",
+            "name": "InsufficientFundsForRedeemExecutor",
+            "inputs": []
+        },
+        {
+            "type": "error",
+            "name": "InvalidControllerAddress",
+            "inputs": []
+        },
+        {
+            "type": "error",
+            "name": "InvalidXrplOwner",
+            "inputs": []
+        },
+        {
+            "type": "error",
+            "name": "OnlyController",
+            "inputs": []
+        }
+    ],
+    "bytecode": {
+        "object": "0x",
+        "sourceMap": "",
+        "linkReferences": {}
+    },
+    "deployedBytecode": {
+        "object": "0x",
+        "sourceMap": "",
+        "linkReferences": {}
+    },
+    "methodIdentifiers": {},
+    "rawMetadata": "{\"compiler\":{\"version\":\"0.8.28+commit.7893614a\"},\"language\":\"Solidity\",\"output\":{\"abi\":[{\"inputs\":[],\"name\":\"AgentNotAvailable\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"AlreadyInitialized\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"ApprovalFailed\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"CustomInstructionCallFailed\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"FxrpAssetManagerNotSet\",\"type\":\"error\"},{\"inputs\":[{\"internalType\":\"uint256\",\"name\":\"collateralReservationFee\",\"type\":\"uint256\"}],\"name\":\"InsufficientFundsForCollateralReservation\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InsufficientFundsForRedeemExecutor\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidControllerAddress\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"InvalidXrplOwner\",\"type\":\"error\"},{\"inputs\":[],\"name\":\"OnlyController\",\"type\":\"error\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"fxrp\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"vault\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"Approved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"lots\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"agentVault\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"executor\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"executorFee\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"reservationId\",\"type\":\"uint256\"}],\"name\":\"CollateralReserved\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"vault\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"actualAmount\",\"type\":\"uint256\"}],\"name\":\"Deposited\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"lots\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"address\",\"name\":\"executor\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"executorFee\",\"type\":\"uint256\"}],\"name\":\"Redeemed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"vault\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"rewardEpochId\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"}],\"name\":\"WithdrawalClaimed\",\"type\":\"event\"},{\"anonymous\":false,\"inputs\":[{\"indexed\":false,\"internalType\":\"address\",\"name\":\"vault\",\"type\":\"address\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"amount\",\"type\":\"uint256\"},{\"indexed\":false,\"internalType\":\"uint256\",\"name\":\"actualAmount\",\"type\":\"uint256\"}],\"name\":\"Withdrawn\",\"type\":\"event\"}],\"devdoc\":{\"kind\":\"dev\",\"methods\":{},\"title\":\"IPersonalAccount\",\"version\":1},\"userdoc\":{\"kind\":\"user\",\"methods\":{},\"notice\":\"Interface for PersonalAccount contract.\",\"version\":1}},\"settings\":{\"compilationTarget\":{\"contracts/userInterfaces/IPersonalAccount.sol\":\"IPersonalAccount\"},\"evmVersion\":\"shanghai\",\"libraries\":{},\"metadata\":{\"bytecodeHash\":\"ipfs\"},\"optimizer\":{\"enabled\":true,\"runs\":200},\"remappings\":[\":@openzeppelin-contracts-5.2.0-rc.1/=dependencies/flare-periphery-0.1.36/dependencies/@openzeppelin-contracts-5.2.0-rc.1/\",\":@openzeppelin-contracts-5.2.0/=dependencies/@openzeppelin-contracts-5.2.0/\",\":@openzeppelin-contracts/=dependencies/@openzeppelin-contracts-5.2.0/\",\":@openzeppelin/contracts/=dependencies/flare-periphery-0.1.36/dependencies/@openzeppelin-contracts-5.2.0-rc.1/\",\":flare-periphery-0.1.36/=dependencies/flare-periphery-0.1.36/src/\",\":flare-periphery/=dependencies/flare-periphery-0.1.36/\",\":forge-std-1.10.0/=dependencies/forge-std-1.10.0/src/\",\":forge-std/=dependencies/forge-std-1.10.0/src/\"]},\"sources\":{\"contracts/userInterfaces/IPersonalAccount.sol\":{\"keccak256\":\"0x2ef724b8ddd41cc2c43eab455f4d4a702a5e47137240e4adfffe3cba15e5e6cf\",\"license\":\"MIT\",\"urls\":[\"bzz-raw://8809074411b6a4d62b94016599a9f1d67dd23af40e2d6567e166ef1640c44596\",\"dweb:/ipfs/QmYvGBMS4a48s7jmxRqCyPxFhuZAvzREVpSZgCRYnVuizH\"]}},\"version\":1}",
+    "metadata": {
+        "compiler": {
+            "version": "0.8.28+commit.7893614a"
+        },
+        "language": "Solidity",
+        "output": {
+            "abi": [
+                {
+                    "inputs": [],
+                    "type": "error",
+                    "name": "AgentNotAvailable"
+                },
+                {
+                    "inputs": [],
+                    "type": "error",
+                    "name": "AlreadyInitialized"
+                },
+                {
+                    "inputs": [],
+                    "type": "error",
+                    "name": "ApprovalFailed"
+                },
+                {
+                    "inputs": [],
+                    "type": "error",
+                    "name": "CustomInstructionCallFailed"
+                },
+                {
+                    "inputs": [],
+                    "type": "error",
+                    "name": "FxrpAssetManagerNotSet"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "collateralReservationFee",
+                            "type": "uint256"
+                        }
+                    ],
+                    "type": "error",
+                    "name": "InsufficientFundsForCollateralReservation"
+                },
+                {
+                    "inputs": [],
+                    "type": "error",
+                    "name": "InsufficientFundsForRedeemExecutor"
+                },
+                {
+                    "inputs": [],
+                    "type": "error",
+                    "name": "InvalidControllerAddress"
+                },
+                {
+                    "inputs": [],
+                    "type": "error",
+                    "name": "InvalidXrplOwner"
+                },
+                {
+                    "inputs": [],
+                    "type": "error",
+                    "name": "OnlyController"
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "fxrp",
+                            "type": "address",
+                            "indexed": false
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "vault",
+                            "type": "address",
+                            "indexed": false
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "amount",
+                            "type": "uint256",
+                            "indexed": false
+                        }
+                    ],
+                    "type": "event",
+                    "name": "Approved",
+                    "anonymous": false
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "lots",
+                            "type": "uint256",
+                            "indexed": false
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "agentVault",
+                            "type": "address",
+                            "indexed": false
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "executor",
+                            "type": "address",
+                            "indexed": false
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "executorFee",
+                            "type": "uint256",
+                            "indexed": false
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "reservationId",
+                            "type": "uint256",
+                            "indexed": false
+                        }
+                    ],
+                    "type": "event",
+                    "name": "CollateralReserved",
+                    "anonymous": false
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "vault",
+                            "type": "address",
+                            "indexed": false
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "amount",
+                            "type": "uint256",
+                            "indexed": false
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "actualAmount",
+                            "type": "uint256",
+                            "indexed": false
+                        }
+                    ],
+                    "type": "event",
+                    "name": "Deposited",
+                    "anonymous": false
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "uint256",
+                            "name": "lots",
+                            "type": "uint256",
+                            "indexed": false
+                        },
+                        {
+                            "internalType": "address",
+                            "name": "executor",
+                            "type": "address",
+                            "indexed": false
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "executorFee",
+                            "type": "uint256",
+                            "indexed": false
+                        }
+                    ],
+                    "type": "event",
+                    "name": "Redeemed",
+                    "anonymous": false
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "vault",
+                            "type": "address",
+                            "indexed": false
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "rewardEpochId",
+                            "type": "uint256",
+                            "indexed": false
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "amount",
+                            "type": "uint256",
+                            "indexed": false
+                        }
+                    ],
+                    "type": "event",
+                    "name": "WithdrawalClaimed",
+                    "anonymous": false
+                },
+                {
+                    "inputs": [
+                        {
+                            "internalType": "address",
+                            "name": "vault",
+                            "type": "address",
+                            "indexed": false
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "amount",
+                            "type": "uint256",
+                            "indexed": false
+                        },
+                        {
+                            "internalType": "uint256",
+                            "name": "actualAmount",
+                            "type": "uint256",
+                            "indexed": false
+                        }
+                    ],
+                    "type": "event",
+                    "name": "Withdrawn",
+                    "anonymous": false
+                }
+            ]
+        }
+    }
+}

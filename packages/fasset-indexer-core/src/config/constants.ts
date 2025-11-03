@@ -128,6 +128,22 @@ export const EVENTS = {
     ESCROW_FINISHED: "EscrowFinished",
     SETTINGS_UPDATED: "SettingsUpdated",
     CUSTODIAN_ADDRESS_UPDATED: "CustodianAddressUpdated"
+  },
+  PERSONAL_ACCOUNT: {
+    DEPOSITED: 'Deposited',
+    WITHDRAWN: 'Withdrawn',
+    WITHDRAWAL_CLAIMED: 'WithdrawalClaimed',
+    APPROVED: 'Approved',
+    REDEEMED: 'Redeemed',
+    COLLATERAL_RESERVED: 'CollateralReserved'
+  },
+  MASTER_ACCOUNT_CONTROLLER: {
+    CUSTOM_INSTRUCTION: 'CustomInstruction',
+    PERSONAL_ACCOUNT_IMPLEMENTATION_SET: 'PersonalAccountImplementationSet',
+    OPERATOR_EXECUTION_WINDOW_SECONDS_SET: 'OperatorExecutionWindowSecondsSet',
+    PERSONAL_ACCOUNT_CREATED: 'PersonalAccountCreated',
+    EXECUTOR_FEE_SET: 'ExecutorFeeSet',
+    INSTRUCTION_EXECUTED: 'InstructionExecuted'
   }
 } as const
 

@@ -5,6 +5,8 @@ import type * as assetManager from "./assetManager";
 export type { assetManager };
 import type * as collateralPool from "./collateralPool";
 export type { collateralPool };
+import type * as smartAccount from "./smartAccount";
+export type { smartAccount };
 export type { IAgentOwnerRegistry } from "./IAgentOwnerRegistry";
 export type { ICoreVaultManager } from "./ICoreVaultManager";
 export type { IERC20 } from "./IERC20";
@@ -26,3 +28,7 @@ export type { ICollateralPool__initial } from "./collateralPool/ICollateralPool_
 export { ICollateralPool__initial__factory } from "./factories/collateralPool/ICollateralPool__initial__factory";
 export type { ICollateralPool__latest } from "./collateralPool/ICollateralPool__latest";
 export { ICollateralPool__latest__factory } from "./factories/collateralPool/ICollateralPool__latest__factory";
+export type { IMasterAccountController } from "./smartAccount/IMasterAccountController";
+export { IMasterAccountController__factory } from "./factories/smartAccount/IMasterAccountController__factory";
+export type { IPersonalAccount } from "./smartAccount/IPersonalAccount";
+export { IPersonalAccount__factory } from "./factories/smartAccount/IPersonalAccount__factory";

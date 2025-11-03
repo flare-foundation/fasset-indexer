@@ -78,14 +78,15 @@ import type {
   EnteredEvent,
   ExitedEvent
 } from "../../../chain/typechain/collateralPool/ICollateralPool__initial"
+import type { FAssetIface } from "../../../src/shared"
 
 export class EventGeneration {
 
   constructor(public readonly orm: ORM) { }
 
-  protected generateEventWithoutArgs(topic: string, source?: string): Omit<Event, 'name' | 'args'> {
+  protected generateEventWithoutArgs(topic: string, sourcename: FAssetIface, source?: string): Omit<Event, 'name' | 'args'> {
       return {
-        topic,
+        topic, sourcename,
         index: randomNumber(1, 1e6),
         source: source ?? randomChoice(ASSET_MANAGERS),
         block: {

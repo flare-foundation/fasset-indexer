@@ -75,7 +75,11 @@ export class EventFixture extends EventGeneration {
 
   async generateEvent(name: keyof EventNameToEventArgs, source?: string, args: any[] = []): Promise<Event> {
     const topic = this.events.getEventTopics(name, Object.values(this.events.interfaces).flat())[0]
-    return { name, args: await this.generateEventArgs(name, args), ...this.generateEventWithoutArgs(topic, source) }
+    return {
+      name,
+      args: await this.generateEventArgs(name, args),
+      ...this.generateEventWithoutArgs(topic, 'ASSET_MANAGER', source)
+    }
   }
 
   protected async generateEventArgs<T extends keyof EventNameToEventArgs>(name: T, args: any[]): Promise<EventNameToEventArgs[T]>

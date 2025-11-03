@@ -1,3 +1,5 @@
+import type { FAssetIface } from "../../shared"
+
 export interface Block {
   index: number
   timestamp: number
@@ -23,6 +25,7 @@ export interface Event {
   name: string
   args: EventArgs
   source: string
+  sourcename: FAssetIface
   index: number
   transaction: Transaction
   block: Block
