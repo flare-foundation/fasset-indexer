@@ -173,20 +173,14 @@ export class DashboardController {
   @ApiOperation({ summary: 'Timespan of collected pool fees along timestamps' })
   @ApiQuery({ name: "timestamps", type: Number, isArray: true })
   @ApiQuery({ name: "pool", type: String, required: false })
-  @ApiQuery({ name: "usd", type: Boolean, required: false })
   getPoolFeesDiff(
     @Query('timestamps') timestamps: string | string[],
-    @Query('pool') pool?: string,
-    @Query('usd', new ParseBoolPipe({ optional: true })) usd?: boolean
+    @Query('pool') pool?: string
   ): Promise<ApiResponse<FAssetTimespan<bigint> | Timespan<bigint>>> {
     const ts = this.parseTimestamps(timestamps)
     const er = this.restrictTimespan(ts)
     if (er !== null) return apiResponse(Promise.reject(er), 400)
-    if (usd === true) {
-      return apiResponse(this.service.claimedPoolFeesAggregateTimespan(ts), 200)
-    } else {
-      return apiResponse(this.service.claimedPoolFeesTimespan(ts, pool, undefined), 200)
-    }
+    return apiResponse(this.service.claimedPoolFeesTimespan(ts, pool), 200)
   }
 
   @Get('timespan/core-vault-inflows?')
