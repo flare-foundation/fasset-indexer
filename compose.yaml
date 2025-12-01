@@ -90,6 +90,7 @@ services:
       interval: 10s
       timeout: 20s
       retries: 10
+    restart: unless-stopped
 
 volumes:
   db_data:
