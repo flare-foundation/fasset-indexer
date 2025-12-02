@@ -23,18 +23,18 @@ import type {
   TypedContractMethod,
 } from "../common";
 
-export declare namespace IMasterAccountController {
-  export type CustomInstructionStruct = {
-    targetContract: AddressLike;
-    value: BigNumberish;
-    data: BytesLike;
+export declare namespace IDiamond {
+  export type FacetCutStruct = {
+    facetAddress: AddressLike;
+    action: BigNumberish;
+    functionSelectors: BytesLike[];
   };
 
-  export type CustomInstructionStructOutput = [
-    targetContract: string,
-    value: bigint,
-    data: string
-  ] & { targetContract: string; value: bigint; data: string };
+  export type FacetCutStructOutput = [
+    facetAddress: string,
+    action: bigint,
+    functionSelectors: string[]
+  ] & { facetAddress: string; action: bigint; functionSelectors: string[] };
 }
 
 export declare namespace IPayment {
@@ -132,48 +132,290 @@ export declare namespace IPayment {
   ] & { merkleProof: string[]; data: IPayment.ResponseStructOutput };
 }
 
+export declare namespace IDiamondLoupe {
+  export type FacetStruct = {
+    facetAddress: AddressLike;
+    functionSelectors: BytesLike[];
+  };
+
+  export type FacetStructOutput = [
+    facetAddress: string,
+    functionSelectors: string[]
+  ] & { facetAddress: string; functionSelectors: string[] };
+}
+
 export interface IMasterAccountControllerInterface extends Interface {
   getFunction(
     nameOrSignature:
-      | "encodeCustomInstruction"
-      | "executeTransaction"
+      | "addAgentVaults"
+      | "addVaults"
+      | "addXrplProviderWallets"
+      | "diamondCut"
+      | "executeDepositAfterMinting"
+      | "executeInstruction"
+      | "facetAddress"
+      | "facetAddresses"
+      | "facetFunctionSelectors"
+      | "facets"
+      | "getAgentVaults"
+      | "getDefaultInstructionFee"
+      | "getExecutorInfo"
+      | "getInstructionFee"
+      | "getPaymentProofValidityDurationSeconds"
       | "getPersonalAccount"
-      | "registerCustomInstruction"
+      | "getSourceId"
+      | "getSwapParams"
+      | "getTransactionIdForCollateralReservation"
+      | "getVaults"
+      | "getXrplProviderWallets"
+      | "implementation"
+      | "isTransactionIdUsed"
+      | "owner"
+      | "removeAgentVaults"
+      | "removeInstructionFees"
+      | "removeXrplProviderWallets"
+      | "reserveCollateral"
+      | "setDefaultInstructionFee"
+      | "setExecutor"
+      | "setExecutorFee"
+      | "setInstructionFees"
+      | "setPaymentProofValidityDuration"
+      | "setPersonalAccountImplementation"
+      | "setSwapParams"
+      | "supportsInterface"
+      | "swapUsdt0ForFAsset"
+      | "swapWNatForUsdt0"
+      | "transferOwnership"
   ): FunctionFragment;
 
   getEvent(
     nameOrSignatureOrTopic:
-      | "CustomInstructionRegistered"
+      | "AgentVaultAdded"
+      | "AgentVaultRemoved"
+      | "Approved"
+      | "Claimed"
+      | "CollateralReserved"
+      | "DefaultInstructionFeeSet"
+      | "Deposited"
+      | "DiamondCut"
       | "ExecutorFeeSet"
+      | "ExecutorSet"
+      | "FXrpRedeemed"
+      | "FXrpTransferred"
       | "InstructionExecuted"
-      | "OperatorExecutionWindowSecondsSet"
+      | "InstructionFeeRemoved"
+      | "InstructionFeeSet"
+      | "OwnershipTransferred"
+      | "PaymentProofValidityDurationSecondsSet"
       | "PersonalAccountCreated"
       | "PersonalAccountImplementationSet"
+      | "RedeemRequested"
+      | "Redeemed"
+      | "SwapExecuted"
+      | "SwapParamsSet"
+      | "VaultAdded"
+      | "WithdrawalClaimed"
+      | "XrplProviderWalletAdded"
+      | "XrplProviderWalletRemoved"
   ): EventFragment;
 
   encodeFunctionData(
-    functionFragment: "encodeCustomInstruction",
-    values: [IMasterAccountController.CustomInstructionStruct[]]
+    functionFragment: "addAgentVaults",
+    values: [BigNumberish[], AddressLike[]]
   ): string;
   encodeFunctionData(
-    functionFragment: "executeTransaction",
+    functionFragment: "addVaults",
+    values: [BigNumberish[], AddressLike[], BigNumberish[]]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "addXrplProviderWallets",
+    values: [string[]]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "diamondCut",
+    values: [IDiamond.FacetCutStruct[], AddressLike, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "executeDepositAfterMinting",
+    values: [BigNumberish, IPayment.ProofStruct, string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "executeInstruction",
     values: [IPayment.ProofStruct, string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "facetAddress",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "facetAddresses",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "facetFunctionSelectors",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(functionFragment: "facets", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "getAgentVaults",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getDefaultInstructionFee",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getExecutorInfo",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getInstructionFee",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getPaymentProofValidityDurationSeconds",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "getPersonalAccount",
     values: [string]
   ): string;
   encodeFunctionData(
-    functionFragment: "registerCustomInstruction",
-    values: [IMasterAccountController.CustomInstructionStruct[]]
+    functionFragment: "getSourceId",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getSwapParams",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getTransactionIdForCollateralReservation",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(functionFragment: "getVaults", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "getXrplProviderWallets",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "implementation",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "isTransactionIdUsed",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(functionFragment: "owner", values?: undefined): string;
+  encodeFunctionData(
+    functionFragment: "removeAgentVaults",
+    values: [BigNumberish[]]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "removeInstructionFees",
+    values: [BigNumberish[]]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "removeXrplProviderWallets",
+    values: [string[]]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "reserveCollateral",
+    values: [string, BytesLike, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setDefaultInstructionFee",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setExecutor",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setExecutorFee",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setInstructionFees",
+    values: [BigNumberish[], BigNumberish[]]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setPaymentProofValidityDuration",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setPersonalAccountImplementation",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setSwapParams",
+    values: [AddressLike, AddressLike, BigNumberish, BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "supportsInterface",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "swapUsdt0ForFAsset",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "swapWNatForUsdt0",
+    values: [string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "transferOwnership",
+    values: [AddressLike]
   ): string;
 
   decodeFunctionResult(
-    functionFragment: "encodeCustomInstruction",
+    functionFragment: "addAgentVaults",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "addVaults", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "addXrplProviderWallets",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "diamondCut", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "executeDepositAfterMinting",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "executeTransaction",
+    functionFragment: "executeInstruction",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "facetAddress",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "facetAddresses",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "facetFunctionSelectors",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "facets", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getAgentVaults",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getDefaultInstructionFee",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getExecutorInfo",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getInstructionFee",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getPaymentProofValidityDurationSeconds",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -181,16 +423,276 @@ export interface IMasterAccountControllerInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
-    functionFragment: "registerCustomInstruction",
+    functionFragment: "getSourceId",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getSwapParams",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getTransactionIdForCollateralReservation",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "getVaults", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "getXrplProviderWallets",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "implementation",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "isTransactionIdUsed",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(functionFragment: "owner", data: BytesLike): Result;
+  decodeFunctionResult(
+    functionFragment: "removeAgentVaults",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "removeInstructionFees",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "removeXrplProviderWallets",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "reserveCollateral",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setDefaultInstructionFee",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setExecutor",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setExecutorFee",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setInstructionFees",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setPaymentProofValidityDuration",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setPersonalAccountImplementation",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setSwapParams",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "supportsInterface",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "swapUsdt0ForFAsset",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "swapWNatForUsdt0",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "transferOwnership",
     data: BytesLike
   ): Result;
 }
 
-export namespace CustomInstructionRegisteredEvent {
-  export type InputTuple = [callHash: BigNumberish];
-  export type OutputTuple = [callHash: bigint];
+export namespace AgentVaultAddedEvent {
+  export type InputTuple = [
+    agentVaultId: BigNumberish,
+    agentVaultAddress: AddressLike
+  ];
+  export type OutputTuple = [agentVaultId: bigint, agentVaultAddress: string];
   export interface OutputObject {
-    callHash: bigint;
+    agentVaultId: bigint;
+    agentVaultAddress: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace AgentVaultRemovedEvent {
+  export type InputTuple = [
+    agentVaultId: BigNumberish,
+    agentVaultAddress: AddressLike
+  ];
+  export type OutputTuple = [agentVaultId: bigint, agentVaultAddress: string];
+  export interface OutputObject {
+    agentVaultId: bigint;
+    agentVaultAddress: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace ApprovedEvent {
+  export type InputTuple = [
+    personalAccount: AddressLike,
+    fxrp: AddressLike,
+    vault: AddressLike,
+    amount: BigNumberish
+  ];
+  export type OutputTuple = [
+    personalAccount: string,
+    fxrp: string,
+    vault: string,
+    amount: bigint
+  ];
+  export interface OutputObject {
+    personalAccount: string;
+    fxrp: string;
+    vault: string;
+    amount: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace ClaimedEvent {
+  export type InputTuple = [
+    personalAccount: AddressLike,
+    vault: AddressLike,
+    year: BigNumberish,
+    month: BigNumberish,
+    day: BigNumberish,
+    shares: BigNumberish,
+    amount: BigNumberish
+  ];
+  export type OutputTuple = [
+    personalAccount: string,
+    vault: string,
+    year: bigint,
+    month: bigint,
+    day: bigint,
+    shares: bigint,
+    amount: bigint
+  ];
+  export interface OutputObject {
+    personalAccount: string;
+    vault: string;
+    year: bigint;
+    month: bigint;
+    day: bigint;
+    shares: bigint;
+    amount: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace CollateralReservedEvent {
+  export type InputTuple = [
+    personalAccount: AddressLike,
+    transactionId: BytesLike,
+    paymentReference: BytesLike,
+    xrplOwner: string,
+    collateralReservationId: BigNumberish,
+    agentVault: AddressLike,
+    lots: BigNumberish,
+    executor: AddressLike,
+    executorFee: BigNumberish
+  ];
+  export type OutputTuple = [
+    personalAccount: string,
+    transactionId: string,
+    paymentReference: string,
+    xrplOwner: string,
+    collateralReservationId: bigint,
+    agentVault: string,
+    lots: bigint,
+    executor: string,
+    executorFee: bigint
+  ];
+  export interface OutputObject {
+    personalAccount: string;
+    transactionId: string;
+    paymentReference: string;
+    xrplOwner: string;
+    collateralReservationId: bigint;
+    agentVault: string;
+    lots: bigint;
+    executor: string;
+    executorFee: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace DefaultInstructionFeeSetEvent {
+  export type InputTuple = [defaultInstructionFee: BigNumberish];
+  export type OutputTuple = [defaultInstructionFee: bigint];
+  export interface OutputObject {
+    defaultInstructionFee: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace DepositedEvent {
+  export type InputTuple = [
+    personalAccount: AddressLike,
+    vault: AddressLike,
+    amount: BigNumberish,
+    shares: BigNumberish
+  ];
+  export type OutputTuple = [
+    personalAccount: string,
+    vault: string,
+    amount: bigint,
+    shares: bigint
+  ];
+  export interface OutputObject {
+    personalAccount: string;
+    vault: string;
+    amount: bigint;
+    shares: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace DiamondCutEvent {
+  export type InputTuple = [
+    _diamondCut: IDiamond.FacetCutStruct[],
+    _init: AddressLike,
+    _calldata: BytesLike
+  ];
+  export type OutputTuple = [
+    _diamondCut: IDiamond.FacetCutStructOutput[],
+    _init: string,
+    _calldata: string
+  ];
+  export interface OutputObject {
+    _diamondCut: IDiamond.FacetCutStructOutput[];
+    _init: string;
+    _calldata: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -210,27 +712,11 @@ export namespace ExecutorFeeSetEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace InstructionExecutedEvent {
-  export type InputTuple = [
-    personalAccount: AddressLike,
-    xrplOwner: string,
-    instructionId: BigNumberish,
-    paymentReference: BigNumberish,
-    transactionId: BytesLike
-  ];
-  export type OutputTuple = [
-    personalAccount: string,
-    xrplOwner: string,
-    instructionId: bigint,
-    paymentReference: bigint,
-    transactionId: string
-  ];
+export namespace ExecutorSetEvent {
+  export type InputTuple = [executor: AddressLike];
+  export type OutputTuple = [executor: string];
   export interface OutputObject {
-    personalAccount: string;
-    xrplOwner: string;
-    instructionId: bigint;
-    paymentReference: bigint;
-    transactionId: string;
+    executor: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -238,11 +724,130 @@ export namespace InstructionExecutedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
-export namespace OperatorExecutionWindowSecondsSetEvent {
-  export type InputTuple = [newWindowSeconds: BigNumberish];
-  export type OutputTuple = [newWindowSeconds: bigint];
+export namespace FXrpRedeemedEvent {
+  export type InputTuple = [
+    personalAccount: AddressLike,
+    lots: BigNumberish,
+    amount: BigNumberish,
+    executor: AddressLike,
+    executorFee: BigNumberish
+  ];
+  export type OutputTuple = [
+    personalAccount: string,
+    lots: bigint,
+    amount: bigint,
+    executor: string,
+    executorFee: bigint
+  ];
   export interface OutputObject {
-    newWindowSeconds: bigint;
+    personalAccount: string;
+    lots: bigint;
+    amount: bigint;
+    executor: string;
+    executorFee: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace FXrpTransferredEvent {
+  export type InputTuple = [
+    personalAccount: AddressLike,
+    to: AddressLike,
+    amount: BigNumberish
+  ];
+  export type OutputTuple = [
+    personalAccount: string,
+    to: string,
+    amount: bigint
+  ];
+  export interface OutputObject {
+    personalAccount: string;
+    to: string;
+    amount: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace InstructionExecutedEvent {
+  export type InputTuple = [
+    personalAccount: AddressLike,
+    transactionId: BytesLike,
+    paymentReference: BytesLike,
+    xrplOwner: string,
+    instructionId: BigNumberish
+  ];
+  export type OutputTuple = [
+    personalAccount: string,
+    transactionId: string,
+    paymentReference: string,
+    xrplOwner: string,
+    instructionId: bigint
+  ];
+  export interface OutputObject {
+    personalAccount: string;
+    transactionId: string;
+    paymentReference: string;
+    xrplOwner: string;
+    instructionId: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace InstructionFeeRemovedEvent {
+  export type InputTuple = [instructionId: BigNumberish];
+  export type OutputTuple = [instructionId: bigint];
+  export interface OutputObject {
+    instructionId: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace InstructionFeeSetEvent {
+  export type InputTuple = [
+    instructionId: BigNumberish,
+    instructionFee: BigNumberish
+  ];
+  export type OutputTuple = [instructionId: bigint, instructionFee: bigint];
+  export interface OutputObject {
+    instructionId: bigint;
+    instructionFee: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace OwnershipTransferredEvent {
+  export type InputTuple = [previousOwner: AddressLike, newOwner: AddressLike];
+  export type OutputTuple = [previousOwner: string, newOwner: string];
+  export interface OutputObject {
+    previousOwner: string;
+    newOwner: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace PaymentProofValidityDurationSecondsSetEvent {
+  export type InputTuple = [paymentProofValidityDurationSeconds: BigNumberish];
+  export type OutputTuple = [paymentProofValidityDurationSeconds: bigint];
+  export interface OutputObject {
+    paymentProofValidityDurationSeconds: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -251,11 +856,11 @@ export namespace OperatorExecutionWindowSecondsSetEvent {
 }
 
 export namespace PersonalAccountCreatedEvent {
-  export type InputTuple = [xrplOwner: string, personalAccount: AddressLike];
-  export type OutputTuple = [xrplOwner: string, personalAccount: string];
+  export type InputTuple = [personalAccount: AddressLike, xrplOwner: string];
+  export type OutputTuple = [personalAccount: string, xrplOwner: string];
   export interface OutputObject {
-    xrplOwner: string;
     personalAccount: string;
+    xrplOwner: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -268,6 +873,189 @@ export namespace PersonalAccountImplementationSetEvent {
   export type OutputTuple = [newImplementation: string];
   export interface OutputObject {
     newImplementation: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace RedeemRequestedEvent {
+  export type InputTuple = [
+    personalAccount: AddressLike,
+    vault: AddressLike,
+    shares: BigNumberish,
+    amount: BigNumberish,
+    claimableEpoch: BigNumberish
+  ];
+  export type OutputTuple = [
+    personalAccount: string,
+    vault: string,
+    shares: bigint,
+    amount: bigint,
+    claimableEpoch: bigint
+  ];
+  export interface OutputObject {
+    personalAccount: string;
+    vault: string;
+    shares: bigint;
+    amount: bigint;
+    claimableEpoch: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace RedeemedEvent {
+  export type InputTuple = [
+    personalAccount: AddressLike,
+    vault: AddressLike,
+    shares: BigNumberish,
+    amount: BigNumberish
+  ];
+  export type OutputTuple = [
+    personalAccount: string,
+    vault: string,
+    shares: bigint,
+    amount: bigint
+  ];
+  export interface OutputObject {
+    personalAccount: string;
+    vault: string;
+    shares: bigint;
+    amount: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace SwapExecutedEvent {
+  export type InputTuple = [
+    personalAccount: AddressLike,
+    tokenIn: AddressLike,
+    tokenOut: AddressLike,
+    xrplOwner: string,
+    amountIn: BigNumberish,
+    amountOut: BigNumberish
+  ];
+  export type OutputTuple = [
+    personalAccount: string,
+    tokenIn: string,
+    tokenOut: string,
+    xrplOwner: string,
+    amountIn: bigint,
+    amountOut: bigint
+  ];
+  export interface OutputObject {
+    personalAccount: string;
+    tokenIn: string;
+    tokenOut: string;
+    xrplOwner: string;
+    amountIn: bigint;
+    amountOut: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace SwapParamsSetEvent {
+  export type InputTuple = [
+    uniswapV3Router: AddressLike,
+    usdt0: AddressLike,
+    wNatUsdt0PoolFeeTierPPM: BigNumberish,
+    usdt0FXrpPoolFeeTierPPM: BigNumberish,
+    maxSlippagePPM: BigNumberish
+  ];
+  export type OutputTuple = [
+    uniswapV3Router: string,
+    usdt0: string,
+    wNatUsdt0PoolFeeTierPPM: bigint,
+    usdt0FXrpPoolFeeTierPPM: bigint,
+    maxSlippagePPM: bigint
+  ];
+  export interface OutputObject {
+    uniswapV3Router: string;
+    usdt0: string;
+    wNatUsdt0PoolFeeTierPPM: bigint;
+    usdt0FXrpPoolFeeTierPPM: bigint;
+    maxSlippagePPM: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace VaultAddedEvent {
+  export type InputTuple = [
+    vaultId: BigNumberish,
+    vaultAddress: AddressLike,
+    vaultType: BigNumberish
+  ];
+  export type OutputTuple = [
+    vaultId: bigint,
+    vaultAddress: string,
+    vaultType: bigint
+  ];
+  export interface OutputObject {
+    vaultId: bigint;
+    vaultAddress: string;
+    vaultType: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace WithdrawalClaimedEvent {
+  export type InputTuple = [
+    personalAccount: AddressLike,
+    vault: AddressLike,
+    period: BigNumberish,
+    amount: BigNumberish
+  ];
+  export type OutputTuple = [
+    personalAccount: string,
+    vault: string,
+    period: bigint,
+    amount: bigint
+  ];
+  export interface OutputObject {
+    personalAccount: string;
+    vault: string;
+    period: bigint;
+    amount: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace XrplProviderWalletAddedEvent {
+  export type InputTuple = [xrplProviderWallet: string];
+  export type OutputTuple = [xrplProviderWallet: string];
+  export interface OutputObject {
+    xrplProviderWallet: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace XrplProviderWalletRemovedEvent {
+  export type InputTuple = [xrplProviderWallet: string];
+  export type OutputTuple = [xrplProviderWallet: string];
+  export interface OutputObject {
+    xrplProviderWallet: string;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -318,27 +1106,250 @@ export interface IMasterAccountController extends BaseContract {
     event?: TCEvent
   ): Promise<this>;
 
-  encodeCustomInstruction: TypedContractMethod<
-    [_customInstruction: IMasterAccountController.CustomInstructionStruct[]],
-    [bigint],
+  addAgentVaults: TypedContractMethod<
+    [_agentVaultIds: BigNumberish[], _agentVaultAddresses: AddressLike[]],
+    [void],
     "nonpayable"
   >;
 
-  executeTransaction: TypedContractMethod<
+  addVaults: TypedContractMethod<
+    [
+      _vaultIds: BigNumberish[],
+      _vaultAddresses: AddressLike[],
+      _vaultTypes: BigNumberish[]
+    ],
+    [void],
+    "nonpayable"
+  >;
+
+  addXrplProviderWallets: TypedContractMethod<
+    [_xrplProviderWallets: string[]],
+    [void],
+    "nonpayable"
+  >;
+
+  diamondCut: TypedContractMethod<
+    [
+      _diamondCut: IDiamond.FacetCutStruct[],
+      _init: AddressLike,
+      _calldata: BytesLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+
+  executeDepositAfterMinting: TypedContractMethod<
+    [
+      _collateralReservationId: BigNumberish,
+      _proof: IPayment.ProofStruct,
+      _xrplAddress: string
+    ],
+    [void],
+    "nonpayable"
+  >;
+
+  executeInstruction: TypedContractMethod<
     [_proof: IPayment.ProofStruct, _xrplAddress: string],
     [void],
     "payable"
   >;
 
+  facetAddress: TypedContractMethod<
+    [_functionSelector: BytesLike],
+    [string],
+    "view"
+  >;
+
+  facetAddresses: TypedContractMethod<[], [string[]], "view">;
+
+  facetFunctionSelectors: TypedContractMethod<
+    [_facet: AddressLike],
+    [string[]],
+    "view"
+  >;
+
+  facets: TypedContractMethod<[], [IDiamondLoupe.FacetStructOutput[]], "view">;
+
+  getAgentVaults: TypedContractMethod<
+    [],
+    [
+      [bigint[], string[]] & {
+        _agentVaultIds: bigint[];
+        _agentVaultAddresses: string[];
+      }
+    ],
+    "view"
+  >;
+
+  getDefaultInstructionFee: TypedContractMethod<[], [bigint], "view">;
+
+  getExecutorInfo: TypedContractMethod<
+    [],
+    [[string, bigint] & { _executor: string; _executorFee: bigint }],
+    "view"
+  >;
+
+  getInstructionFee: TypedContractMethod<
+    [_instructionId: BigNumberish],
+    [bigint],
+    "view"
+  >;
+
+  getPaymentProofValidityDurationSeconds: TypedContractMethod<
+    [],
+    [bigint],
+    "view"
+  >;
+
   getPersonalAccount: TypedContractMethod<
     [_xrplOwner: string],
     [string],
+    "view"
+  >;
+
+  getSourceId: TypedContractMethod<[], [string], "view">;
+
+  getSwapParams: TypedContractMethod<
+    [],
+    [
+      [string, string, bigint, bigint, bigint] & {
+        _uniswapV3Router: string;
+        _usdt0: string;
+        _wNatUsdt0PoolFeeTierPPM: bigint;
+        _usdt0FXrpPoolFeeTierPPM: bigint;
+        _maxSlippagePPM: bigint;
+      }
+    ],
+    "view"
+  >;
+
+  getTransactionIdForCollateralReservation: TypedContractMethod<
+    [_collateralReservationId: BigNumberish],
+    [string],
+    "view"
+  >;
+
+  getVaults: TypedContractMethod<
+    [],
+    [
+      [bigint[], string[], bigint[]] & {
+        _vaultIds: bigint[];
+        _vaultAddresses: string[];
+        _vaultTypes: bigint[];
+      }
+    ],
+    "view"
+  >;
+
+  getXrplProviderWallets: TypedContractMethod<[], [string[]], "view">;
+
+  implementation: TypedContractMethod<[], [string], "view">;
+
+  isTransactionIdUsed: TypedContractMethod<
+    [_transactionId: BytesLike],
+    [boolean],
+    "view"
+  >;
+
+  owner: TypedContractMethod<[], [string], "view">;
+
+  removeAgentVaults: TypedContractMethod<
+    [_agentVaultIds: BigNumberish[]],
+    [void],
     "nonpayable"
   >;
 
-  registerCustomInstruction: TypedContractMethod<
-    [_customInstruction: IMasterAccountController.CustomInstructionStruct[]],
+  removeInstructionFees: TypedContractMethod<
+    [_instructionIds: BigNumberish[]],
+    [void],
+    "nonpayable"
+  >;
+
+  removeXrplProviderWallets: TypedContractMethod<
+    [_xrplProviderWallets: string[]],
+    [void],
+    "nonpayable"
+  >;
+
+  reserveCollateral: TypedContractMethod<
+    [
+      _xrplAddress: string,
+      _paymentReference: BytesLike,
+      _transactionId: BytesLike
+    ],
     [bigint],
+    "payable"
+  >;
+
+  setDefaultInstructionFee: TypedContractMethod<
+    [_defaultInstructionFee: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  setExecutor: TypedContractMethod<
+    [_executor: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  setExecutorFee: TypedContractMethod<
+    [_executorFee: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  setInstructionFees: TypedContractMethod<
+    [_instructionIds: BigNumberish[], _fees: BigNumberish[]],
+    [void],
+    "nonpayable"
+  >;
+
+  setPaymentProofValidityDuration: TypedContractMethod<
+    [_paymentProofValidityDurationSeconds: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  setPersonalAccountImplementation: TypedContractMethod<
+    [_implementation: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  setSwapParams: TypedContractMethod<
+    [
+      _uniswapV3Router: AddressLike,
+      _usdt0: AddressLike,
+      _wNatUsdt0PoolFeeTierPPM: BigNumberish,
+      _usdt0FXrpPoolFeeTierPPM: BigNumberish,
+      _maxSlippagePPM: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
+
+  supportsInterface: TypedContractMethod<
+    [interfaceId: BytesLike],
+    [boolean],
+    "view"
+  >;
+
+  swapUsdt0ForFAsset: TypedContractMethod<
+    [_xrplAddress: string],
+    [void],
+    "nonpayable"
+  >;
+
+  swapWNatForUsdt0: TypedContractMethod<
+    [_xrplAddress: string],
+    [void],
+    "nonpayable"
+  >;
+
+  transferOwnership: TypedContractMethod<
+    [_newOwner: AddressLike],
+    [void],
     "nonpayable"
   >;
 
@@ -347,36 +1358,295 @@ export interface IMasterAccountController extends BaseContract {
   ): T;
 
   getFunction(
-    nameOrSignature: "encodeCustomInstruction"
+    nameOrSignature: "addAgentVaults"
   ): TypedContractMethod<
-    [_customInstruction: IMasterAccountController.CustomInstructionStruct[]],
-    [bigint],
+    [_agentVaultIds: BigNumberish[], _agentVaultAddresses: AddressLike[]],
+    [void],
     "nonpayable"
   >;
   getFunction(
-    nameOrSignature: "executeTransaction"
+    nameOrSignature: "addVaults"
+  ): TypedContractMethod<
+    [
+      _vaultIds: BigNumberish[],
+      _vaultAddresses: AddressLike[],
+      _vaultTypes: BigNumberish[]
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "addXrplProviderWallets"
+  ): TypedContractMethod<
+    [_xrplProviderWallets: string[]],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "diamondCut"
+  ): TypedContractMethod<
+    [
+      _diamondCut: IDiamond.FacetCutStruct[],
+      _init: AddressLike,
+      _calldata: BytesLike
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "executeDepositAfterMinting"
+  ): TypedContractMethod<
+    [
+      _collateralReservationId: BigNumberish,
+      _proof: IPayment.ProofStruct,
+      _xrplAddress: string
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "executeInstruction"
   ): TypedContractMethod<
     [_proof: IPayment.ProofStruct, _xrplAddress: string],
     [void],
     "payable"
   >;
   getFunction(
-    nameOrSignature: "getPersonalAccount"
-  ): TypedContractMethod<[_xrplOwner: string], [string], "nonpayable">;
+    nameOrSignature: "facetAddress"
+  ): TypedContractMethod<[_functionSelector: BytesLike], [string], "view">;
   getFunction(
-    nameOrSignature: "registerCustomInstruction"
+    nameOrSignature: "facetAddresses"
+  ): TypedContractMethod<[], [string[]], "view">;
+  getFunction(
+    nameOrSignature: "facetFunctionSelectors"
+  ): TypedContractMethod<[_facet: AddressLike], [string[]], "view">;
+  getFunction(
+    nameOrSignature: "facets"
+  ): TypedContractMethod<[], [IDiamondLoupe.FacetStructOutput[]], "view">;
+  getFunction(
+    nameOrSignature: "getAgentVaults"
   ): TypedContractMethod<
-    [_customInstruction: IMasterAccountController.CustomInstructionStruct[]],
-    [bigint],
+    [],
+    [
+      [bigint[], string[]] & {
+        _agentVaultIds: bigint[];
+        _agentVaultAddresses: string[];
+      }
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "getDefaultInstructionFee"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getExecutorInfo"
+  ): TypedContractMethod<
+    [],
+    [[string, bigint] & { _executor: string; _executorFee: bigint }],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "getInstructionFee"
+  ): TypedContractMethod<[_instructionId: BigNumberish], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getPaymentProofValidityDurationSeconds"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getPersonalAccount"
+  ): TypedContractMethod<[_xrplOwner: string], [string], "view">;
+  getFunction(
+    nameOrSignature: "getSourceId"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "getSwapParams"
+  ): TypedContractMethod<
+    [],
+    [
+      [string, string, bigint, bigint, bigint] & {
+        _uniswapV3Router: string;
+        _usdt0: string;
+        _wNatUsdt0PoolFeeTierPPM: bigint;
+        _usdt0FXrpPoolFeeTierPPM: bigint;
+        _maxSlippagePPM: bigint;
+      }
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "getTransactionIdForCollateralReservation"
+  ): TypedContractMethod<
+    [_collateralReservationId: BigNumberish],
+    [string],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "getVaults"
+  ): TypedContractMethod<
+    [],
+    [
+      [bigint[], string[], bigint[]] & {
+        _vaultIds: bigint[];
+        _vaultAddresses: string[];
+        _vaultTypes: bigint[];
+      }
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "getXrplProviderWallets"
+  ): TypedContractMethod<[], [string[]], "view">;
+  getFunction(
+    nameOrSignature: "implementation"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "isTransactionIdUsed"
+  ): TypedContractMethod<[_transactionId: BytesLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "owner"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "removeAgentVaults"
+  ): TypedContractMethod<
+    [_agentVaultIds: BigNumberish[]],
+    [void],
     "nonpayable"
   >;
+  getFunction(
+    nameOrSignature: "removeInstructionFees"
+  ): TypedContractMethod<
+    [_instructionIds: BigNumberish[]],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "removeXrplProviderWallets"
+  ): TypedContractMethod<
+    [_xrplProviderWallets: string[]],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "reserveCollateral"
+  ): TypedContractMethod<
+    [
+      _xrplAddress: string,
+      _paymentReference: BytesLike,
+      _transactionId: BytesLike
+    ],
+    [bigint],
+    "payable"
+  >;
+  getFunction(
+    nameOrSignature: "setDefaultInstructionFee"
+  ): TypedContractMethod<
+    [_defaultInstructionFee: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setExecutor"
+  ): TypedContractMethod<[_executor: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setExecutorFee"
+  ): TypedContractMethod<[_executorFee: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setInstructionFees"
+  ): TypedContractMethod<
+    [_instructionIds: BigNumberish[], _fees: BigNumberish[]],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setPaymentProofValidityDuration"
+  ): TypedContractMethod<
+    [_paymentProofValidityDurationSeconds: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setPersonalAccountImplementation"
+  ): TypedContractMethod<[_implementation: AddressLike], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setSwapParams"
+  ): TypedContractMethod<
+    [
+      _uniswapV3Router: AddressLike,
+      _usdt0: AddressLike,
+      _wNatUsdt0PoolFeeTierPPM: BigNumberish,
+      _usdt0FXrpPoolFeeTierPPM: BigNumberish,
+      _maxSlippagePPM: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "supportsInterface"
+  ): TypedContractMethod<[interfaceId: BytesLike], [boolean], "view">;
+  getFunction(
+    nameOrSignature: "swapUsdt0ForFAsset"
+  ): TypedContractMethod<[_xrplAddress: string], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "swapWNatForUsdt0"
+  ): TypedContractMethod<[_xrplAddress: string], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "transferOwnership"
+  ): TypedContractMethod<[_newOwner: AddressLike], [void], "nonpayable">;
 
   getEvent(
-    key: "CustomInstructionRegistered"
+    key: "AgentVaultAdded"
   ): TypedContractEvent<
-    CustomInstructionRegisteredEvent.InputTuple,
-    CustomInstructionRegisteredEvent.OutputTuple,
-    CustomInstructionRegisteredEvent.OutputObject
+    AgentVaultAddedEvent.InputTuple,
+    AgentVaultAddedEvent.OutputTuple,
+    AgentVaultAddedEvent.OutputObject
+  >;
+  getEvent(
+    key: "AgentVaultRemoved"
+  ): TypedContractEvent<
+    AgentVaultRemovedEvent.InputTuple,
+    AgentVaultRemovedEvent.OutputTuple,
+    AgentVaultRemovedEvent.OutputObject
+  >;
+  getEvent(
+    key: "Approved"
+  ): TypedContractEvent<
+    ApprovedEvent.InputTuple,
+    ApprovedEvent.OutputTuple,
+    ApprovedEvent.OutputObject
+  >;
+  getEvent(
+    key: "Claimed"
+  ): TypedContractEvent<
+    ClaimedEvent.InputTuple,
+    ClaimedEvent.OutputTuple,
+    ClaimedEvent.OutputObject
+  >;
+  getEvent(
+    key: "CollateralReserved"
+  ): TypedContractEvent<
+    CollateralReservedEvent.InputTuple,
+    CollateralReservedEvent.OutputTuple,
+    CollateralReservedEvent.OutputObject
+  >;
+  getEvent(
+    key: "DefaultInstructionFeeSet"
+  ): TypedContractEvent<
+    DefaultInstructionFeeSetEvent.InputTuple,
+    DefaultInstructionFeeSetEvent.OutputTuple,
+    DefaultInstructionFeeSetEvent.OutputObject
+  >;
+  getEvent(
+    key: "Deposited"
+  ): TypedContractEvent<
+    DepositedEvent.InputTuple,
+    DepositedEvent.OutputTuple,
+    DepositedEvent.OutputObject
+  >;
+  getEvent(
+    key: "DiamondCut"
+  ): TypedContractEvent<
+    DiamondCutEvent.InputTuple,
+    DiamondCutEvent.OutputTuple,
+    DiamondCutEvent.OutputObject
   >;
   getEvent(
     key: "ExecutorFeeSet"
@@ -386,6 +1656,27 @@ export interface IMasterAccountController extends BaseContract {
     ExecutorFeeSetEvent.OutputObject
   >;
   getEvent(
+    key: "ExecutorSet"
+  ): TypedContractEvent<
+    ExecutorSetEvent.InputTuple,
+    ExecutorSetEvent.OutputTuple,
+    ExecutorSetEvent.OutputObject
+  >;
+  getEvent(
+    key: "FXrpRedeemed"
+  ): TypedContractEvent<
+    FXrpRedeemedEvent.InputTuple,
+    FXrpRedeemedEvent.OutputTuple,
+    FXrpRedeemedEvent.OutputObject
+  >;
+  getEvent(
+    key: "FXrpTransferred"
+  ): TypedContractEvent<
+    FXrpTransferredEvent.InputTuple,
+    FXrpTransferredEvent.OutputTuple,
+    FXrpTransferredEvent.OutputObject
+  >;
+  getEvent(
     key: "InstructionExecuted"
   ): TypedContractEvent<
     InstructionExecutedEvent.InputTuple,
@@ -393,11 +1684,32 @@ export interface IMasterAccountController extends BaseContract {
     InstructionExecutedEvent.OutputObject
   >;
   getEvent(
-    key: "OperatorExecutionWindowSecondsSet"
+    key: "InstructionFeeRemoved"
   ): TypedContractEvent<
-    OperatorExecutionWindowSecondsSetEvent.InputTuple,
-    OperatorExecutionWindowSecondsSetEvent.OutputTuple,
-    OperatorExecutionWindowSecondsSetEvent.OutputObject
+    InstructionFeeRemovedEvent.InputTuple,
+    InstructionFeeRemovedEvent.OutputTuple,
+    InstructionFeeRemovedEvent.OutputObject
+  >;
+  getEvent(
+    key: "InstructionFeeSet"
+  ): TypedContractEvent<
+    InstructionFeeSetEvent.InputTuple,
+    InstructionFeeSetEvent.OutputTuple,
+    InstructionFeeSetEvent.OutputObject
+  >;
+  getEvent(
+    key: "OwnershipTransferred"
+  ): TypedContractEvent<
+    OwnershipTransferredEvent.InputTuple,
+    OwnershipTransferredEvent.OutputTuple,
+    OwnershipTransferredEvent.OutputObject
+  >;
+  getEvent(
+    key: "PaymentProofValidityDurationSecondsSet"
+  ): TypedContractEvent<
+    PaymentProofValidityDurationSecondsSetEvent.InputTuple,
+    PaymentProofValidityDurationSecondsSetEvent.OutputTuple,
+    PaymentProofValidityDurationSecondsSetEvent.OutputObject
   >;
   getEvent(
     key: "PersonalAccountCreated"
@@ -413,17 +1725,150 @@ export interface IMasterAccountController extends BaseContract {
     PersonalAccountImplementationSetEvent.OutputTuple,
     PersonalAccountImplementationSetEvent.OutputObject
   >;
+  getEvent(
+    key: "RedeemRequested"
+  ): TypedContractEvent<
+    RedeemRequestedEvent.InputTuple,
+    RedeemRequestedEvent.OutputTuple,
+    RedeemRequestedEvent.OutputObject
+  >;
+  getEvent(
+    key: "Redeemed"
+  ): TypedContractEvent<
+    RedeemedEvent.InputTuple,
+    RedeemedEvent.OutputTuple,
+    RedeemedEvent.OutputObject
+  >;
+  getEvent(
+    key: "SwapExecuted"
+  ): TypedContractEvent<
+    SwapExecutedEvent.InputTuple,
+    SwapExecutedEvent.OutputTuple,
+    SwapExecutedEvent.OutputObject
+  >;
+  getEvent(
+    key: "SwapParamsSet"
+  ): TypedContractEvent<
+    SwapParamsSetEvent.InputTuple,
+    SwapParamsSetEvent.OutputTuple,
+    SwapParamsSetEvent.OutputObject
+  >;
+  getEvent(
+    key: "VaultAdded"
+  ): TypedContractEvent<
+    VaultAddedEvent.InputTuple,
+    VaultAddedEvent.OutputTuple,
+    VaultAddedEvent.OutputObject
+  >;
+  getEvent(
+    key: "WithdrawalClaimed"
+  ): TypedContractEvent<
+    WithdrawalClaimedEvent.InputTuple,
+    WithdrawalClaimedEvent.OutputTuple,
+    WithdrawalClaimedEvent.OutputObject
+  >;
+  getEvent(
+    key: "XrplProviderWalletAdded"
+  ): TypedContractEvent<
+    XrplProviderWalletAddedEvent.InputTuple,
+    XrplProviderWalletAddedEvent.OutputTuple,
+    XrplProviderWalletAddedEvent.OutputObject
+  >;
+  getEvent(
+    key: "XrplProviderWalletRemoved"
+  ): TypedContractEvent<
+    XrplProviderWalletRemovedEvent.InputTuple,
+    XrplProviderWalletRemovedEvent.OutputTuple,
+    XrplProviderWalletRemovedEvent.OutputObject
+  >;
 
   filters: {
-    "CustomInstructionRegistered(uint256)": TypedContractEvent<
-      CustomInstructionRegisteredEvent.InputTuple,
-      CustomInstructionRegisteredEvent.OutputTuple,
-      CustomInstructionRegisteredEvent.OutputObject
+    "AgentVaultAdded(uint256,address)": TypedContractEvent<
+      AgentVaultAddedEvent.InputTuple,
+      AgentVaultAddedEvent.OutputTuple,
+      AgentVaultAddedEvent.OutputObject
     >;
-    CustomInstructionRegistered: TypedContractEvent<
-      CustomInstructionRegisteredEvent.InputTuple,
-      CustomInstructionRegisteredEvent.OutputTuple,
-      CustomInstructionRegisteredEvent.OutputObject
+    AgentVaultAdded: TypedContractEvent<
+      AgentVaultAddedEvent.InputTuple,
+      AgentVaultAddedEvent.OutputTuple,
+      AgentVaultAddedEvent.OutputObject
+    >;
+
+    "AgentVaultRemoved(uint256,address)": TypedContractEvent<
+      AgentVaultRemovedEvent.InputTuple,
+      AgentVaultRemovedEvent.OutputTuple,
+      AgentVaultRemovedEvent.OutputObject
+    >;
+    AgentVaultRemoved: TypedContractEvent<
+      AgentVaultRemovedEvent.InputTuple,
+      AgentVaultRemovedEvent.OutputTuple,
+      AgentVaultRemovedEvent.OutputObject
+    >;
+
+    "Approved(address,address,address,uint256)": TypedContractEvent<
+      ApprovedEvent.InputTuple,
+      ApprovedEvent.OutputTuple,
+      ApprovedEvent.OutputObject
+    >;
+    Approved: TypedContractEvent<
+      ApprovedEvent.InputTuple,
+      ApprovedEvent.OutputTuple,
+      ApprovedEvent.OutputObject
+    >;
+
+    "Claimed(address,address,uint256,uint256,uint256,uint256,uint256)": TypedContractEvent<
+      ClaimedEvent.InputTuple,
+      ClaimedEvent.OutputTuple,
+      ClaimedEvent.OutputObject
+    >;
+    Claimed: TypedContractEvent<
+      ClaimedEvent.InputTuple,
+      ClaimedEvent.OutputTuple,
+      ClaimedEvent.OutputObject
+    >;
+
+    "CollateralReserved(address,bytes32,bytes32,string,uint256,address,uint256,address,uint256)": TypedContractEvent<
+      CollateralReservedEvent.InputTuple,
+      CollateralReservedEvent.OutputTuple,
+      CollateralReservedEvent.OutputObject
+    >;
+    CollateralReserved: TypedContractEvent<
+      CollateralReservedEvent.InputTuple,
+      CollateralReservedEvent.OutputTuple,
+      CollateralReservedEvent.OutputObject
+    >;
+
+    "DefaultInstructionFeeSet(uint256)": TypedContractEvent<
+      DefaultInstructionFeeSetEvent.InputTuple,
+      DefaultInstructionFeeSetEvent.OutputTuple,
+      DefaultInstructionFeeSetEvent.OutputObject
+    >;
+    DefaultInstructionFeeSet: TypedContractEvent<
+      DefaultInstructionFeeSetEvent.InputTuple,
+      DefaultInstructionFeeSetEvent.OutputTuple,
+      DefaultInstructionFeeSetEvent.OutputObject
+    >;
+
+    "Deposited(address,address,uint256,uint256)": TypedContractEvent<
+      DepositedEvent.InputTuple,
+      DepositedEvent.OutputTuple,
+      DepositedEvent.OutputObject
+    >;
+    Deposited: TypedContractEvent<
+      DepositedEvent.InputTuple,
+      DepositedEvent.OutputTuple,
+      DepositedEvent.OutputObject
+    >;
+
+    "DiamondCut(tuple[],address,bytes)": TypedContractEvent<
+      DiamondCutEvent.InputTuple,
+      DiamondCutEvent.OutputTuple,
+      DiamondCutEvent.OutputObject
+    >;
+    DiamondCut: TypedContractEvent<
+      DiamondCutEvent.InputTuple,
+      DiamondCutEvent.OutputTuple,
+      DiamondCutEvent.OutputObject
     >;
 
     "ExecutorFeeSet(uint256)": TypedContractEvent<
@@ -437,7 +1882,40 @@ export interface IMasterAccountController extends BaseContract {
       ExecutorFeeSetEvent.OutputObject
     >;
 
-    "InstructionExecuted(address,string,uint256,uint256,bytes32)": TypedContractEvent<
+    "ExecutorSet(address)": TypedContractEvent<
+      ExecutorSetEvent.InputTuple,
+      ExecutorSetEvent.OutputTuple,
+      ExecutorSetEvent.OutputObject
+    >;
+    ExecutorSet: TypedContractEvent<
+      ExecutorSetEvent.InputTuple,
+      ExecutorSetEvent.OutputTuple,
+      ExecutorSetEvent.OutputObject
+    >;
+
+    "FXrpRedeemed(address,uint256,uint256,address,uint256)": TypedContractEvent<
+      FXrpRedeemedEvent.InputTuple,
+      FXrpRedeemedEvent.OutputTuple,
+      FXrpRedeemedEvent.OutputObject
+    >;
+    FXrpRedeemed: TypedContractEvent<
+      FXrpRedeemedEvent.InputTuple,
+      FXrpRedeemedEvent.OutputTuple,
+      FXrpRedeemedEvent.OutputObject
+    >;
+
+    "FXrpTransferred(address,address,uint256)": TypedContractEvent<
+      FXrpTransferredEvent.InputTuple,
+      FXrpTransferredEvent.OutputTuple,
+      FXrpTransferredEvent.OutputObject
+    >;
+    FXrpTransferred: TypedContractEvent<
+      FXrpTransferredEvent.InputTuple,
+      FXrpTransferredEvent.OutputTuple,
+      FXrpTransferredEvent.OutputObject
+    >;
+
+    "InstructionExecuted(address,bytes32,bytes32,string,uint256)": TypedContractEvent<
       InstructionExecutedEvent.InputTuple,
       InstructionExecutedEvent.OutputTuple,
       InstructionExecutedEvent.OutputObject
@@ -448,18 +1926,51 @@ export interface IMasterAccountController extends BaseContract {
       InstructionExecutedEvent.OutputObject
     >;
 
-    "OperatorExecutionWindowSecondsSet(uint256)": TypedContractEvent<
-      OperatorExecutionWindowSecondsSetEvent.InputTuple,
-      OperatorExecutionWindowSecondsSetEvent.OutputTuple,
-      OperatorExecutionWindowSecondsSetEvent.OutputObject
+    "InstructionFeeRemoved(uint256)": TypedContractEvent<
+      InstructionFeeRemovedEvent.InputTuple,
+      InstructionFeeRemovedEvent.OutputTuple,
+      InstructionFeeRemovedEvent.OutputObject
     >;
-    OperatorExecutionWindowSecondsSet: TypedContractEvent<
-      OperatorExecutionWindowSecondsSetEvent.InputTuple,
-      OperatorExecutionWindowSecondsSetEvent.OutputTuple,
-      OperatorExecutionWindowSecondsSetEvent.OutputObject
+    InstructionFeeRemoved: TypedContractEvent<
+      InstructionFeeRemovedEvent.InputTuple,
+      InstructionFeeRemovedEvent.OutputTuple,
+      InstructionFeeRemovedEvent.OutputObject
     >;
 
-    "PersonalAccountCreated(string,address)": TypedContractEvent<
+    "InstructionFeeSet(uint256,uint256)": TypedContractEvent<
+      InstructionFeeSetEvent.InputTuple,
+      InstructionFeeSetEvent.OutputTuple,
+      InstructionFeeSetEvent.OutputObject
+    >;
+    InstructionFeeSet: TypedContractEvent<
+      InstructionFeeSetEvent.InputTuple,
+      InstructionFeeSetEvent.OutputTuple,
+      InstructionFeeSetEvent.OutputObject
+    >;
+
+    "OwnershipTransferred(address,address)": TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
+    >;
+    OwnershipTransferred: TypedContractEvent<
+      OwnershipTransferredEvent.InputTuple,
+      OwnershipTransferredEvent.OutputTuple,
+      OwnershipTransferredEvent.OutputObject
+    >;
+
+    "PaymentProofValidityDurationSecondsSet(uint256)": TypedContractEvent<
+      PaymentProofValidityDurationSecondsSetEvent.InputTuple,
+      PaymentProofValidityDurationSecondsSetEvent.OutputTuple,
+      PaymentProofValidityDurationSecondsSetEvent.OutputObject
+    >;
+    PaymentProofValidityDurationSecondsSet: TypedContractEvent<
+      PaymentProofValidityDurationSecondsSetEvent.InputTuple,
+      PaymentProofValidityDurationSecondsSetEvent.OutputTuple,
+      PaymentProofValidityDurationSecondsSetEvent.OutputObject
+    >;
+
+    "PersonalAccountCreated(address,string)": TypedContractEvent<
       PersonalAccountCreatedEvent.InputTuple,
       PersonalAccountCreatedEvent.OutputTuple,
       PersonalAccountCreatedEvent.OutputObject
@@ -479,6 +1990,94 @@ export interface IMasterAccountController extends BaseContract {
       PersonalAccountImplementationSetEvent.InputTuple,
       PersonalAccountImplementationSetEvent.OutputTuple,
       PersonalAccountImplementationSetEvent.OutputObject
+    >;
+
+    "RedeemRequested(address,address,uint256,uint256,uint256)": TypedContractEvent<
+      RedeemRequestedEvent.InputTuple,
+      RedeemRequestedEvent.OutputTuple,
+      RedeemRequestedEvent.OutputObject
+    >;
+    RedeemRequested: TypedContractEvent<
+      RedeemRequestedEvent.InputTuple,
+      RedeemRequestedEvent.OutputTuple,
+      RedeemRequestedEvent.OutputObject
+    >;
+
+    "Redeemed(address,address,uint256,uint256)": TypedContractEvent<
+      RedeemedEvent.InputTuple,
+      RedeemedEvent.OutputTuple,
+      RedeemedEvent.OutputObject
+    >;
+    Redeemed: TypedContractEvent<
+      RedeemedEvent.InputTuple,
+      RedeemedEvent.OutputTuple,
+      RedeemedEvent.OutputObject
+    >;
+
+    "SwapExecuted(address,address,address,string,uint256,uint256)": TypedContractEvent<
+      SwapExecutedEvent.InputTuple,
+      SwapExecutedEvent.OutputTuple,
+      SwapExecutedEvent.OutputObject
+    >;
+    SwapExecuted: TypedContractEvent<
+      SwapExecutedEvent.InputTuple,
+      SwapExecutedEvent.OutputTuple,
+      SwapExecutedEvent.OutputObject
+    >;
+
+    "SwapParamsSet(address,address,uint24,uint24,uint24)": TypedContractEvent<
+      SwapParamsSetEvent.InputTuple,
+      SwapParamsSetEvent.OutputTuple,
+      SwapParamsSetEvent.OutputObject
+    >;
+    SwapParamsSet: TypedContractEvent<
+      SwapParamsSetEvent.InputTuple,
+      SwapParamsSetEvent.OutputTuple,
+      SwapParamsSetEvent.OutputObject
+    >;
+
+    "VaultAdded(uint256,address,uint8)": TypedContractEvent<
+      VaultAddedEvent.InputTuple,
+      VaultAddedEvent.OutputTuple,
+      VaultAddedEvent.OutputObject
+    >;
+    VaultAdded: TypedContractEvent<
+      VaultAddedEvent.InputTuple,
+      VaultAddedEvent.OutputTuple,
+      VaultAddedEvent.OutputObject
+    >;
+
+    "WithdrawalClaimed(address,address,uint256,uint256)": TypedContractEvent<
+      WithdrawalClaimedEvent.InputTuple,
+      WithdrawalClaimedEvent.OutputTuple,
+      WithdrawalClaimedEvent.OutputObject
+    >;
+    WithdrawalClaimed: TypedContractEvent<
+      WithdrawalClaimedEvent.InputTuple,
+      WithdrawalClaimedEvent.OutputTuple,
+      WithdrawalClaimedEvent.OutputObject
+    >;
+
+    "XrplProviderWalletAdded(string)": TypedContractEvent<
+      XrplProviderWalletAddedEvent.InputTuple,
+      XrplProviderWalletAddedEvent.OutputTuple,
+      XrplProviderWalletAddedEvent.OutputObject
+    >;
+    XrplProviderWalletAdded: TypedContractEvent<
+      XrplProviderWalletAddedEvent.InputTuple,
+      XrplProviderWalletAddedEvent.OutputTuple,
+      XrplProviderWalletAddedEvent.OutputObject
+    >;
+
+    "XrplProviderWalletRemoved(string)": TypedContractEvent<
+      XrplProviderWalletRemovedEvent.InputTuple,
+      XrplProviderWalletRemovedEvent.OutputTuple,
+      XrplProviderWalletRemovedEvent.OutputObject
+    >;
+    XrplProviderWalletRemoved: TypedContractEvent<
+      XrplProviderWalletRemovedEvent.InputTuple,
+      XrplProviderWalletRemovedEvent.OutputTuple,
+      XrplProviderWalletRemovedEvent.OutputObject
     >;
   };
 }

@@ -129,21 +129,32 @@ export const EVENTS = {
     SETTINGS_UPDATED: "SettingsUpdated",
     CUSTODIAN_ADDRESS_UPDATED: "CustodianAddressUpdated"
   },
-  PERSONAL_ACCOUNT: {
-    DEPOSITED: 'Deposited',
-    WITHDRAWN: 'Withdrawn',
-    WITHDRAWAL_CLAIMED: 'WithdrawalClaimed',
-    APPROVED: 'Approved',
-    REDEEMED: 'Redeemed',
-    COLLATERAL_RESERVED: 'CollateralReserved'
-  },
   MASTER_ACCOUNT_CONTROLLER: {
-    CUSTOM_INSTRUCTION: 'CustomInstruction',
-    PERSONAL_ACCOUNT_IMPLEMENTATION_SET: 'PersonalAccountImplementationSet',
-    OPERATOR_EXECUTION_WINDOW_SECONDS_SET: 'OperatorExecutionWindowSecondsSet',
-    PERSONAL_ACCOUNT_CREATED: 'PersonalAccountCreated',
+    AGENT_VAULT_ADDED: 'AgentVaultAdded',
+    AGENT_VAULT_REMOVED: 'AgentVaultRemoved',
+    VAULT_ADDED: 'VaultAdded',
+    APPROVED: 'Approved',
+    CLAIMED: 'Claimed',
+    COLLATERAL_RESERVED: 'CollateralReserved',
+    DEPOSITED: 'Deposited',
+    REDEEM_REQUESTED: 'RedeemRequested',
+    REDEEMED: 'Redeemed',
+    DEFAULT_INSTRUCTION_FEE_SET: 'DefaultInstructionFeeSet',
     EXECUTOR_FEE_SET: 'ExecutorFeeSet',
-    INSTRUCTION_EXECUTED: 'InstructionExecuted'
+    EXECUTOR_SET: 'ExecutorSet',
+    WITHDRAWAL_CLAIMED: 'WithdrawalClaimed',
+    INSTRUCTION_EXECUTED: 'InstructionExecuted',
+    INSTRUCTION_FEE_REMOVED: 'InstructionFeeRemoved',
+    INSTRUCTION_FEE_SET: 'InstructionFeeSet',
+    OWNERSHIP_TRANSFERRED: 'OwnershipTransferred',
+    PAYMENT_PROOF_VALIDITY_DURATION_SECONDS_SET: 'PaymentProofValidityDurationSecondsSet',
+    PERSONAL_ACCOUNT_CREATED: 'PersonalAccountCreated',
+    SWAP_EXECUTED: 'SwapExecuted',
+    SWAP_PARAMS_SET: 'SwapExecuted',
+    FXRP_REDEEMED: 'FXrpRedeemed',
+    FXRP_TRANSFERRED: 'FXrpTransferred',
+    XRPL_PROVIDER_WALLET_ADDED: 'XrplProviderWalletAdded',
+    XRPL_PROVIDER_WALLET_REMOVED: 'XrplProviderWalletRemoved'
   }
 } as const
 

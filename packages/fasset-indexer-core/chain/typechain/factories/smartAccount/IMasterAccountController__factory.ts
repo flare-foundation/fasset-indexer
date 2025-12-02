@@ -11,43 +11,252 @@ import type {
 const _abi = [
   {
     type: "function",
-    name: "encodeCustomInstruction",
+    name: "addAgentVaults",
     inputs: [
       {
-        name: "_customInstruction",
-        type: "tuple[]",
-        internalType: "struct IMasterAccountController.CustomInstruction[]",
-        components: [
-          {
-            name: "targetContract",
-            type: "address",
-            internalType: "address",
-          },
-          {
-            name: "value",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "data",
-            type: "bytes",
-            internalType: "bytes",
-          },
-        ],
+        name: "_agentVaultIds",
+        type: "uint256[]",
+        internalType: "uint256[]",
       },
-    ],
-    outputs: [
       {
-        name: "",
-        type: "uint256",
-        internalType: "uint256",
+        name: "_agentVaultAddresses",
+        type: "address[]",
+        internalType: "address[]",
       },
     ],
+    outputs: [],
     stateMutability: "nonpayable",
   },
   {
     type: "function",
-    name: "executeTransaction",
+    name: "addVaults",
+    inputs: [
+      {
+        name: "_vaultIds",
+        type: "uint256[]",
+        internalType: "uint256[]",
+      },
+      {
+        name: "_vaultAddresses",
+        type: "address[]",
+        internalType: "address[]",
+      },
+      {
+        name: "_vaultTypes",
+        type: "uint8[]",
+        internalType: "uint8[]",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "addXrplProviderWallets",
+    inputs: [
+      {
+        name: "_xrplProviderWallets",
+        type: "string[]",
+        internalType: "string[]",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "diamondCut",
+    inputs: [
+      {
+        name: "_diamondCut",
+        type: "tuple[]",
+        internalType: "struct IDiamond.FacetCut[]",
+        components: [
+          {
+            name: "facetAddress",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "action",
+            type: "uint8",
+            internalType: "enum IDiamond.FacetCutAction",
+          },
+          {
+            name: "functionSelectors",
+            type: "bytes4[]",
+            internalType: "bytes4[]",
+          },
+        ],
+      },
+      {
+        name: "_init",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "_calldata",
+        type: "bytes",
+        internalType: "bytes",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "executeDepositAfterMinting",
+    inputs: [
+      {
+        name: "_collateralReservationId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "_proof",
+        type: "tuple",
+        internalType: "struct IPayment.Proof",
+        components: [
+          {
+            name: "merkleProof",
+            type: "bytes32[]",
+            internalType: "bytes32[]",
+          },
+          {
+            name: "data",
+            type: "tuple",
+            internalType: "struct IPayment.Response",
+            components: [
+              {
+                name: "attestationType",
+                type: "bytes32",
+                internalType: "bytes32",
+              },
+              {
+                name: "sourceId",
+                type: "bytes32",
+                internalType: "bytes32",
+              },
+              {
+                name: "votingRound",
+                type: "uint64",
+                internalType: "uint64",
+              },
+              {
+                name: "lowestUsedTimestamp",
+                type: "uint64",
+                internalType: "uint64",
+              },
+              {
+                name: "requestBody",
+                type: "tuple",
+                internalType: "struct IPayment.RequestBody",
+                components: [
+                  {
+                    name: "transactionId",
+                    type: "bytes32",
+                    internalType: "bytes32",
+                  },
+                  {
+                    name: "inUtxo",
+                    type: "uint256",
+                    internalType: "uint256",
+                  },
+                  {
+                    name: "utxo",
+                    type: "uint256",
+                    internalType: "uint256",
+                  },
+                ],
+              },
+              {
+                name: "responseBody",
+                type: "tuple",
+                internalType: "struct IPayment.ResponseBody",
+                components: [
+                  {
+                    name: "blockNumber",
+                    type: "uint64",
+                    internalType: "uint64",
+                  },
+                  {
+                    name: "blockTimestamp",
+                    type: "uint64",
+                    internalType: "uint64",
+                  },
+                  {
+                    name: "sourceAddressHash",
+                    type: "bytes32",
+                    internalType: "bytes32",
+                  },
+                  {
+                    name: "sourceAddressesRoot",
+                    type: "bytes32",
+                    internalType: "bytes32",
+                  },
+                  {
+                    name: "receivingAddressHash",
+                    type: "bytes32",
+                    internalType: "bytes32",
+                  },
+                  {
+                    name: "intendedReceivingAddressHash",
+                    type: "bytes32",
+                    internalType: "bytes32",
+                  },
+                  {
+                    name: "spentAmount",
+                    type: "int256",
+                    internalType: "int256",
+                  },
+                  {
+                    name: "intendedSpentAmount",
+                    type: "int256",
+                    internalType: "int256",
+                  },
+                  {
+                    name: "receivedAmount",
+                    type: "int256",
+                    internalType: "int256",
+                  },
+                  {
+                    name: "intendedReceivedAmount",
+                    type: "int256",
+                    internalType: "int256",
+                  },
+                  {
+                    name: "standardPaymentReference",
+                    type: "bytes32",
+                    internalType: "bytes32",
+                  },
+                  {
+                    name: "oneToOne",
+                    type: "bool",
+                    internalType: "bool",
+                  },
+                  {
+                    name: "status",
+                    type: "uint8",
+                    internalType: "uint8",
+                  },
+                ],
+              },
+            ],
+          },
+        ],
+      },
+      {
+        name: "_xrplAddress",
+        type: "string",
+        internalType: "string",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "executeInstruction",
     inputs: [
       {
         name: "_proof",
@@ -193,6 +402,163 @@ const _abi = [
   },
   {
     type: "function",
+    name: "facetAddress",
+    inputs: [
+      {
+        name: "_functionSelector",
+        type: "bytes4",
+        internalType: "bytes4",
+      },
+    ],
+    outputs: [
+      {
+        name: "facetAddress_",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "facetAddresses",
+    inputs: [],
+    outputs: [
+      {
+        name: "facetAddresses_",
+        type: "address[]",
+        internalType: "address[]",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "facetFunctionSelectors",
+    inputs: [
+      {
+        name: "_facet",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    outputs: [
+      {
+        name: "facetFunctionSelectors_",
+        type: "bytes4[]",
+        internalType: "bytes4[]",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "facets",
+    inputs: [],
+    outputs: [
+      {
+        name: "facets_",
+        type: "tuple[]",
+        internalType: "struct IDiamondLoupe.Facet[]",
+        components: [
+          {
+            name: "facetAddress",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "functionSelectors",
+            type: "bytes4[]",
+            internalType: "bytes4[]",
+          },
+        ],
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getAgentVaults",
+    inputs: [],
+    outputs: [
+      {
+        name: "_agentVaultIds",
+        type: "uint256[]",
+        internalType: "uint256[]",
+      },
+      {
+        name: "_agentVaultAddresses",
+        type: "address[]",
+        internalType: "address[]",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getDefaultInstructionFee",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getExecutorInfo",
+    inputs: [],
+    outputs: [
+      {
+        name: "_executor",
+        type: "address",
+        internalType: "address payable",
+      },
+      {
+        name: "_executorFee",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getInstructionFee",
+    inputs: [
+      {
+        name: "_instructionId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getPaymentProofValidityDurationSeconds",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
     name: "getPersonalAccount",
     inputs: [
       {
@@ -205,56 +571,660 @@ const _abi = [
       {
         name: "",
         type: "address",
-        internalType: "contract PersonalAccount",
+        internalType: "address",
       },
     ],
-    stateMutability: "nonpayable",
+    stateMutability: "view",
   },
   {
     type: "function",
-    name: "registerCustomInstruction",
+    name: "getSourceId",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "bytes32",
+        internalType: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getSwapParams",
+    inputs: [],
+    outputs: [
+      {
+        name: "_uniswapV3Router",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "_usdt0",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "_wNatUsdt0PoolFeeTierPPM",
+        type: "uint24",
+        internalType: "uint24",
+      },
+      {
+        name: "_usdt0FXrpPoolFeeTierPPM",
+        type: "uint24",
+        internalType: "uint24",
+      },
+      {
+        name: "_maxSlippagePPM",
+        type: "uint24",
+        internalType: "uint24",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getTransactionIdForCollateralReservation",
     inputs: [
       {
-        name: "_customInstruction",
-        type: "tuple[]",
-        internalType: "struct IMasterAccountController.CustomInstruction[]",
-        components: [
-          {
-            name: "targetContract",
-            type: "address",
-            internalType: "address",
-          },
-          {
-            name: "value",
-            type: "uint256",
-            internalType: "uint256",
-          },
-          {
-            name: "data",
-            type: "bytes",
-            internalType: "bytes",
-          },
-        ],
+        name: "_collateralReservationId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [
+      {
+        name: "_transactionId",
+        type: "bytes32",
+        internalType: "bytes32",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getVaults",
+    inputs: [],
+    outputs: [
+      {
+        name: "_vaultIds",
+        type: "uint256[]",
+        internalType: "uint256[]",
+      },
+      {
+        name: "_vaultAddresses",
+        type: "address[]",
+        internalType: "address[]",
+      },
+      {
+        name: "_vaultTypes",
+        type: "uint8[]",
+        internalType: "uint8[]",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "getXrplProviderWallets",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "string[]",
+        internalType: "string[]",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "implementation",
+    inputs: [],
+    outputs: [
+      {
+        name: "",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "isTransactionIdUsed",
+    inputs: [
+      {
+        name: "_transactionId",
+        type: "bytes32",
+        internalType: "bytes32",
       },
     ],
     outputs: [
       {
         name: "",
+        type: "bool",
+        internalType: "bool",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "owner",
+    inputs: [],
+    outputs: [
+      {
+        name: "owner_",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "removeAgentVaults",
+    inputs: [
+      {
+        name: "_agentVaultIds",
+        type: "uint256[]",
+        internalType: "uint256[]",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "removeInstructionFees",
+    inputs: [
+      {
+        name: "_instructionIds",
+        type: "uint256[]",
+        internalType: "uint256[]",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "removeXrplProviderWallets",
+    inputs: [
+      {
+        name: "_xrplProviderWallets",
+        type: "string[]",
+        internalType: "string[]",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "reserveCollateral",
+    inputs: [
+      {
+        name: "_xrplAddress",
+        type: "string",
+        internalType: "string",
+      },
+      {
+        name: "_paymentReference",
+        type: "bytes32",
+        internalType: "bytes32",
+      },
+      {
+        name: "_transactionId",
+        type: "bytes32",
+        internalType: "bytes32",
+      },
+    ],
+    outputs: [
+      {
+        name: "_collateralReservationId",
         type: "uint256",
         internalType: "uint256",
       },
     ],
+    stateMutability: "payable",
+  },
+  {
+    type: "function",
+    name: "setDefaultInstructionFee",
+    inputs: [
+      {
+        name: "_defaultInstructionFee",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "setExecutor",
+    inputs: [
+      {
+        name: "_executor",
+        type: "address",
+        internalType: "address payable",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "setExecutorFee",
+    inputs: [
+      {
+        name: "_executorFee",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "setInstructionFees",
+    inputs: [
+      {
+        name: "_instructionIds",
+        type: "uint256[]",
+        internalType: "uint256[]",
+      },
+      {
+        name: "_fees",
+        type: "uint256[]",
+        internalType: "uint256[]",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "setPaymentProofValidityDuration",
+    inputs: [
+      {
+        name: "_paymentProofValidityDurationSeconds",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "setPersonalAccountImplementation",
+    inputs: [
+      {
+        name: "_implementation",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "setSwapParams",
+    inputs: [
+      {
+        name: "_uniswapV3Router",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "_usdt0",
+        type: "address",
+        internalType: "address",
+      },
+      {
+        name: "_wNatUsdt0PoolFeeTierPPM",
+        type: "uint24",
+        internalType: "uint24",
+      },
+      {
+        name: "_usdt0FXrpPoolFeeTierPPM",
+        type: "uint24",
+        internalType: "uint24",
+      },
+      {
+        name: "_maxSlippagePPM",
+        type: "uint24",
+        internalType: "uint24",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "supportsInterface",
+    inputs: [
+      {
+        name: "interfaceId",
+        type: "bytes4",
+        internalType: "bytes4",
+      },
+    ],
+    outputs: [
+      {
+        name: "",
+        type: "bool",
+        internalType: "bool",
+      },
+    ],
+    stateMutability: "view",
+  },
+  {
+    type: "function",
+    name: "swapUsdt0ForFAsset",
+    inputs: [
+      {
+        name: "_xrplAddress",
+        type: "string",
+        internalType: "string",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "swapWNatForUsdt0",
+    inputs: [
+      {
+        name: "_xrplAddress",
+        type: "string",
+        internalType: "string",
+      },
+    ],
+    outputs: [],
+    stateMutability: "nonpayable",
+  },
+  {
+    type: "function",
+    name: "transferOwnership",
+    inputs: [
+      {
+        name: "_newOwner",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+    outputs: [],
     stateMutability: "nonpayable",
   },
   {
     type: "event",
-    name: "CustomInstructionRegistered",
+    name: "AgentVaultAdded",
     inputs: [
       {
-        name: "callHash",
+        name: "agentVaultId",
+        type: "uint256",
+        indexed: true,
+        internalType: "uint256",
+      },
+      {
+        name: "agentVaultAddress",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "AgentVaultRemoved",
+    inputs: [
+      {
+        name: "agentVaultId",
+        type: "uint256",
+        indexed: true,
+        internalType: "uint256",
+      },
+      {
+        name: "agentVaultAddress",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "Approved",
+    inputs: [
+      {
+        name: "personalAccount",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "fxrp",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+      {
+        name: "vault",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+      {
+        name: "amount",
         type: "uint256",
         indexed: false,
         internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "Claimed",
+    inputs: [
+      {
+        name: "personalAccount",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "vault",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "year",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "month",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "day",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "shares",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "CollateralReserved",
+    inputs: [
+      {
+        name: "personalAccount",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "transactionId",
+        type: "bytes32",
+        indexed: true,
+        internalType: "bytes32",
+      },
+      {
+        name: "paymentReference",
+        type: "bytes32",
+        indexed: true,
+        internalType: "bytes32",
+      },
+      {
+        name: "xrplOwner",
+        type: "string",
+        indexed: false,
+        internalType: "string",
+      },
+      {
+        name: "collateralReservationId",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "agentVault",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+      {
+        name: "lots",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "executor",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+      {
+        name: "executorFee",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "DefaultInstructionFeeSet",
+    inputs: [
+      {
+        name: "defaultInstructionFee",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "Deposited",
+    inputs: [
+      {
+        name: "personalAccount",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "vault",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "shares",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "DiamondCut",
+    inputs: [
+      {
+        name: "_diamondCut",
+        type: "tuple[]",
+        indexed: false,
+        internalType: "struct IDiamond.FacetCut[]",
+        components: [
+          {
+            name: "facetAddress",
+            type: "address",
+            internalType: "address",
+          },
+          {
+            name: "action",
+            type: "uint8",
+            internalType: "enum IDiamond.FacetCutAction",
+          },
+          {
+            name: "functionSelectors",
+            type: "bytes4[]",
+            internalType: "bytes4[]",
+          },
+        ],
+      },
+      {
+        name: "_init",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+      {
+        name: "_calldata",
+        type: "bytes",
+        indexed: false,
+        internalType: "bytes",
       },
     ],
     anonymous: false,
@@ -274,6 +1244,81 @@ const _abi = [
   },
   {
     type: "event",
+    name: "ExecutorSet",
+    inputs: [
+      {
+        name: "executor",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "FXrpRedeemed",
+    inputs: [
+      {
+        name: "personalAccount",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "lots",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "executor",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+      {
+        name: "executorFee",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "FXrpTransferred",
+    inputs: [
+      {
+        name: "personalAccount",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "to",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+      {
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
     name: "InstructionExecuted",
     inputs: [
       {
@@ -283,11 +1328,49 @@ const _abi = [
         internalType: "address",
       },
       {
+        name: "transactionId",
+        type: "bytes32",
+        indexed: true,
+        internalType: "bytes32",
+      },
+      {
+        name: "paymentReference",
+        type: "bytes32",
+        indexed: true,
+        internalType: "bytes32",
+      },
+      {
         name: "xrplOwner",
         type: "string",
-        indexed: true,
+        indexed: false,
         internalType: "string",
       },
+      {
+        name: "instructionId",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "InstructionFeeRemoved",
+    inputs: [
+      {
+        name: "instructionId",
+        type: "uint256",
+        indexed: true,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "InstructionFeeSet",
+    inputs: [
       {
         name: "instructionId",
         type: "uint256",
@@ -295,26 +1378,39 @@ const _abi = [
         internalType: "uint256",
       },
       {
-        name: "paymentReference",
+        name: "instructionFee",
         type: "uint256",
         indexed: false,
         internalType: "uint256",
-      },
-      {
-        name: "transactionId",
-        type: "bytes32",
-        indexed: false,
-        internalType: "bytes32",
       },
     ],
     anonymous: false,
   },
   {
     type: "event",
-    name: "OperatorExecutionWindowSecondsSet",
+    name: "OwnershipTransferred",
     inputs: [
       {
-        name: "newWindowSeconds",
+        name: "previousOwner",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "newOwner",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "PaymentProofValidityDurationSecondsSet",
+    inputs: [
+      {
+        name: "paymentProofValidityDurationSeconds",
         type: "uint256",
         indexed: false,
         internalType: "uint256",
@@ -327,16 +1423,16 @@ const _abi = [
     name: "PersonalAccountCreated",
     inputs: [
       {
+        name: "personalAccount",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
         name: "xrplOwner",
         type: "string",
         indexed: false,
         internalType: "string",
-      },
-      {
-        name: "personalAccount",
-        type: "address",
-        indexed: false,
-        internalType: "address",
       },
     ],
     anonymous: false,
@@ -355,18 +1451,330 @@ const _abi = [
     anonymous: false,
   },
   {
+    type: "event",
+    name: "RedeemRequested",
+    inputs: [
+      {
+        name: "personalAccount",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "vault",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "shares",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "claimableEpoch",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "Redeemed",
+    inputs: [
+      {
+        name: "personalAccount",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "vault",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "shares",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "SwapExecuted",
+    inputs: [
+      {
+        name: "personalAccount",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "tokenIn",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "tokenOut",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "xrplOwner",
+        type: "string",
+        indexed: false,
+        internalType: "string",
+      },
+      {
+        name: "amountIn",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "amountOut",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "SwapParamsSet",
+    inputs: [
+      {
+        name: "uniswapV3Router",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+      {
+        name: "usdt0",
+        type: "address",
+        indexed: false,
+        internalType: "address",
+      },
+      {
+        name: "wNatUsdt0PoolFeeTierPPM",
+        type: "uint24",
+        indexed: false,
+        internalType: "uint24",
+      },
+      {
+        name: "usdt0FXrpPoolFeeTierPPM",
+        type: "uint24",
+        indexed: false,
+        internalType: "uint24",
+      },
+      {
+        name: "maxSlippagePPM",
+        type: "uint24",
+        indexed: false,
+        internalType: "uint24",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "VaultAdded",
+    inputs: [
+      {
+        name: "vaultId",
+        type: "uint256",
+        indexed: true,
+        internalType: "uint256",
+      },
+      {
+        name: "vaultAddress",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "vaultType",
+        type: "uint8",
+        indexed: true,
+        internalType: "uint8",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "WithdrawalClaimed",
+    inputs: [
+      {
+        name: "personalAccount",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "vault",
+        type: "address",
+        indexed: true,
+        internalType: "address",
+      },
+      {
+        name: "period",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+      {
+        name: "amount",
+        type: "uint256",
+        indexed: false,
+        internalType: "uint256",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "XrplProviderWalletAdded",
+    inputs: [
+      {
+        name: "xrplProviderWallet",
+        type: "string",
+        indexed: false,
+        internalType: "string",
+      },
+    ],
+    anonymous: false,
+  },
+  {
+    type: "event",
+    name: "XrplProviderWalletRemoved",
+    inputs: [
+      {
+        name: "xrplProviderWallet",
+        type: "string",
+        indexed: false,
+        internalType: "string",
+      },
+    ],
+    anonymous: false,
+  },
+  {
     type: "error",
-    name: "AmountZero",
+    name: "AddressZero",
     inputs: [],
   },
   {
     type: "error",
-    name: "InvalidAgentVaultAddress",
+    name: "AgentNotAvailable",
+    inputs: [
+      {
+        name: "agentVault",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+  },
+  {
+    type: "error",
+    name: "AgentVaultAddressAlreadyAdded",
+    inputs: [
+      {
+        name: "agentVaultAddress",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+  },
+  {
+    type: "error",
+    name: "AgentVaultAddressZero",
+    inputs: [
+      {
+        name: "index",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+  },
+  {
+    type: "error",
+    name: "AgentVaultIdAlreadyAdded",
+    inputs: [
+      {
+        name: "agentVaultId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+  },
+  {
+    type: "error",
+    name: "AgentVaultIdZero",
+    inputs: [
+      {
+        name: "index",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+  },
+  {
+    type: "error",
+    name: "AgentsVaultsLengthsMismatch",
     inputs: [],
   },
   {
     type: "error",
-    name: "InvalidDepositVault",
+    name: "InstructionFeeNotSet",
+    inputs: [
+      {
+        name: "instructionId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+  },
+  {
+    type: "error",
+    name: "InstructionFeesLengthsMismatch",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "InvalidAgentVault",
+    inputs: [
+      {
+        name: "agentVaultId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+  },
+  {
+    type: "error",
+    name: "InvalidAmount",
     inputs: [],
   },
   {
@@ -381,7 +1789,23 @@ const _abi = [
   },
   {
     type: "error",
-    name: "InvalidInstructionId",
+    name: "InvalidInstruction",
+    inputs: [
+      {
+        name: "instructionType",
+        type: "uint256",
+        internalType: "uint256",
+      },
+      {
+        name: "instructionCommand",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+  },
+  {
+    type: "error",
+    name: "InvalidInstructionFee",
     inputs: [
       {
         name: "instructionId",
@@ -392,12 +1816,39 @@ const _abi = [
   },
   {
     type: "error",
-    name: "InvalidOperatorAddress",
+    name: "InvalidInstructionType",
+    inputs: [
+      {
+        name: "instructionType",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+  },
+  {
+    type: "error",
+    name: "InvalidMaxSlippagePPM",
     inputs: [],
   },
   {
     type: "error",
-    name: "InvalidOperatorExecutionWindowSeconds",
+    name: "InvalidMinter",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "InvalidPaymentAmount",
+    inputs: [
+      {
+        name: "requiredAmount",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+  },
+  {
+    type: "error",
+    name: "InvalidPaymentProofValidityDuration",
     inputs: [],
   },
   {
@@ -407,7 +1858,22 @@ const _abi = [
   },
   {
     type: "error",
+    name: "InvalidPoolFeeTierPPM",
+    inputs: [],
+  },
+  {
+    type: "error",
     name: "InvalidReceivingAddressHash",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "InvalidSourceId",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "InvalidTransactionId",
     inputs: [],
   },
   {
@@ -422,12 +1888,50 @@ const _abi = [
   },
   {
     type: "error",
-    name: "InvalidXrplProviderWallet",
+    name: "InvalidUniswapV3Router",
     inputs: [],
   },
   {
     type: "error",
-    name: "LotsZero",
+    name: "InvalidUsdt0",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "InvalidVaultId",
+    inputs: [
+      {
+        name: "vaultId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+  },
+  {
+    type: "error",
+    name: "InvalidVaultType",
+    inputs: [
+      {
+        name: "vaultType",
+        type: "uint8",
+        internalType: "uint8",
+      },
+    ],
+  },
+  {
+    type: "error",
+    name: "InvalidXrplProviderWallet",
+    inputs: [
+      {
+        name: "xrplProviderWallet",
+        type: "string",
+        internalType: "string",
+      },
+    ],
+  },
+  {
+    type: "error",
+    name: "MintingNotCompleted",
     inputs: [],
   },
   {
@@ -437,18 +1941,94 @@ const _abi = [
   },
   {
     type: "error",
-    name: "OnlyOperatorCanExecute",
+    name: "PaymentProofExpired",
     inputs: [],
   },
   {
     type: "error",
-    name: "RewardEpochIdZero",
-    inputs: [],
+    name: "PersonalAccountNotSuccessfullyDeployed",
+    inputs: [
+      {
+        name: "personalAccountAddress",
+        type: "address",
+        internalType: "address",
+      },
+    ],
   },
   {
     type: "error",
     name: "TransactionAlreadyExecuted",
     inputs: [],
+  },
+  {
+    type: "error",
+    name: "UnknownCollateralReservationId",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "ValueZero",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "VaultAddressAlreadyAdded",
+    inputs: [
+      {
+        name: "vaultAddress",
+        type: "address",
+        internalType: "address",
+      },
+    ],
+  },
+  {
+    type: "error",
+    name: "VaultAddressZero",
+    inputs: [
+      {
+        name: "index",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+  },
+  {
+    type: "error",
+    name: "VaultIdAlreadyAdded",
+    inputs: [
+      {
+        name: "vaultId",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+  },
+  {
+    type: "error",
+    name: "VaultIdZero",
+    inputs: [
+      {
+        name: "index",
+        type: "uint256",
+        internalType: "uint256",
+      },
+    ],
+  },
+  {
+    type: "error",
+    name: "VaultsLengthsMismatch",
+    inputs: [],
+  },
+  {
+    type: "error",
+    name: "XrplProviderWalletAlreadyExists",
+    inputs: [
+      {
+        name: "xrplProviderWallet",
+        type: "string",
+        internalType: "string",
+      },
+    ],
   },
 ] as const;
 

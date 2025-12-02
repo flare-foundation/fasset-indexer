@@ -70,3 +70,7 @@ export { UnderlyingReference as UnderlyingVoutReference } from "./underlying/ref
 export { UnderlyingTransaction } from "./underlying/transaction"
 // building event bound stuff
 export { EventBound, FAssetEventBound } from "./events/_bound"
+
+// personal account
+export * from './personal-account'
+export * from './events/personal-accounts'

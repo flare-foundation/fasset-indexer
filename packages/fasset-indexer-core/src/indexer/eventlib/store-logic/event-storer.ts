@@ -1,28 +1,31 @@
-import * as Entities from '../../orm/entities'
-import * as shared from '../../shared'
-import { findOrCreateEntity } from "../../orm/utils"
-import { isUntrackedAgentVault } from "../utils"
-import { ContractLookup } from "../../context/lookup"
-import { CollateralPoolEventMigration } from "./migrations/collateral-pool-migrations"
-import { AssetManagerEventMigration } from "./migrations/asset-manager-migration"
-import { EVENTS } from '../../config/constants'
+import * as Entities from '../../../orm/entities'
+import * as shared from '../../../shared'
+import { findOrCreateEntity } from "../../../orm/utils"
+import { isUntrackedAgentVault } from "../../utils"
+import { ContractLookup } from "../../../context/lookup"
+import { CollateralPoolEventMigration } from "../migrations/collateral-pool-migrations"
+import { AssetManagerEventMigration } from "../migrations/asset-manager-migration"
+import { SmartAccountsEventStorer } from './smart-accounts'
+import { EVENTS } from '../../../config/constants'
 import type { EntityManager } from "@mikro-orm/knex"
-import type { ORM } from "../../orm/interface"
-import type { Event } from "./types"
-import type * as AssetManager from "../../../chain/typechain/assetManager/IAssetManager__latest"
-import type * as CollateralPool from "../../../chain/typechain/collateralPool/ICollateralPool__latest"
-import type * as CollateralPoolPreUpgrade  from "../../../chain/typechain/collateralPool/ICollateralPool__initial"
-import type * as CoreVaultManager from "../../../chain/typechain/ICoreVaultManager"
-import type * as ERC20 from "../../../chain/typechain/IERC20"
-import type * as PriceChangeEmitter from "../../../chain/typechain/IPriceChangeEmitter"
+import type { ORM } from "../../../orm/interface"
+import type { Event } from "../types"
+import type * as AssetManager from "../../../../chain/typechain/assetManager/IAssetManager__latest"
+import type * as CollateralPool from "../../../../chain/typechain/collateralPool/ICollateralPool__latest"
+import type * as CollateralPoolPreUpgrade  from "../../../../chain/typechain/collateralPool/ICollateralPool__initial"
+import type * as CoreVaultManager from "../../../../chain/typechain/ICoreVaultManager"
+import type * as ERC20 from "../../../../chain/typechain/IERC20"
+import type * as PriceChangeEmitter from "../../../../chain/typechain/IPriceChangeEmitter"
 
 
 export class EventStorer {
+  private smartAccounts: SmartAccountsEventStorer
   oldCollateralTypeAddedTopic: string
   oldAgentVaultCreatedTopic: string
   oldEmergencySystemPauseTopic: string
 
   constructor(readonly orm: ORM, public readonly lookup: ContractLookup) {
+    this.smartAccounts = new SmartAccountsEventStorer()
     const oldIface = this.lookup.interfaces.assetManagerInterface[0]
     this.oldCollateralTypeAddedTopic = this.lookup.getEventTopics(EVENTS.ASSET_MANAGER.COLLATERAL_TYPE_ADDED, [oldIface])[0]
     this.oldAgentVaultCreatedTopic = this.lookup.getEventTopics(EVENTS.ASSET_MANAGER.AGENT_VAULT_CREATED, [oldIface])[0]
@@ -46,6 +49,9 @@ export class EventStorer {
   }
 
   protected async _processEvent(em: EntityManager, log: Event, evmLog: Entities.EvmLog): Promise<boolean> {
+    if (log.sourcename == 'MASTER_ACCOUNT_CONTROLLER') {
+      return this.smartAccounts.processEvent(em, log, evmLog)
+    }
     switch (log.name) {
       case EVENTS.ASSET_MANAGER.CONTRACT_CHANGED: {
         await this.onAssetManagerContractChanged(em, evmLog, log.args)

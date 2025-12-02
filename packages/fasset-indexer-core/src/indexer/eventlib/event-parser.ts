@@ -20,7 +20,7 @@ export class EventParser {
     const topic = log.topics[0]
     const iface = this.topicToIfaces.get(topic)
     if (iface == null || iface.length == 0) return null
-    const source = await this.validLogSource(iface, log.address)
+    const source = await this.logSource(iface, log.address)
     if (source == null) return null
     const parsed = this.context.parseLog(iface[0], log)
     if (parsed == null) return null
@@ -38,7 +38,7 @@ export class EventParser {
     }
   }
 
-  async validLogSource(ifaces: FAssetIface[], source: string): Promise<FAssetIface | null> {
+  async logSource(ifaces: FAssetIface[], source: string): Promise<FAssetIface | null> {
     if (ifaces.includes('ASSET_MANAGER')) {
       if (this.context.isAssetManager(source)) {
         return 'ASSET_MANAGER'
