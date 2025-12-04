@@ -53,6 +53,7 @@ import type { EmergencyPauseTriggeredEvent } from "../../../chain/typechain/asse
 import type { EnteredEvent, ExitedEvent } from "../../../chain/typechain/collateralPool/ICollateralPool__initial"
 import type { TransferEvent } from "../../../chain/typechain/IERC20"
 import type { SettingsUpdatedEvent } from "../../../chain/typechain/ICoreVaultManager"
+import type { PersonalAccountCreatedEvent } from "../../../chain/typechain/smartAccount/IMasterAccountController"
 
 
 export type EventNameToEventArgs = {
@@ -108,4 +109,5 @@ export type EventNameToEventArgs = {
   [EVENTS.COLLATERAL_POOL.CP_FEE_DEBT_CHANGED]: CPFeeDebtChangedEvent.OutputTuple
   [EVENTS.COLLATERAL_POOL.CP_FEE_DEBT_PAID]: CPFeesWithdrawnEvent.OutputTuple
   [EVENTS.COLLATERAL_POOL.CP_PAID_OUT]: CPPaidOutEvent.OutputTuple
+  [EVENTS.MASTER_ACCOUNT_CONTROLLER.PERSONAL_ACCOUNT_CREATED]: PersonalAccountCreatedEvent.OutputTuple
 }

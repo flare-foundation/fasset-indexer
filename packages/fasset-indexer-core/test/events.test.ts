@@ -91,7 +91,7 @@ describe("FAsset evm events", () => {
       })
       await em.persistAndFlush(assetManagerSettings)
       const assetManagerSettingsChanged = await fixture.generateEvent(
-        EVENTS.ASSET_MANAGER.SETTING_CHANGED, assetManager, ['lotSizeAMG'])
+        EVENTS.ASSET_MANAGER.SETTING_CHANGED, assetManager, 'ASSET_MANAGER', ['lotSizeAMG'])
       await storer.processEventUnsafe(em, assetManagerSettingsChanged)
       assetManagerSettings = await em.findOneOrFail(Entities.AssetManagerSettings, { fasset: FAssetType.FXRP })
       expect(assetManagerSettings).to.exist
@@ -824,7 +824,22 @@ describe("FAsset evm events", () => {
     })
   })
 
-  describe("edge cases", async () => {
+  describe("smart accounts", () => {
+
+    it("should be able to store new created smart account personal account", async () => {
+      const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const event = await fixture.generateEvent(EVENTS.MASTER_ACCOUNT_CONTROLLER.PERSONAL_ACCOUNT_CREATED, assetManagerXrp, 'MASTER_ACCOUNT_CONTROLLER')
+      await storer.processEvent(event)
+      const em = context.orm.em.fork()
+      const personalAccountCreated = await em.findOneOrFail(Entities.SM_PersonalAccountCreated,
+        { fasset: FAssetType.FXRP }, { populate: [ 'personalAccount.address', 'personalAccount.underlyingAddress' ]})
+      expect(personalAccountCreated.personalAccount.address.hex).to.equal(event.args[0])
+      expect(personalAccountCreated.personalAccount.underlyingAddress.text).to.equal(event.args[1])
+    })
+
+  })
+
+  describe("edge cases", () => {
 
     it("should be able to store collateral reserved events with same ids, from different fassets", async () => {
       const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)

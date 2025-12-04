@@ -78,6 +78,7 @@ import type {
   EnteredEvent,
   ExitedEvent
 } from "../../../chain/typechain/collateralPool/ICollateralPool__initial"
+import type { PersonalAccountCreatedEvent } from "../../../chain/typechain/smartAccount/IMasterAccountController"
 import type { FAssetIface } from "../../../src/shared"
 
 export class EventGeneration {
@@ -589,6 +590,10 @@ export class EventGeneration {
       BigInt(randomNumber(1e4, 1e12)),
       BigInt(randomNumber(1e4, 1e12))
     ]
+  }
+
+  protected async generatePersonalAccountCreated(): Promise<PersonalAccountCreatedEvent.OutputTuple> {
+    return [randomNativeAddress(), randomUnderlyingAddress()]
   }
 
   /////////////////////////////////////////////////////////////////////////////
