@@ -8,7 +8,7 @@ export { EventIndexer } from "./indexer/indexer"
 export { EventParser } from "./indexer/eventlib/event-parser"
 export { EventScraper } from "./indexer/eventlib/event-scraper"
 export { StateUpdater } from "./indexer/eventlib/state-updater"
-export { EventStorer } from "./indexer/eventlib/event-storer"
+export { EventStorer } from "./indexer/eventlib/store-logic/event-storer"
 export { IndexerRunner } from "./indexer/runner"
 // core types
 export {

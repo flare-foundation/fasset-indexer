@@ -128,6 +128,33 @@ export const EVENTS = {
     ESCROW_FINISHED: "EscrowFinished",
     SETTINGS_UPDATED: "SettingsUpdated",
     CUSTODIAN_ADDRESS_UPDATED: "CustodianAddressUpdated"
+  },
+  MASTER_ACCOUNT_CONTROLLER: {
+    AGENT_VAULT_ADDED: 'AgentVaultAdded',
+    AGENT_VAULT_REMOVED: 'AgentVaultRemoved',
+    VAULT_ADDED: 'VaultAdded',
+    APPROVED: 'Approved',
+    CLAIMED: 'Claimed',
+    COLLATERAL_RESERVED: 'CollateralReserved',
+    DEPOSITED: 'Deposited',
+    REDEEM_REQUESTED: 'RedeemRequested',
+    REDEEMED: 'Redeemed',
+    DEFAULT_INSTRUCTION_FEE_SET: 'DefaultInstructionFeeSet',
+    EXECUTOR_FEE_SET: 'ExecutorFeeSet',
+    EXECUTOR_SET: 'ExecutorSet',
+    WITHDRAWAL_CLAIMED: 'WithdrawalClaimed',
+    INSTRUCTION_EXECUTED: 'InstructionExecuted',
+    INSTRUCTION_FEE_REMOVED: 'InstructionFeeRemoved',
+    INSTRUCTION_FEE_SET: 'InstructionFeeSet',
+    OWNERSHIP_TRANSFERRED: 'OwnershipTransferred',
+    PAYMENT_PROOF_VALIDITY_DURATION_SECONDS_SET: 'PaymentProofValidityDurationSecondsSet',
+    PERSONAL_ACCOUNT_CREATED: 'PersonalAccountCreated',
+    SWAP_EXECUTED: 'SwapExecuted',
+    SWAP_PARAMS_SET: 'SwapExecuted',
+    FXRP_REDEEMED: 'FXrpRedeemed',
+    FXRP_TRANSFERRED: 'FXrpTransferred',
+    XRPL_PROVIDER_WALLET_ADDED: 'XrplProviderWalletAdded',
+    XRPL_PROVIDER_WALLET_REMOVED: 'XrplProviderWalletRemoved'
   }
 } as const
 

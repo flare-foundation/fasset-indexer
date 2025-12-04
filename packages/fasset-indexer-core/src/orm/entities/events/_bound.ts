@@ -2,6 +2,7 @@ import { OneToOne, Enum, ManyToOne } from "@mikro-orm/core"
 import { FAssetType } from "../../../shared"
 import { EvmLog } from "../evm/log"
 import { AgentVault } from "../agent"
+import { PersonalAccount } from "../personal-account"
 
 export class EventBound {
 
@@ -19,4 +20,11 @@ export class AgentEventBound extends FAssetEventBound {
 
   @ManyToOne({ entity: () => AgentVault })
   agentVault!: AgentVault
+}
+
+
+export class PersonalAccountEventBound extends FAssetEventBound {
+
+  @ManyToOne(() => PersonalAccount)
+  personalAccount!: PersonalAccount
 }

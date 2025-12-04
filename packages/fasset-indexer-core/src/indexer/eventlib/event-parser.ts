@@ -1,28 +1,28 @@
 import { AgentVault } from "../../orm/entities/agent"
 import { Context } from "../../context/context"
+import { FAssetType, type FAssetIface } from "../../shared"
 import type { EntityManager } from "@mikro-orm/knex"
 import type { Log } from "ethers"
-import type { FAssetIface } from "../../shared"
 import type { Block, Transaction, Event } from "./types"
 
 
 
 export class EventParser {
-  private topicToIface = new Map<string, FAssetIface>()
+  private topicToIfaces = new Map<string, FAssetIface[]>()
   private blockCache: Block | null = null
   private transactionCache: Transaction | null = null
 
   constructor(public readonly context: Context, public readonly eventnames?: string[]) {
-    this.topicToIface = this.context.getTopicToIfaceMap(eventnames)
+    this.topicToIfaces = this.context.getTopicToIfaceMap(eventnames)
   }
 
   async logToEvent(log: Log): Promise<Event | null> {
     const topic = log.topics[0]
-    const iface = this.topicToIface.get(topic)
-    if (iface == null) return null
-    const valid = await this.validLogSource(iface, log.address)
-    if (!valid) return null
-    const parsed = this.context.parseLog(iface, log)
+    const iface = this.topicToIfaces.get(topic)
+    if (iface == null || iface.length == 0) return null
+    const source = await this.logSource(iface, log.address)
+    if (source == null) return null
+    const parsed = this.context.parseLog(iface[0], log)
     if (parsed == null) return null
     const block = await this.getBlock(log.blockNumber)
     const transaction = await this.getTransaction(log.transactionHash)
@@ -31,41 +31,49 @@ export class EventParser {
       topic,
       args: parsed.args,
       source: log.address,
+      sourcename: source,
       index: log.index,
       transaction: transaction,
       block: block,
     }
   }
 
-  async validLogSource(iface: FAssetIface, source: string): Promise<boolean> {
-    if (iface === 'ASSET_MANAGER') {
+  async logSource(ifaces: FAssetIface[], source: string): Promise<FAssetIface | null> {
+    if (ifaces.includes('ASSET_MANAGER')) {
       if (this.context.isAssetManager(source)) {
-        return true
+        return 'ASSET_MANAGER'
       }
-    } else if (iface === 'ERC20') {
+    }
+    if (ifaces.includes('ERC20')) {
       const em = this.context.orm.em.fork()
       if (this.context.isFAssetToken(source)) {
-        return true
+        return 'ERC20'
       } else if (await this.isCollateralPoolToken(em, source)) {
-        return true
+        return 'COLLATERAL_POOL'
       }
-    } else if (iface === 'COLLATERAL_POOL') {
+    }
+    if (ifaces.includes('COLLATERAL_POOL')) {
       const em = this.context.orm.em.fork()
       if (await this.isCollateralPool(em, source)) {
-        return true
+        return 'COLLATERAL_POOL'
       }
-    } else if (iface === 'PRICE_READER') {
-      if (await this.isPriceReader(source)) {
-        return true
-      }
-    } else if (iface === 'CORE_VAULT_MANAGER') {
-      if (this.context.isCoreVaultManager(source)) {
-        return true
-      }
-    } else {
-      return false
     }
-    return false
+    if (ifaces.includes('PRICE_READER')) {
+      if (await this.isPriceReader(source)) {
+        return 'PRICE_READER'
+      }
+    }
+    if (ifaces.includes('CORE_VAULT_MANAGER')) {
+      if (this.context.isCoreVaultManager(source)) {
+        return 'CORE_VAULT_MANAGER'
+      }
+    }
+    if (ifaces.includes('MASTER_ACCOUNT_CONTROLLER')) {
+      if (this.context.fassetTypeToMasterAccountController(FAssetType.FXRP) == source) {
+        return 'MASTER_ACCOUNT_CONTROLLER'
+      }
+    }
+    return null
   }
 
   protected async isCollateralPool(em: EntityManager, address: string): Promise<boolean> {

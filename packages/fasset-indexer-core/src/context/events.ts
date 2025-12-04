@@ -2,7 +2,8 @@ import { Interface, Log, LogDescription } from "ethers"
 import {
   IAssetManager__latest__factory, IERC20__factory, ICollateralPool__latest__factory,
   IAssetManager__initial__factory, ICollateralPool__initial__factory,
-  IPriceChangeEmitter__factory, ICoreVaultManager__factory
+  IPriceChangeEmitter__factory, ICoreVaultManager__factory,
+  IMasterAccountController__factory, IPersonalAccount__factory
 } from "../../chain/typechain"
 import { EVENTS } from "../config/constants"
 import type { IAssetManager__latestInterface } from "../../chain/typechain/assetManager/IAssetManager__latest"
@@ -14,6 +15,9 @@ import type { ICoreVaultManagerInterface } from "../../chain/typechain/ICoreVaul
 // deprecated due to upgrades
 import type { IAssetManager__initialInterface } from "../../chain/typechain/assetManager/IAssetManager__initial"
 import type { ICollateralPool__initialInterface } from "../../chain/typechain/collateralPool/ICollateralPool__initial"
+// smart accounts
+import type { IPersonalAccountInterface } from "../../chain/typechain/smartAccount/IPersonalAccount"
+import type { IMasterAccountControllerInterface } from "../../chain/typechain/smartAccount/IMasterAccountController"
 
 
 export class EventInterface {
@@ -22,7 +26,9 @@ export class EventInterface {
     erc20Interface: [IERC20Interface],
     collateralPoolInterface: [ICollateralPool__initialInterface, ICollateralPool__latestInterface],
     priceReader: [IPriceChangeEmitterInterface],
-    coreVaultManager: [ICoreVaultManagerInterface]
+    coreVaultManager: [ICoreVaultManagerInterface],
+    masterAccountController: [IMasterAccountControllerInterface],
+    personalAccount: [IPersonalAccountInterface]
   }
 
   constructor() {
@@ -43,6 +49,12 @@ export class EventInterface {
       ],
       coreVaultManager: [
         ICoreVaultManager__factory.createInterface()
+      ],
+      masterAccountController: [
+        IMasterAccountController__factory.createInterface()
+      ],
+      personalAccount: [
+        IPersonalAccount__factory.createInterface()
       ]
     }
   }
@@ -58,16 +70,19 @@ export class EventInterface {
     return null
   }
 
-  getTopicToIfaceMap(eventNames?: string[]): Map<string, FAssetIface> {
-    const mp = new Map<string, FAssetIface>()
+  getTopicToIfaceMap(eventNames?: string[]): Map<string, FAssetIface[]> {
+    const mp = new Map<string, FAssetIface[]>()
     for (const contractname of Object.keys(EVENTS)) {
-      const cname = contractname as keyof typeof EVENTS
-      const iface = this.contractToIface(contractname)
+      const cname = contractname as FAssetIface
+      const iface = this.contractToIface(cname)
       for (const event of Object.values(EVENTS[cname])) {
         if (eventNames?.includes(event) !== false) {
           const topics = this.getEventTopics(event, iface)
           for (const topic of topics) {
-            mp.set(topic, cname)
+            if (mp.get(topic) == null) {
+              mp.set(topic, [])
+            }
+            mp.get(topic)!.push(cname)
           }
         }
       }
@@ -101,6 +116,10 @@ export class EventInterface {
         return this.interfaces.priceReader
       case "CORE_VAULT_MANAGER":
         return this.interfaces.coreVaultManager
+      case "MASTER_ACCOUNT_CONTROLLER":
+        return this.interfaces.masterAccountController
+      case "PERSONAL_ACCOUNT":
+        return this.interfaces.personalAccount
       default:
         throw new Error(`Unknown interface ${name}`)
     }

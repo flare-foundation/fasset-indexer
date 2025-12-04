@@ -13,6 +13,7 @@ export class ContractLookup extends EventInterface {
   private fAssetToFAssetToken__cache: Map<FAssetType, string> = new Map()
   private coreVaultToFAsset__cache: Map<string, FAssetType> = new Map()
   private fAssetToCoreVault__cache: Map<FAssetType, string> = new Map()
+  private fAssetToMasterAccountController__cache: Map<FAssetType, string> = new Map()
   // public
   public fassetTokens: string[] = []
   public contractInfos!: ContractInfo[]
@@ -27,6 +28,7 @@ export class ContractLookup extends EventInterface {
     this.populateFAssetTypeToAssetManagerCache()
     this.populateFAssetTypeToFAssetTokenCache()
     this.populateFAssetTypeToCoreVaultManagerCache()
+    this.populateFAssetTypeToSmartAccountContractCache()
     this.fassetTokens = Array.from(this.fAssetTokenToFAsset__cache.keys())
     ContractLookup.singleton = this
   }
@@ -95,6 +97,14 @@ export class ContractLookup extends EventInterface {
     }
   }
 
+  fassetTypeToMasterAccountController(type: FAssetType): string {
+    if (this.fAssetToMasterAccountController__cache.has(type)) {
+      return this.fAssetToMasterAccountController__cache.get(type)!
+    } else {
+      throw new Error(`No master account controller found for type ${type}`)
+    }
+  }
+
   getContractAddress(name: string): string {
     for (const contract of this.contractInfos) {
       if (contract.name === name)
@@ -128,6 +138,11 @@ export class ContractLookup extends EventInterface {
       this.fAssetTokenToFAsset__cache.set(contract.address, fasset)
       this.fAssetToFAssetToken__cache.set(fasset, contract.address)
     }
+  }
+
+  protected populateFAssetTypeToSmartAccountContractCache(): void {
+    const masteraddr = this.getContractAddress('MasterAccountController')
+    this.fAssetToMasterAccountController__cache.set(FAssetType.FXRP, masteraddr)
   }
 
   protected contractNameToFAssetType(name: string, prefix = ''): FAssetType | null {

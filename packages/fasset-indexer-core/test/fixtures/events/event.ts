@@ -10,6 +10,7 @@ import { EventGeneration } from "./generate"
 import { EVENTS } from "../../../src/config"
 import type { Event } from "../../../src/indexer/eventlib/types"
 import type { EventNameToEventArgs } from "./types"
+import type { FAssetIface } from "../../../src/shared"
 
 
 export class EventFixture extends EventGeneration {
@@ -73,9 +74,13 @@ export class EventFixture extends EventGeneration {
     return agents
   }
 
-  async generateEvent(name: keyof EventNameToEventArgs, source?: string, args: any[] = []): Promise<Event> {
+  async generateEvent(name: keyof EventNameToEventArgs, source?: string, sourcename: FAssetIface = 'ASSET_MANAGER', args: any[] = []): Promise<Event> {
     const topic = this.events.getEventTopics(name, Object.values(this.events.interfaces).flat())[0]
-    return { name, args: await this.generateEventArgs(name, args), ...this.generateEventWithoutArgs(topic, source) }
+    return {
+      name,
+      args: await this.generateEventArgs(name, args),
+      ...this.generateEventWithoutArgs(topic, sourcename, source)
+    }
   }
 
   protected async generateEventArgs<T extends keyof EventNameToEventArgs>(name: T, args: any[]): Promise<EventNameToEventArgs[T]>
@@ -185,6 +190,8 @@ export class EventFixture extends EventGeneration {
         return this.generateCPPaidOut()
       } case EVENTS.COLLATERAL_POOL.CP_SELF_CLOSE_EXITED: {
         return this.generateCPSelfCloseExited()
+      } case EVENTS.MASTER_ACCOUNT_CONTROLLER.PERSONAL_ACCOUNT_CREATED: {
+        return this.generatePersonalAccountCreated()
       }
     }
   }
