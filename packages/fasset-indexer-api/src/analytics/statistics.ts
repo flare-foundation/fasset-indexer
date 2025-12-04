@@ -3,7 +3,8 @@ import { raw, type ORM } from "fasset-indexer-core/orm"
 import {
   AgentVault, MintingExecuted,
   RedemptionDefault, RedemptionPerformed, RedemptionRequested,
-  LiquidationPerformed, CollateralTypeAdded
+  LiquidationPerformed, CollateralTypeAdded,
+  MintingPaymentDefault
 } from "fasset-indexer-core/entities"
 import { SharedAnalytics } from "./shared"
 import { weightedAverage } from "./utils/weighted-average"
@@ -151,6 +152,9 @@ export class AgentStatistics extends SharedAnalytics {
     return weightedAverage(timespan, now, delta)
   }
 
+  /////////////////////////////////////////////////////////////////////////////////////////////////////
+  // wallet statistic utils
+
   async mintedByUnderlyingAddressDuring(address: string, start: number, end: number): Promise<FAssetValueResult> {
     const em = this.orm.em.fork()
     const r = await em.execute(SQL.MINTED_BY_UNDERLYING_ADDRESS, [address, start, end]) as { fasset: FAssetType, val: string }[]
@@ -167,5 +171,10 @@ export class AgentStatistics extends SharedAnalytics {
     const em = this.orm.em.fork()
     const minters = await em.execute(SQL.UNDERLYING_MINTERS, [address]) as { address: string }[]
     return minters.map(({ address }) => address)
+  }
+
+  async minterDefaultCount(address: string): Promise<number> {
+    const em = this.orm.em.fork()
+    return await em.count(MintingPaymentDefault, { collateralReserved: { minter: { hex: address }}, fasset: FAssetType.FXRP })
   }
 }

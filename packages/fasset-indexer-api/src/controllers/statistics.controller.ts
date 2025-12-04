@@ -124,6 +124,14 @@ export class StatisticsController {
     return apiResponse(this.service.underlyingMinterAddresses(user), 200)
   }
 
+  @Get('/minter-default-count?')
+  @ApiOperation({ summary: 'Number of defaults by the given minter evm address' })
+  getMinterDefaultCount(
+    @Query('user') user: string
+  ): Promise<ApiResponse<number>> {
+    return apiResponse(this.service.minterDefaultCount(user), 200)
+  }
+
   protected async structureReturn(prms: Promise<[bigint, number]>, now: number): Promise<StatisticAverage> {
     return prms.then(([avg, num]) => ({
       average: avg,

@@ -1,4 +1,4 @@
-import { Controller, Get, ParseBoolPipe, ParseIntPipe, Query, UseInterceptors } from '@nestjs/common'
+import { Controller, Get, ParseIntPipe, Query, UseInterceptors } from '@nestjs/common'
 import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager'
 import { ApiOperation, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { FAssetType } from 'fasset-indexer-core'
@@ -15,8 +15,7 @@ import type { RedemptionDefault } from 'fasset-indexer-core/entities'
 import type {
   AmountResult, TimeSeries, Timespan, TokenPortfolio,
   FAssetCollateralPoolScore, FAssetValueResult,
-  FAssetAmountResult, FAssetTimespan,
-  FAssetTimeSeries
+  FAssetAmountResult, FAssetTimespan
 } from '../analytics/types'
 
 
