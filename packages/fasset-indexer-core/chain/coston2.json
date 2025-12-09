@@ -1,8 +1,8 @@
 [
   {
     "name": "MasterAccountController",
-    "contractName": "MasterAccountControllerProxy.sol",
-    "address": "0xa7bc2aC84DB618fde9fa4892D1166fFf75D36FA6"
+    "contractName": "MasterAccountController.sol",
+    "address": "0x3ab31E2d943d1E8F47B275605E50Ff107f2F8393"
   },
   {
     "name": "GovernanceSettings",
