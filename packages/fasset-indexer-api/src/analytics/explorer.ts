@@ -570,7 +570,7 @@ export class ExplorerAnalytics extends SharedAnalytics {
     fasset: core.FAssetType,
     reference: string,
     filters: FilterQuery<Entities.UnderlyingVoutReference> = {}
-  ): Promise<Entities.UnderlyingVoutReference | null> {
+  ): Promise<Entities.UnderlyingVoutReference | Entities.UnderlyingVoutReference[] | null> {
     const transactions = await em.find(Entities.UnderlyingVoutReference,
       { fasset, reference, ...filters as object },
       {
@@ -580,8 +580,8 @@ export class ExplorerAnalytics extends SharedAnalytics {
     )
     if (transactions.length == 0) return null
     const successful = transactions.filter(x => x.transaction.result == XRP_TRANSACTION_SUCCESS_CODE)
-    if (successful.length > 0) return successful[0]
-    return transactions[0]
+    if (successful.length > 0) return successful.length > 1 ? successful : successful[0]
+    return transactions.length > 1 ? transactions : transactions[0]
   }
 
   protected eventNameToTransactionType(name: string): ExplorerType.TransactionType {
