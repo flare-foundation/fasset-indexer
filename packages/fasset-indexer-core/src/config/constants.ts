@@ -155,6 +155,10 @@ export const EVENTS = {
     FXRP_TRANSFERRED: 'FXrpTransferred',
     XRPL_PROVIDER_WALLET_ADDED: 'XrplProviderWalletAdded',
     XRPL_PROVIDER_WALLET_REMOVED: 'XrplProviderWalletRemoved'
+  },
+  OFT_ADAPTER: {
+    OFT_RECEIVED: 'OFTReceived',
+    OFT_SEND: 'OFTSent'
   }
 } as const
 

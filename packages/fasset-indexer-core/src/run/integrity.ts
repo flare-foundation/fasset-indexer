@@ -15,7 +15,7 @@ export async function ensureConfigIntegrity(context: Context, updates: boolean, 
 }
 
 export async function ensureChainIntegrity(context: Context): Promise<void> {
-  const amc = context.getContractAddress('AssetManagerController')
+  const amc = context.requireContractAddress('AssetManagerController')
   const contract = await context.provider.getCode(amc)
   if (contract === '0x') {
     throw new Error(`AssetManagerController contract ${amc} does not exist on rpc ${context.config.rpcUrl}`)
@@ -34,7 +34,7 @@ export async function ensureDatabaseIntegrity(context: Context): Promise<void> {
   }
   // check asset manager controller
   const dbamc = await getVar(em, 'asset_manager_controller')
-  const cfamc = context.getContractAddress('AssetManagerController')
+  const cfamc = context.requireContractAddress('AssetManagerController')
   if (dbamc != null && dbamc.value !== cfamc) {
     throw new Error(`AssetManagerController contract addresses in database ${dbamc.value} does not match ${cfamc} from address file`)
   }
@@ -65,7 +65,7 @@ export async function ensureUpdateIndexerIntegrity(context: Context, updateName?
 
 async function markNewDatabase(context: Context): Promise<void> {
   const envchain = context.config.chain
-  const amc = context.getContractAddress('AssetManagerController')
+  const amc = context.requireContractAddress('AssetManagerController')
   let minblock = context.config.minBlock ?? null
   if (minblock == null) {
     minblock = await getContractCreationBlock(context.provider, amc, envchain)

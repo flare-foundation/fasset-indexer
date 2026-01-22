@@ -5,6 +5,11 @@
     "address": "0x0000000000000000000000000000000000000000"
   },
   {
+    "name": "FAssetOFTAdapter",
+    "contractName": "FAssetOFTAdapter.sol",
+    "address": "0x0000000000000000000000000000000000000000"
+  },
+  {
     "name": "InflationAllocation",
     "contractName": "InflationAllocation.sol",
     "address": "0xD11CB940C8375c119CAe7b8A75844ec35371F2E0"

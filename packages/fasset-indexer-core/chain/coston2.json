@@ -5,6 +5,11 @@
     "address": "0x3ab31E2d943d1E8F47B275605E50Ff107f2F8393"
   },
   {
+    "name": "FAssetOFTAdapter",
+    "contractName": "FAssetOFTAdapter.sol",
+    "address": "0xCd3d2127935Ae82Af54Fc31cCD9D3440dbF46639"
+  },
+  {
     "name": "GovernanceSettings",
     "contractName": "GovernanceSettings.sol",
     "address": "0x1000000000000000000000000000000000000007"

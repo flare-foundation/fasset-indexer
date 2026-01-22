@@ -117,6 +117,8 @@
         "VaultAdded",
         "WithdrawalClaimed",
         "XrplProviderWalletAdded",
-        "XrplProviderWalletRemoved"
+        "XrplProviderWalletRemoved",
+        "OFTReceived",
+        "OFTSent"
     ]
 }

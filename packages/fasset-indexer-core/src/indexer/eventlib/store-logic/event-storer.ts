@@ -6,6 +6,7 @@ import { ContractLookup } from "../../../context/lookup"
 import { CollateralPoolEventMigration } from "../migrations/collateral-pool-migrations"
 import { AssetManagerEventMigration } from "../migrations/asset-manager-migration"
 import { SmartAccountsEventStorer } from './smart-accounts'
+import { OftAdapterEventStorer } from './oft-adapter'
 import { EVENTS } from '../../../config/constants'
 import type { EntityManager } from "@mikro-orm/knex"
 import type { ORM } from "../../../orm/interface"
@@ -19,13 +20,15 @@ import type * as PriceChangeEmitter from "../../../../chain/typechain/IPriceChan
 
 
 export class EventStorer {
-  private smartAccounts: SmartAccountsEventStorer
   oldCollateralTypeAddedTopic: string
   oldAgentVaultCreatedTopic: string
   oldEmergencySystemPauseTopic: string
+  private smartAccounts: SmartAccountsEventStorer
+  private oftAdapter: OftAdapterEventStorer
 
   constructor(readonly orm: ORM, public readonly lookup: ContractLookup) {
     this.smartAccounts = new SmartAccountsEventStorer()
+    this.oftAdapter = new OftAdapterEventStorer()
     const oldIface = this.lookup.interfaces.assetManagerInterface[0]
     this.oldCollateralTypeAddedTopic = this.lookup.getEventTopics(EVENTS.ASSET_MANAGER.COLLATERAL_TYPE_ADDED, [oldIface])[0]
     this.oldAgentVaultCreatedTopic = this.lookup.getEventTopics(EVENTS.ASSET_MANAGER.AGENT_VAULT_CREATED, [oldIface])[0]
@@ -51,6 +54,8 @@ export class EventStorer {
   protected async _processEvent(em: EntityManager, log: Event, evmLog: Entities.EvmLog): Promise<boolean> {
     if (log.sourcename == 'MASTER_ACCOUNT_CONTROLLER') {
       return this.smartAccounts.processEvent(em, log, evmLog)
+    } else if (log.sourcename == 'OFT_ADAPTER') {
+      return this.oftAdapter.processEvent(em, log, evmLog)
     }
     switch (log.name) {
       case EVENTS.ASSET_MANAGER.CONTRACT_CHANGED: {

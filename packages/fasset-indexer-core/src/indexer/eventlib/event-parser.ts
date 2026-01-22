@@ -73,6 +73,11 @@ export class EventParser {
         return 'MASTER_ACCOUNT_CONTROLLER'
       }
     }
+    if (ifaces.includes('OFT_ADAPTER')) {
+      if (this.context.oftAdapterAddress() == source) {
+        return 'OFT_ADAPTER'
+      }
+    }
     return null
   }
 

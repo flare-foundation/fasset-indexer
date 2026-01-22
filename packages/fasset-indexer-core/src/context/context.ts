@@ -58,12 +58,12 @@ export class Context extends ContractLookup {
   }
 
   private getAgentOwnerRegistryContract(): IAgentOwnerRegistry {
-    const address = this.getContractAddress("AgentOwnerRegistry")
+    const address = this.requireContractAddress("AgentOwnerRegistry")
     return IAgentOwnerRegistry__factory.connect(address, this.provider)
   }
 
   private getPriceReaderContract(): IPriceReader {
-    const address = this.getContractAddress("PriceReader")
+    const address = this.requireContractAddress("PriceReader")
     return IPriceReader__factory.connect(address, this.provider)
   }
 

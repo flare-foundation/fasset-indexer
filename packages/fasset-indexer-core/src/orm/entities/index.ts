@@ -71,6 +71,9 @@ export { UnderlyingTransaction } from "./underlying/transaction"
 // building event bound stuff
 export { EventBound, FAssetEventBound } from "./events/_bound"
 
-// personal account
+// smart accounts
 export * from './personal-account'
-export * from './events/personal-accounts'
+export * from './events/smart-accounts'
+
+// oft adapter
+export * from './events/oft-adapter'

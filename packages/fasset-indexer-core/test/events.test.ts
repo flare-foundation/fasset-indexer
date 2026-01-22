@@ -37,7 +37,7 @@ describe("FAsset evm events", () => {
   describe("token operations", () => {
 
     it("should store erc20 transfers", async () => {
-      const assetManager = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManager = context.requireContractAddress(ASSET_MANAGER_FXRP)
       const erc20Transfer = await fixture.generateEvent(EVENTS.ERC20.TRANSFER, assetManager)
       const em = context.orm.em.fork()
       await storer.processEventUnsafe(em, erc20Transfer)
@@ -84,7 +84,7 @@ describe("FAsset evm events", () => {
   describe("system operations", () => {
 
     it("should store asset manager settings update", async () => {
-      const assetManager = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManager = context.requireContractAddress(ASSET_MANAGER_FXRP)
       const em = context.orm.em.fork()
       let assetManagerSettings = em.create(Entities.AssetManagerSettings, {
         fasset: FAssetType.FXRP, lotSizeAmg: BigInt(10)
@@ -101,7 +101,7 @@ describe("FAsset evm events", () => {
     })
 
     it("should store current underlying block updated event", async () => {
-      const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManagerXrp = context.requireContractAddress(ASSET_MANAGER_FXRP)
       const currentUnderlyingBlockUpdatedEvent = await fixture.generateEvent(EVENTS.ASSET_MANAGER.CURRENT_UNDERLYING_BLOCK_UPDATED, assetManagerXrp)
       const em = context.orm.em.fork()
       await storer.processEventUnsafe(em, currentUnderlyingBlockUpdatedEvent)
@@ -117,7 +117,7 @@ describe("FAsset evm events", () => {
     })
 
     it("should store core vault manager settings updated", async () => {
-      const coreVaultManagerXrp = context.getContractAddress(CORE_VAULT_MANAGER_FXRP)
+      const coreVaultManagerXrp = context.requireContractAddress(CORE_VAULT_MANAGER_FXRP)
       await fixture.storeInitialCoreVaultManagerSettings()
       const em = context.orm.em.fork()
       const esu = await fixture.generateEvent(EVENTS.CORE_VAULT_MANAGER.SETTINGS_UPDATED, coreVaultManagerXrp)
@@ -142,7 +142,7 @@ describe("FAsset evm events", () => {
   describe("agent operations", () => {
 
     it("should store agent created event", async () => {
-      const assetManager = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManager = context.requireContractAddress(ASSET_MANAGER_FXRP)
       const em = context.orm.em.fork()
       // add initial collateral token type
       const collateralTypeAddedEvent = await fixture.generateEvent(
@@ -184,7 +184,7 @@ describe("FAsset evm events", () => {
     })
 
     it("should store agent vault destroy announced", async () => {
-      const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManagerXrp = context.requireContractAddress(ASSET_MANAGER_FXRP)
       await fixture.storeInitialAgents(FAssetType.FXRP)
       const em = context.orm.em.fork()
       const announceDestroyEvent = await fixture.generateEvent(EVENTS.ASSET_MANAGER.AGENT_VAULT_DESTROY_ANNOUNCED, assetManagerXrp)
@@ -199,7 +199,7 @@ describe("FAsset evm events", () => {
     })
 
     it("should store agent ping", async () => {
-      const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManagerXrp = context.requireContractAddress(ASSET_MANAGER_FXRP)
       await fixture.storeInitialAgents(FAssetType.FXRP)
       const em = context.orm.em.fork()
       // agent ping
@@ -218,7 +218,7 @@ describe("FAsset evm events", () => {
     })
 
     it("should store agent ping response", async () => {
-      const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManagerXrp = context.requireContractAddress(ASSET_MANAGER_FXRP)
       await fixture.storeInitialAgents(FAssetType.FXRP)
       const em = context.orm.em.fork()
       // agent pong
@@ -240,7 +240,7 @@ describe("FAsset evm events", () => {
   describe("mintings", () => {
 
     it("should store all minting events", async () => {
-      const assetManager = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManager = context.requireContractAddress(ASSET_MANAGER_FXRP)
       await fixture.storeInitialAgents()
       const em = context.orm.em.fork()
       // collateral reserved event
@@ -298,7 +298,7 @@ describe("FAsset evm events", () => {
     })
 
     it("should store self-mint event", async () => {
-      const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManagerXrp = context.requireContractAddress(ASSET_MANAGER_FXRP)
       await fixture.storeInitialAgents(FAssetType.FXRP)
       const em = context.orm.em.fork()
       const selfMintEvent = await fixture.generateEvent(EVENTS.ASSET_MANAGER.SELF_MINT, assetManagerXrp)
@@ -320,7 +320,7 @@ describe("FAsset evm events", () => {
   describe("redemptions", () => {
 
     it("should store all redemption events", async () => {
-      const assetManager = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManager = context.requireContractAddress(ASSET_MANAGER_FXRP)
       await fixture.storeInitialAgents()
       const em = context.orm.em.fork()
       // redemption requested event
@@ -407,7 +407,7 @@ describe("FAsset evm events", () => {
     })
 
     it("should store redeemed in collateral event", async () => {
-      const assetManager = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManager = context.requireContractAddress(ASSET_MANAGER_FXRP)
       await fixture.storeInitialAgents()
       const em = context.orm.em.fork()
       // redemption requested event
@@ -426,7 +426,7 @@ describe("FAsset evm events", () => {
     })
 
     it("should store redemption request resolutions", async () => {
-      const assetManager = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManager = context.requireContractAddress(ASSET_MANAGER_FXRP)
       await fixture.storeInitialAgents()
       const em = context.orm.em.fork()
       const redemptionRequestedEvent = await fixture.generateEvent(EVENTS.ASSET_MANAGER.REDEMPTION_REQUESTED, assetManager)
@@ -445,7 +445,7 @@ describe("FAsset evm events", () => {
   describe("redemption tickets", () => {
 
     it("should store the redemption ticket created event and state", async () => {
-      const assetManager = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManager = context.requireContractAddress(ASSET_MANAGER_FXRP)
       await fixture.storeInitialAgents()
       const em = context.orm.em.fork()
       // redemption ticket created event
@@ -468,7 +468,7 @@ describe("FAsset evm events", () => {
     })
 
     it("should store the redemption ticket updated event and state", async () => {
-      const assetManager = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManager = context.requireContractAddress(ASSET_MANAGER_FXRP)
       await fixture.storeInitialAgents()
       const em = context.orm.em.fork()
       // redemption ticket created event
@@ -497,7 +497,7 @@ describe("FAsset evm events", () => {
     })
 
     it("should store the redemption ticket deleted event and state", async () => {
-      const assetManager = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManager = context.requireContractAddress(ASSET_MANAGER_FXRP)
       await fixture.storeInitialAgents()
       const em = context.orm.em.fork()
       // redemption ticket created event
@@ -528,7 +528,7 @@ describe("FAsset evm events", () => {
   describe("liquidations", () => {
 
     it("should store all liquidation started events", async () => {
-      const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManagerXrp = context.requireContractAddress(ASSET_MANAGER_FXRP)
       await fixture.storeInitialAgents(FAssetType.FXRP)
       const em = context.orm.em.fork()
       const liquidationStartedEvent = await fixture.generateEvent(EVENTS.ASSET_MANAGER.LIQUIDATION_STARTED, assetManagerXrp)
@@ -543,7 +543,7 @@ describe("FAsset evm events", () => {
     })
 
     it("should store all full-liquidation started events", async () => {
-      const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManagerXrp = context.requireContractAddress(ASSET_MANAGER_FXRP)
       await fixture.storeInitialAgents()
       const em = context.orm.em.fork()
       const fullLiquidationStartedEvent = await fixture.generateEvent(EVENTS.ASSET_MANAGER.FULL_LIQUIDATION_STARTED, assetManagerXrp)
@@ -558,7 +558,7 @@ describe("FAsset evm events", () => {
     })
 
     it("should store all liquidation ended events", async () => {
-      const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManagerXrp = context.requireContractAddress(ASSET_MANAGER_FXRP)
       await fixture.storeInitialAgents()
       const em = context.orm.em.fork()
       const liquidationStartedEvent = await fixture.generateEvent(EVENTS.ASSET_MANAGER.LIQUIDATION_ENDED, assetManagerXrp)
@@ -573,7 +573,7 @@ describe("FAsset evm events", () => {
     })
 
     it("should store all liquidation performed events", async () => {
-      const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManagerXrp = context.requireContractAddress(ASSET_MANAGER_FXRP)
       await fixture.storeInitialAgents()
       const em = context.orm.em.fork()
       const liquidationPerformedEvent = await fixture.generateEvent(EVENTS.ASSET_MANAGER.LIQUIDATION_PERFORMED, assetManagerXrp)
@@ -593,7 +593,7 @@ describe("FAsset evm events", () => {
   describe("emergency pause", () => {
 
     it("should test storing the emergency pause triggered event with old interface", async () => {
-      const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManagerXrp = context.requireContractAddress(ASSET_MANAGER_FXRP)
       const event = await fixture.generateEvent(EVENTS.ASSET_MANAGER.EMERGENCY_PAUSE_TRIGGERED, assetManagerXrp)
       await storer.processEvent(event)
       const em = context.orm.em.fork()
@@ -608,7 +608,7 @@ describe("FAsset evm events", () => {
   describe("core vault", () => {
 
     it("should store transfer to core vault data", async () => {
-      const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManagerXrp = context.requireContractAddress(ASSET_MANAGER_FXRP)
       await fixture.storeInitialAgents(FAssetType.FXRP)
       const em = context.orm.em.fork()
       // test transfer to core vault started
@@ -642,7 +642,7 @@ describe("FAsset evm events", () => {
     })
 
     it("should store return from core vault", async () => {
-      const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManagerXrp = context.requireContractAddress(ASSET_MANAGER_FXRP)
       await fixture.storeInitialAgents(FAssetType.FXRP)
       const em = context.orm.em.fork()
       // test transfer from core vault requested
@@ -678,7 +678,7 @@ describe("FAsset evm events", () => {
     })
 
     it("should store core vault redemption requested", async () => {
-      const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManagerXrp = context.requireContractAddress(ASSET_MANAGER_FXRP)
       await fixture.storeInitialAgents(FAssetType.FXRP)
       const em = context.orm.em.fork()
       // test core vault redemption requested
@@ -827,7 +827,7 @@ describe("FAsset evm events", () => {
   describe("smart accounts", () => {
 
     it("should be able to store new created smart account personal account", async () => {
-      const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManagerXrp = context.requireContractAddress(ASSET_MANAGER_FXRP)
       const event = await fixture.generateEvent(EVENTS.MASTER_ACCOUNT_CONTROLLER.PERSONAL_ACCOUNT_CREATED, assetManagerXrp, 'MASTER_ACCOUNT_CONTROLLER')
       await storer.processEvent(event)
       const em = context.orm.em.fork()
@@ -842,8 +842,8 @@ describe("FAsset evm events", () => {
   describe("edge cases", () => {
 
     it("should be able to store collateral reserved events with same ids, from different fassets", async () => {
-      const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
-      const assetManagerBtc = context.getContractAddress(ASSET_MANAGER_FBTC)
+      const assetManagerXrp = context.requireContractAddress(ASSET_MANAGER_FXRP)
+      const assetManagerBtc = context.requireContractAddress(ASSET_MANAGER_FBTC)
       await fixture.storeInitialAgents()
       const event1 = await fixture.generateEvent(EVENTS.ASSET_MANAGER.COLLATERAL_RESERVED, assetManagerXrp)
       const event2 = await fixture.generateEvent(EVENTS.ASSET_MANAGER.COLLATERAL_RESERVED, assetManagerBtc)
@@ -860,8 +860,8 @@ describe("FAsset evm events", () => {
     })
 
     it("should not confuse collateral reserved from different fassets", async () => {
-      const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
-      const assetManagerBtc = context.getContractAddress(ASSET_MANAGER_FBTC)
+      const assetManagerXrp = context.requireContractAddress(ASSET_MANAGER_FXRP)
+      const assetManagerBtc = context.requireContractAddress(ASSET_MANAGER_FBTC)
       await fixture.storeInitialAgents()
       const em = context.orm.em.fork()
       const event1 = await fixture.generateEvent(EVENTS.ASSET_MANAGER.COLLATERAL_RESERVED, assetManagerXrp)
@@ -873,8 +873,8 @@ describe("FAsset evm events", () => {
     })
 
     it("should not allow two events with same log index and block index", async () => {
-      const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
-      const assetManagerBtc = context.getContractAddress(ASSET_MANAGER_FBTC)
+      const assetManagerXrp = context.requireContractAddress(ASSET_MANAGER_FXRP)
+      const assetManagerBtc = context.requireContractAddress(ASSET_MANAGER_FBTC)
       const event1 = await fixture.generateEvent(EVENTS.ASSET_MANAGER.COLLATERAL_TYPE_ADDED, assetManagerXrp)
       const event2 = await fixture.generateEvent(EVENTS.ASSET_MANAGER.COLLATERAL_TYPE_ADDED, assetManagerBtc)
       event2.index = event1.index
@@ -896,7 +896,7 @@ describe("FAsset evm events", () => {
     })
 
     it("should not store same event twice (really really improbable to happen with current impl)", async () => {
-      const assetManagerXrp = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManagerXrp = context.requireContractAddress(ASSET_MANAGER_FXRP)
       const event1 = await fixture.generateEvent(EVENTS.ASSET_MANAGER.COLLATERAL_TYPE_ADDED, assetManagerXrp)
       const event2 = await fixture.generateEvent(EVENTS.ASSET_MANAGER.COLLATERAL_TYPE_ADDED, assetManagerXrp)
       event2.block.index = event1.block.index
@@ -909,7 +909,7 @@ describe("FAsset evm events", () => {
     })
 
     it("should fetch null bigint when storing agent settings updated", async () => {
-      const assetManager = context.getContractAddress(ASSET_MANAGER_FXRP)
+      const assetManager = context.requireContractAddress(ASSET_MANAGER_FXRP)
       // add initial collateral token type
       const collateralTypeAddedEvent = await fixture.generateEvent(EVENTS.ASSET_MANAGER.COLLATERAL_TYPE_ADDED, assetManager)
       await storer.processEvent(collateralTypeAddedEvent)

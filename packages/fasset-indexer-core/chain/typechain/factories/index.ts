@@ -4,6 +4,7 @@
 export * as assetManager from "./assetManager";
 export * as collateralPool from "./collateralPool";
 export * as smartAccount from "./smartAccount";
+export { FAssetOFTAdapter__factory } from "./FAssetOFTAdapter__factory";
 export { IAgentOwnerRegistry__factory } from "./IAgentOwnerRegistry__factory";
 export { ICoreVaultManager__factory } from "./ICoreVaultManager__factory";
 export { IERC20__factory } from "./IERC20__factory";

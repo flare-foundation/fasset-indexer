@@ -3,7 +3,8 @@ import {
   IAssetManager__latest__factory, IERC20__factory, ICollateralPool__latest__factory,
   IAssetManager__initial__factory, ICollateralPool__initial__factory,
   IPriceChangeEmitter__factory, ICoreVaultManager__factory,
-  IMasterAccountController__factory, IPersonalAccount__factory
+  IMasterAccountController__factory, IPersonalAccount__factory,
+  FAssetOFTAdapter__factory
 } from "../../chain/typechain"
 import { EVENTS } from "../config/constants"
 import type { IAssetManager__latestInterface } from "../../chain/typechain/assetManager/IAssetManager__latest"
@@ -18,6 +19,7 @@ import type { ICollateralPool__initialInterface } from "../../chain/typechain/co
 // smart accounts
 import type { IPersonalAccountInterface } from "../../chain/typechain/smartAccount/IPersonalAccount"
 import type { IMasterAccountControllerInterface } from "../../chain/typechain/smartAccount/IMasterAccountController"
+import type { FAssetOFTAdapterInterface } from "../../chain/typechain/FAssetOFTAdapter"
 
 
 export class EventInterface {
@@ -28,7 +30,8 @@ export class EventInterface {
     priceReader: [IPriceChangeEmitterInterface],
     coreVaultManager: [ICoreVaultManagerInterface],
     masterAccountController: [IMasterAccountControllerInterface],
-    personalAccount: [IPersonalAccountInterface]
+    personalAccount: [IPersonalAccountInterface],
+    oftAdapter: [FAssetOFTAdapterInterface]
   }
 
   constructor() {
@@ -55,6 +58,9 @@ export class EventInterface {
       ],
       personalAccount: [
         IPersonalAccount__factory.createInterface()
+      ],
+      oftAdapter: [
+        FAssetOFTAdapter__factory.createInterface()
       ]
     }
   }
@@ -120,6 +126,8 @@ export class EventInterface {
         return this.interfaces.masterAccountController
       case "PERSONAL_ACCOUNT":
         return this.interfaces.personalAccount
+      case "OFT_ADAPTER":
+        return this.interfaces.oftAdapter
       default:
         throw new Error(`Unknown interface ${name}`)
     }

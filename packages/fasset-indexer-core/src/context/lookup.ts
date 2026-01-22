@@ -7,6 +7,7 @@ import type { ContractInfo } from "../config/interface"
 export class ContractLookup extends EventInterface {
   static singleton: ContractLookup | null = null
   // caches
+  private contractNameToAddress: Map<string, string> = new Map<string, string>
   private assetManagerToFAsset__cache: Map<string, FAssetType> = new Map()
   private fAssetToAssetManager__cache: Map<FAssetType, string> = new Map()
   private fAssetTokenToFAsset__cache: Map<string, FAssetType> = new Map()
@@ -25,6 +26,7 @@ export class ContractLookup extends EventInterface {
     super()
     this.contractInfos = getContractInfo(chain, file)
     // populate caches for faster lookups
+    this.populateContractMap()
     this.populateFAssetTypeToAssetManagerCache()
     this.populateFAssetTypeToFAssetTokenCache()
     this.populateFAssetTypeToCoreVaultManagerCache()
@@ -105,12 +107,16 @@ export class ContractLookup extends EventInterface {
     }
   }
 
-  getContractAddress(name: string): string {
-    for (const contract of this.contractInfos) {
-      if (contract.name === name)
-        return contract.address
+  oftAdapterAddress(): string {
+    return this.requireContractAddress('FAssetOFTAdapter')
+  }
+
+  requireContractAddress(name: string): string {
+    const address = this.contractNameToAddress.get(name)
+    if (address == null) {
+      throw new Error(`Contract address not found for ${name}`)
     }
-    throw new Error(`Contract address not found for ${name}`)
+    return address
   }
 
   protected populateFAssetTypeToAssetManagerCache(): void {
@@ -141,8 +147,14 @@ export class ContractLookup extends EventInterface {
   }
 
   protected populateFAssetTypeToSmartAccountContractCache(): void {
-    const masteraddr = this.getContractAddress('MasterAccountController')
+    const masteraddr = this.requireContractAddress('MasterAccountController')
     this.fAssetToMasterAccountController__cache.set(FAssetType.FXRP, masteraddr)
+  }
+
+  protected populateContractMap(): void {
+    for (const contract of this.contractInfos) {
+      this.contractNameToAddress.set(contract.name, contract.address)
+    }
   }
 
   protected contractNameToFAssetType(name: string, prefix = ''): FAssetType | null {
