@@ -149,7 +149,12 @@ SELECT
   t.value_uba, t.resolution, ur.id as underlying_payment, COUNT(*) OVER() as count
 FROM (${Array.from(explorerQueryTransactions.entries()).filter(([k, _]) => methods.includes(k)).map(([_, v]) => v).join(' UNION ALL ')}) t
 FULL JOIN evm_address eau ON eau.id = t.user_id
-FULL JOIN underlying_reference ur ON ur.reference = t.payment_reference
+FULL JOIN LATERAL (
+  SELECT *
+  FROM underlying_reference ur
+  WHERE ur.reference = t.payment_reference
+  LIMIT 1
+) ur ON true
 JOIN evm_log el ON el.id = t.evm_log_id
 JOIN evm_block eb ON eb.index = el.block_index
 JOIN evm_transaction et ON et.id = el.transaction_id
