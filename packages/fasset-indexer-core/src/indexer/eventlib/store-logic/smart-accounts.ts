@@ -91,7 +91,7 @@ export class SmartAccountsEventStorer {
     const [personalAccount, xrplOwner] = args
     const _address = await findOrCreateEntity(em, Entities.EvmAddress, { hex: personalAccount })
     const _xrplOwner = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: xrplOwner })
-    const account = em.create(Entities.PersonalAccount, { address: _address, underlyingAddress: _xrplOwner, fasset: FAssetType.FXRP })
+    const account = await findOrCreateEntity(em, Entities.PersonalAccount, { address: _address }, {}, { underlyingAddress: _xrplOwner, fasset: FAssetType.FXRP })
     return em.create(Entities.SM_PersonalAccountCreated, { fasset: FAssetType.FXRP, evmLog: log, personalAccount: account })
   }
 
