@@ -148,11 +148,12 @@ SELECT
   am.name as agent_name, eau.hex as user, eao.hex as source,
   t.value_uba, t.resolution, ur.id as underlying_payment, COUNT(*) OVER() as count
 FROM (${Array.from(explorerQueryTransactions.entries()).filter(([k, _]) => methods.includes(k)).map(([_, v]) => v).join(' UNION ALL ')}) t
-FULL JOIN evm_address eau ON eau.id = t.user_id
-FULL JOIN LATERAL (
+LEFT JOIN evm_address eau ON eau.id = t.user_id
+LEFT JOIN LATERAL (
   SELECT *
   FROM underlying_reference ur
   WHERE ur.reference = t.payment_reference
+  ORDER BY ur.id ASC
   LIMIT 1
 ) ur ON true
 JOIN evm_log el ON el.id = t.evm_log_id
