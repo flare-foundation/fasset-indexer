@@ -27,6 +27,24 @@ export async function findOrCreateEntity<T extends object>(
     { ...where, ...args } as RequiredEntityData<T>, opts)
 }
 
+export async function findOrCreateEntities<T extends object, K extends string & keyof T>(
+  em: EntityManager,
+  entityClass: EntityName<T>,
+  key: K,
+  values: string[]
+): Promise<Map<string, T>> {
+  const uniqueValues = [...new Set(values)]
+  if (uniqueValues.length === 0) return new Map()
+  const existing = await em.find(entityClass, { [key]: { $in: uniqueValues } } as FilterQuery<T>)
+  const map = new Map<string, T>(existing.map(e => [(e as any)[key] as string, e]))
+  for (const value of uniqueValues) {
+    if (!map.has(value)) {
+      map.set(value, em.create(entityClass, { [key]: value } as RequiredEntityData<T>))
+    }
+  }
+  return map
+}
+
 export async function setVar(em: EntityManager, key: string, value?: string): Promise<void> {
   const vr = await findOrCreateEntity(em, Var, { key }, {}, { value })
   vr.value = value

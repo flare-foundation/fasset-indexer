@@ -1,6 +1,6 @@
 import * as Entities from '../../../orm/entities'
 import * as shared from '../../../shared'
-import { findOrCreateEntity } from "../../../orm/utils"
+import { findOrCreateEntity, findOrCreateEntities } from "../../../orm/utils"
 import { isUntrackedAgentVault } from "../../utils"
 import { ContractLookup } from "../../../context/lookup"
 import { CollateralPoolEventMigration } from "../migrations/collateral-pool-migrations"
@@ -403,11 +403,15 @@ export class EventStorer {
       buyFAssetByAgentFactorBIPS, poolExitCollateralRatioBIPS, redemptionPoolFeeShareBIPS
     ] = (logArgs as any).creationData
     // addresses
-    const _owner = await em.findOneOrFail(Entities.AgentOwner, { manager: { address: { hex: owner }}})
-    const _address = await findOrCreateEntity(em, Entities.EvmAddress, { hex: agentVault })
-    const _agentVaultUnderlying = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: underlyingAddress })
-    const _collateralPool = await findOrCreateEntity(em, Entities.EvmAddress, { hex: collateralPool })
-    const _collateralPoolToken = await findOrCreateEntity(em, Entities.EvmAddress, { hex: collateralPoolToken! })
+    const [_owner, evmAddresses, underlyingAddresses] = await Promise.all([
+      em.findOneOrFail(Entities.AgentOwner, { manager: { address: { hex: owner }}}),
+      findOrCreateEntities(em, Entities.EvmAddress, 'hex', [agentVault, collateralPool, collateralPoolToken!]),
+      findOrCreateEntities(em, Entities.UnderlyingAddress, 'text', [underlyingAddress])
+    ])
+    const _address = evmAddresses.get(agentVault)!
+    const _agentVaultUnderlying = underlyingAddresses.get(underlyingAddress)!
+    const _collateralPool = evmAddresses.get(collateralPool)!
+    const _collateralPoolToken = evmAddresses.get(collateralPoolToken!)!
     // create agent vault
     const _agentVault = em.create(Entities.AgentVault, {
       fasset, address: _address, underlyingAddress: _agentVaultUnderlying,
@@ -564,10 +568,14 @@ export class EventStorer {
       firstUnderlyingBlock, lastUnderlyingBlock, lastUnderlyingTimestamp,
       paymentAddress, paymentReference, executor, executorFeeNatWei
     ] = logArgs
-    const _agentVault = await em.findOneOrFail(Entities.AgentVault, { address: { hex: agentVault }})
-    const _minter = await findOrCreateEntity(em, Entities.EvmAddress, { hex: minter })
-    const _paymentAddress = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: paymentAddress })
-    const _executor = await findOrCreateEntity(em, Entities.EvmAddress, { hex: executor })
+    const [_agentVault, evmAddresses, underlyingAddresses] = await Promise.all([
+      em.findOneOrFail(Entities.AgentVault, { address: { hex: agentVault }}),
+      findOrCreateEntities(em, Entities.EvmAddress, 'hex', [minter, executor]),
+      findOrCreateEntities(em, Entities.UnderlyingAddress, 'text', [paymentAddress])
+    ])
+    const _minter = evmAddresses.get(minter)!
+    const _executor = evmAddresses.get(executor)!
+    const _paymentAddress = underlyingAddresses.get(paymentAddress)!
     return em.create(Entities.CollateralReserved, {
       evmLog, fasset, collateralReservationId: Number(collateralReservationId), agentVault: _agentVault,
       minter: _minter, valueUBA, feeUBA,
@@ -644,10 +652,14 @@ export class EventStorer {
       firstUnderlyingBlock, lastUnderlyingBlock, lastUnderlyingTimestamp,
       paymentReference, executor, executorFeeNatWei
     ] = logArgs
-    const _agentVault = await em.findOneOrFail(Entities.AgentVault, { address: { hex: agentVault }})
-    const _redeemer = await findOrCreateEntity(em, Entities.EvmAddress, { hex: redeemer })
-    const _paymentAddress = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: paymentAddress })
-    const _executor = await findOrCreateEntity(em, Entities.EvmAddress, { hex: executor })
+    const [_agentVault, evmAddresses, underlyingAddresses] = await Promise.all([
+      em.findOneOrFail(Entities.AgentVault, { address: { hex: agentVault }}),
+      findOrCreateEntities(em, Entities.EvmAddress, 'hex', [redeemer, executor]),
+      findOrCreateEntities(em, Entities.UnderlyingAddress, 'text', [paymentAddress])
+    ])
+    const _redeemer = evmAddresses.get(redeemer)!
+    const _executor = evmAddresses.get(executor)!
+    const _paymentAddress = underlyingAddresses.get(paymentAddress)!
     return em.create(Entities.RedemptionRequested, {
       evmLog, fasset, agentVault: _agentVault, redeemer: _redeemer, requestId: Number(requestId),
       paymentAddress: _paymentAddress, valueUBA, feeUBA,
@@ -1082,8 +1094,9 @@ export class EventStorer {
     logArgs: ERC20.TransferEvent.OutputTuple
   ): Promise<Entities.ERC20Transfer> {
     const [ from, to, value ] = logArgs
-    const _from = await findOrCreateEntity(em, Entities.EvmAddress, { hex: from })
-    const _to = await findOrCreateEntity(em, Entities.EvmAddress, { hex: to })
+    const evmAddresses = await findOrCreateEntities(em, Entities.EvmAddress, 'hex', [from, to])
+    const _from = evmAddresses.get(from)!
+    const _to = evmAddresses.get(to)!
     await this.changeTokenBalance(em, evmLog.address, _to, value)
     await this.changeTokenBalance(em, evmLog.address, _from, -value)
     return em.create(Entities.ERC20Transfer, { evmLog, from: _from, to: _to, value })
@@ -1335,8 +1348,12 @@ export class EventStorer {
   ): Promise<Entities.CoreVaultRedemptionRequested> {
     const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
     const [ redeemer, paymentAddress, paymentReference, valueUBA, feeUBA ] = logArgs
-    const _redeemer = await findOrCreateEntity(em, Entities.EvmAddress, { hex: redeemer })
-    const _paymentAddress = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: paymentAddress })
+    const [evmAddresses, underlyingAddresses] = await Promise.all([
+      findOrCreateEntities(em, Entities.EvmAddress, 'hex', [redeemer]),
+      findOrCreateEntities(em, Entities.UnderlyingAddress, 'text', [paymentAddress])
+    ])
+    const _redeemer = evmAddresses.get(redeemer)!
+    const _paymentAddress = underlyingAddresses.get(paymentAddress)!
     return em.create(Entities.CoreVaultRedemptionRequested, {
       evmLog, fasset, redeemer: _redeemer, paymentAddress: _paymentAddress,
       paymentReference, valueUBA, feeUBA
@@ -1428,8 +1445,9 @@ export class EventStorer {
   ): Promise<Entities.CoreVaultManagerEscrowInstructions> {
     const fasset = this.lookup.coreVaultManagerToFAssetType(evmLog.address.hex)
     const [ sequence, preimageHash, account, destination, amount, fee, cancelAfterTs ] = logArgs
-    const _account = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: account })
-    const _destination = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: destination })
+    const underlyingAddresses = await findOrCreateEntities(em, Entities.UnderlyingAddress, 'text', [account, destination])
+    const _account = underlyingAddresses.get(account)!
+    const _destination = underlyingAddresses.get(destination)!
     return em.create(Entities.CoreVaultManagerEscrowInstructions, {
       evmLog, fasset, sequence, preimageHash, account: _account,
       destination: _destination, amount, fee, cancelAfterTs
@@ -1463,8 +1481,9 @@ export class EventStorer {
   {
     const fasset = this.lookup.coreVaultManagerToFAssetType(evmLog.address.hex)
     const [ sequence, account, destination, amount, fee, paymentReference ] = logArgs
-    const _account = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: account })
-    const _destination = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: destination })
+    const underlyingAddresses = await findOrCreateEntities(em, Entities.UnderlyingAddress, 'text', [account, destination])
+    const _account = underlyingAddresses.get(account)!
+    const _destination = underlyingAddresses.get(destination)!
     return em.create(Entities.CoreVaultManagerPaymentInstructions, {
       evmLog, fasset, sequence, account: _account,
       destination: _destination, amount, fee, paymentReference
@@ -1527,14 +1546,21 @@ export class EventStorer {
   // will not persist new transactions, blocks, and events if the latter will not be successfully processed
   // we do have to persist addresses as they can be refereced during event processing
   private async createLogEntity(em: EntityManager, log: Event): Promise<Entities.EvmLog> {
-    const source = await findOrCreateEntity(em, Entities.EvmAddress, { hex: log.transaction.source })
-    const target = log.transaction.target === null ? undefined
-      : await findOrCreateEntity(em, Entities.EvmAddress, { hex: log.transaction.target })
-    const block = await findOrCreateEntity(em, Entities.EvmBlock,
-      { index: log.block.index }, { persist: false }, { timestamp: log.block.timestamp })
-    const transaction = await findOrCreateEntity(em, Entities.EvmTransaction,
-      { hash: log.transaction.hash }, { persist: false }, { block, ...log.transaction, source, target })
-    const address = await findOrCreateEntity(em, Entities.EvmAddress, { hex: log.source })
+    const hexes = log.transaction.target === null
+      ? [log.transaction.source, log.source]
+      : [log.transaction.source, log.transaction.target, log.source]
+    const [addressMap, existingBlock, existingTransaction] = await Promise.all([
+      findOrCreateEntities(em, Entities.EvmAddress, 'hex', hexes),
+      em.findOne(Entities.EvmBlock, { index: log.block.index }),
+      em.findOne(Entities.EvmTransaction, { hash: log.transaction.hash }),
+    ])
+    const source = addressMap.get(log.transaction.source)!
+    const target = log.transaction.target === null ? undefined : addressMap.get(log.transaction.target)!
+    const address = addressMap.get(log.source)!
+    const block = existingBlock ?? em.create(Entities.EvmBlock,
+      { index: log.block.index, timestamp: log.block.timestamp }, { persist: false })
+    const transaction = existingTransaction ?? em.create(Entities.EvmTransaction,
+      { ...log.transaction, block, source, target }, { persist: false })
     return em.create(Entities.EvmLog,
       { index: log.index, name: log.name, address, transaction, block }, { persist: false })
   }

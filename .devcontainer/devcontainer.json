@@ -1,0 +1,50 @@
+// For format details, see https://aka.ms/devcontainer.json. For config options, see the
+// README at: https://github.com/devcontainers/templates/tree/main/src/docker-existing-dockerfile
+{
+	"name": "FAsset Indexer Container",
+    "image": "mcr.microsoft.com/devcontainers/typescript-node:20",
+    "postCreateCommand": "npm install -g @anthropic-ai/claude-code",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "mikestead.dotenv",
+                "esbenp.prettier-vscode",
+                "dbaeumer.vscode-eslint",
+                "eamodio.gitlens",
+                "usernamehw.errorlens",
+                "ms-azuretools.vscode-docker",
+                "christian-kohler.path-intellisense",
+                "wayou.vscode-todo-highlight",
+                "pkief.material-icon-theme"
+            ],
+            "settings": {
+                "[typescript]": {
+                    "editor.defaultFormatter": "vscode.typescript-language-features",
+                    "editor.tabSize": 2
+                },
+                "editor.insertSpaces": true,
+                "editor.detectIndentation": false,
+                "files.trimFinalNewlines": true,
+                "files.trimTrailingWhitespace": true,
+                "yaml.customTags": [
+                    "!reference sequence"
+                ]
+            }
+        }
+    }
+
+	// Features to add to the dev container. More info: https://containers.dev/features.
+	// "features": {},
+
+	// Use 'forwardPorts' to make a list of ports inside the container available locally.
+	// "forwardPorts": [],
+
+	// Uncomment the next line to run commands after the container is created.
+	// "postCreateCommand": "cat /etc/os-release",
+
+	// Configure tool-specific properties.
+	// "customizations": {},
+
+	// Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
+	// "remoteUser": "devcontainer"
+}
