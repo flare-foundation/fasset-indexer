@@ -54,10 +54,22 @@ export class ExplorerAnalytics extends SharedAnalytics {
   ): Promise<ExplorerType.TransactionsInfo> {
     const em = this.orm.em.fork()
     ;[start, end] = this.standardizeInterval(start, end)
-    const transactions = await em.getConnection('read').execute(
-      SQL.EXPLORER_TRANSACTIONS(user != null, agent != null, asc, start != null || end != null, status != null, types),
-      [user ?? agent, start, end, status, limit, offset].filter(x => x != null)
-    ) as SQL.ExplorerTransactionsOrmResult[]
+    const hasUser = user != null
+    const hasAgent = agent != null
+    const hasWindow = start != null || end != null
+    const hasStatus = status != null
+    const filterParams = [user ?? agent, start, end, status].filter(x => x != null)
+    const conn = em.getConnection('read')
+    const [transactions, countResult] = await Promise.all([
+      conn.execute(
+        SQL.EXPLORER_TRANSACTIONS(hasUser, hasAgent, asc, hasWindow, hasStatus, types),
+        [...filterParams, limit, offset]
+      ) as Promise<SQL.ExplorerTransactionsOrmResult[]>,
+      conn.execute(
+        SQL.EXPLORER_TRANSACTIONS_COUNT(hasUser, hasAgent, hasWindow, hasStatus, types),
+        filterParams
+      ) as Promise<[{ count: string }]>
+    ])
     const info: ExplorerType.TransactionInfo[] = []
     for (const { name, timestamp, source, hash, agent_vault, agent_name, value_uba, user, resolution, underlying_payment } of transactions) {
       const transactionType = this.eventNameToTransactionType(name)
@@ -69,7 +81,7 @@ export class ExplorerAnalytics extends SharedAnalytics {
         resolution: resolutionString, payment: underlying_payment != null
       })
     }
-    return { transactions: info, count: transactions[0]?.count ?? 0 }
+    return { transactions: info, count: Number(countResult[0]?.count ?? 0) }
   }
 
   async transactionClassification(

@@ -136,6 +136,27 @@ const explorerQueryTransactions = new Map([
   ]
 ])
 
+const explorerTransactionsUnion = (methods: TransactionType[]) =>
+  Array.from(explorerQueryTransactions.entries())
+    .filter(([k]) => methods.includes(k))
+    .map(([, v]) => v)
+    .join(' UNION ALL ')
+
+const explorerTransactionsFilter = (
+  user: boolean, agent: boolean,
+  window: boolean, status: boolean
+) => `
+JOIN evm_log eli ON eli.id = ti.evm_log_id
+JOIN evm_block ebi ON ebi.index = eli.block_index
+${user ? 'JOIN evm_address eaui ON eaui.id = ti.user_id' : ''}
+${agent ? 'JOIN evm_address eaai ON eaai.id = ti.agent_vault_address_id' : ''}
+WHERE 1=1
+${user ? 'AND eaui.hex = ?' : ''}
+${agent ? 'AND eaai.hex = ?' : ''}
+${window ? 'AND ebi.timestamp BETWEEN ? AND ?' : ''}
+${status ? 'AND ti.resolution = ?' : ''}
+`
+
 // psql specific query
 export const EXPLORER_TRANSACTIONS = (
   user: boolean, agent: boolean,
@@ -146,37 +167,47 @@ export const EXPLORER_TRANSACTIONS = (
 SELECT
   et.hash, el.name, eb.timestamp, eaa.hex as agent_vault,
   am.name as agent_name, eau.hex as user, eao.hex as source,
-  t.value_uba, t.resolution, ur.id as underlying_payment, COUNT(*) OVER() as count
-FROM (${Array.from(explorerQueryTransactions.entries()).filter(([k, _]) => methods.includes(k)).map(([_, v]) => v).join(' UNION ALL ')}) t
-LEFT JOIN evm_address eau ON eau.id = t.user_id
-LEFT JOIN LATERAL (
-  SELECT *
-  FROM underlying_reference ur
-  WHERE ur.reference = t.payment_reference
-  ORDER BY ur.id ASC
-  LIMIT 1
-) ur ON true
+  t.value_uba, t.resolution, ur.id as underlying_payment
+FROM (
+  SELECT ti.evm_log_id, ti.agent_vault_address_id, ti.value_uba, ti.user_id, ti.resolution, ti.payment_reference, eli.block_index
+  FROM (${explorerTransactionsUnion(methods)}) ti
+  ${explorerTransactionsFilter(user, agent, window, status)}
+  ORDER BY eli.block_index ${asc ? 'ASC' : 'DESC'}
+  LIMIT ? OFFSET ?
+) t
 JOIN evm_log el ON el.id = t.evm_log_id
 JOIN evm_block eb ON eb.index = el.block_index
 JOIN evm_transaction et ON et.id = el.transaction_id
 JOIN evm_address eaa ON eaa.id = t.agent_vault_address_id
 JOIN evm_address eao ON eao.id = et.source_id
+LEFT JOIN evm_address eau ON eau.id = t.user_id
 JOIN agent_vault av ON av.address_id = t.agent_vault_address_id
 JOIN agent_owner ao ON av.vaults = ao.id
 JOIN agent_manager am ON am.address_id = ao.agents
-WHERE 1=1
-${user ? 'AND eau.hex = ?' : ''}
-${agent ? 'AND eaa.hex = ?' : ''}
-${window ? 'AND eb.timestamp BETWEEN ? AND ?' : ''}
-${status ? 'AND t.resolution = ?' : ''}
-ORDER BY el.block_index ${asc ? 'ASC' : 'DESC'}
-LIMIT ? OFFSET ?
+LEFT JOIN LATERAL (
+  SELECT ur.id
+  FROM underlying_reference ur
+  WHERE ur.reference = t.payment_reference
+  ORDER BY ur.id ASC
+  LIMIT 1
+) ur ON true
+ORDER BY t.block_index ${asc ? 'ASC' : 'DESC'}
+`
+
+export const EXPLORER_TRANSACTIONS_COUNT = (
+  user: boolean, agent: boolean,
+  window: boolean, status: boolean,
+  methods: TransactionType[]
+) => `
+SELECT COUNT(*) as count
+FROM (${explorerTransactionsUnion(methods)}) ti
+${explorerTransactionsFilter(user, agent, window, status)}
 `
 
 export type ExplorerTransactionsOrmResult = {
   name: string, timestamp: number, source: string, user: string,
   hash: string, agent_vault: string, agent_name: string, value_uba: string,
-  count: number, resolution: number, underlying_payment?: number
+  resolution: number, underlying_payment?: number
 }
 
 export const EVENT_FROM_UNDERLYING_HASH = `
