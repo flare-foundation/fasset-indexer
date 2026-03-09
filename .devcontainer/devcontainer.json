@@ -1,9 +1,15 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
 // README at: https://github.com/devcontainers/templates/tree/main/src/docker-existing-dockerfile
+// git ssh: https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials
 {
 	"name": "FAsset Indexer Container",
     "image": "mcr.microsoft.com/devcontainers/typescript-node:20",
     "postCreateCommand": "npm install -g @anthropic-ai/claude-code",
+    "mounts": [
+        "source=/dev/null,target=${containerWorkspaceFolder}/.env,type=bind,readonly",
+        "source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind",
+        "source=${localEnv:HOME}/.claude.json,target=/home/node/.claude.json,type=bind"
+    ],
     "customizations": {
         "vscode": {
             "extensions": [
