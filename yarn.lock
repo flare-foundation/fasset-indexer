@@ -3658,7 +3658,6 @@ __metadata:
     fs: ^0.0.1-security
     mikro-orm: 6.3.6
     mocha: ^10.4.0
-    ts-node: ^10.9.2
     tsx: ^4.19.2
     typechain: ^8.3.2
     winston: ^3.17.0
