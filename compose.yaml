@@ -90,6 +90,7 @@ services:
       interval: 10s
       timeout: 20s
       retries: 10
+    shm_size: 1g
     restart: unless-stopped
 
 volumes:
