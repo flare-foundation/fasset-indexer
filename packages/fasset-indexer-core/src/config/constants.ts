@@ -162,8 +162,8 @@ export const EVENTS = {
   }
 } as const
 
-export const EVENT_NAMES = Object.keys(EVENTS).map(
-  key => Object.values(EVENTS[key as keyof typeof EVENTS])).flat()
+export const EVENT_NAMES = Object.entries(EVENTS).flatMap(
+  ([key, events]) => Object.values(events).map(event => `${key}:${event}`))
 
 // metadata
 export const ADDRESS_LENGTH = 42

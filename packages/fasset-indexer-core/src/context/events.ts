@@ -82,7 +82,7 @@ export class EventInterface {
       const cname = contractname as FAssetIface
       const iface = this.contractToIface(cname)
       for (const event of Object.values(EVENTS[cname])) {
-        if (eventNames?.includes(event) !== false) {
+        if (this.shouldIndexEvent(eventNames, cname, event)) {
           const topics = this.getEventTopics(event, iface)
           for (const topic of topics) {
             if (mp.get(topic) == null) {
@@ -94,6 +94,11 @@ export class EventInterface {
       }
     }
     return mp
+  }
+
+  private shouldIndexEvent(eventNames: string[] | undefined, contract: FAssetIface, event: string): boolean {
+    if (eventNames == null) return true
+    return eventNames.includes(`${contract}:${event}`) || eventNames.includes(event)
   }
 
   getEventTopics(eventName: string, ifaces: Interface[]): string[] {
