@@ -157,6 +157,9 @@ export class EventStorer {
       } case EVENTS.ASSET_MANAGER.REDEMPTION_REQUESTED: {
         await this.onRedemptionRequested(em, evmLog, log.args)
         break
+      } case EVENTS.ASSET_MANAGER.REDEMPTION_WITH_TAG_REQUESTED: {
+        await this.onRedemptionWithTagRequested(em, evmLog, log.args)
+        break
       } case EVENTS.ASSET_MANAGER.REDEMPTION_PERFORMED: {
         await this.onRedemptionPerformed(em, evmLog, log.args)
         break
@@ -186,6 +189,9 @@ export class EventStorer {
         break
       } case EVENTS.ASSET_MANAGER.REDEMPTION_REQUEST_INCOMPLETE: {
         await this.onRedemptionPaymentIncomplete(em, evmLog, log.args)
+        break
+      } case EVENTS.ASSET_MANAGER.REDEMPTION_AMOUNT_INCOMPLETE: {
+        await this.onRedemptionAmountIncomplete(em, evmLog, log.args)
         break
       } case EVENTS.ASSET_MANAGER.REDEMPTION_POOL_FEE_MINTED: {
         await this.onRedemptionPoolFeeMinted(em, evmLog, log.args)
@@ -775,6 +781,37 @@ export class EventStorer {
     })
   }
 
+  protected async onRedemptionWithTagRequested(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.RedemptionWithTagRequestedEvent.OutputTuple
+  ): Promise<Entities.RedemptionWithTagRequested> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [
+      agentVault, redeemer, requestId, paymentAddress, valueUBA, feeUBA,
+      firstUnderlyingBlock, lastUnderlyingBlock, lastUnderlyingTimestamp,
+      paymentReference, executor, executorFeeNatWei, destinationTag
+    ] = logArgs
+    const [_agentVault, evmAddresses, underlyingAddresses] = await Promise.all([
+      em.findOneOrFail(Entities.AgentVault, { address: { hex: agentVault }}),
+      findOrCreateEntities(em, Entities.EvmAddress, 'hex', [redeemer, executor]),
+      findOrCreateEntities(em, Entities.UnderlyingAddress, 'text', [paymentAddress])
+    ])
+    const _redeemer = evmAddresses.get(redeemer)!
+    const _executor = evmAddresses.get(executor)!
+    const _paymentAddress = underlyingAddresses.get(paymentAddress)!
+    const redemptionRequested = em.create(Entities.RedemptionRequested, {
+      evmLog, fasset, agentVault: _agentVault, redeemer: _redeemer, requestId: Number(requestId),
+      paymentAddress: _paymentAddress, valueUBA, feeUBA,
+      firstUnderlyingBlock: Number(firstUnderlyingBlock), lastUnderlyingBlock: Number(lastUnderlyingBlock),
+      lastUnderlyingTimestamp: Number(lastUnderlyingTimestamp), paymentReference, executor: _executor, executorFeeNatWei,
+      resolution: shared.RedemptionResolution.NONE
+    })
+    return em.create(Entities.RedemptionWithTagRequested, {
+      evmLog, fasset, redemptionRequested, destinationTag
+    })
+  }
+
   protected async onRedemptionPerformed(
     em: EntityManager,
     evmLog: Entities.EvmLog,
@@ -916,6 +953,18 @@ export class EventStorer {
     const [ redeemer, remainingLots ] = logArgs
     const _redeemer = await findOrCreateEntity(em, Entities.EvmAddress, { hex: redeemer })
     return em.create(Entities.RedemptionRequestIncomplete, { evmLog, fasset, redeemer: _redeemer, remainingLots })
+  }
+
+  protected async onRedemptionAmountIncomplete(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.RedemptionAmountIncompleteEvent.OutputTuple
+  ): Promise<Entities.RedemptionAmountIncomplete>
+  {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ redeemer, remainingAmountUBA ] = logArgs
+    const _redeemer = await findOrCreateEntity(em, Entities.EvmAddress, { hex: redeemer })
+    return em.create(Entities.RedemptionAmountIncomplete, { evmLog, fasset, redeemer: _redeemer, remainingAmountUBA })
   }
 
   protected async onRedemptionPoolFeeMinted(

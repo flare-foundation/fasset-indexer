@@ -122,6 +122,26 @@ export class RedemptionRequestIncomplete extends FAssetEventBound {
 }
 
 @Entity()
+export class RedemptionAmountIncomplete extends FAssetEventBound {
+
+  @ManyToOne({ entity: () => EvmAddress })
+  redeemer!: EvmAddress
+
+  @Property({ type: new uint256() })
+  remainingAmountUBA!: bigint
+}
+
+@Entity()
+export class RedemptionWithTagRequested extends FAssetEventBound {
+
+  @OneToOne({ entity: () => RedemptionRequested, owner: true })
+  redemptionRequested!: RedemptionRequested
+
+  @Property({ type: new uint256() })
+  destinationTag!: bigint
+}
+
+@Entity()
 export class RedemptionPoolFeeMinted extends FAssetEventBound {
 
   @OneToOne({ entity: () => RedemptionRequested, owner: true })

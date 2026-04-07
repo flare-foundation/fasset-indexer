@@ -57,12 +57,14 @@ export const EVENTS = {
     DIRECT_MINTINGS_UNBLOCKED: "DirectMintingsUnblocked",
     // redemption
     REDEMPTION_REQUESTED: "RedemptionRequested",
+    REDEMPTION_WITH_TAG_REQUESTED: "RedemptionWithTagRequested",
     REDEMPTION_PERFORMED: "RedemptionPerformed",
     REDEMPTION_DEFAULT: "RedemptionDefault",
     REDEMPTION_PAYMENT_BLOCKED: "RedemptionPaymentBlocked",
     REDEMPTION_PAYMENT_FAILED: "RedemptionPaymentFailed",
     REDEMPTION_REJECTED: "RedemptionRejected",
     REDEMPTION_REQUEST_INCOMPLETE: "RedemptionRequestIncomplete",
+    REDEMPTION_AMOUNT_INCOMPLETE: "RedemptionAmountIncomplete",
     REDEEMED_IN_COLLATERAL: "RedeemedInCollateral",
     REDEMPTION_POOL_FEE_MINTED: "RedemptionPoolFeeMinted",
     // redemption tickets
