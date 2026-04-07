@@ -5,7 +5,6 @@ export * from "./evm/transaction"
 export * from "./evm/log"
 export * from "./events/agent"
 export * from "./events/minting"
-export * from "./events/direct-minting"
 export * from "./events/redemption"
 export * from "./events/redemption-ticket"
 export * from "./state/redemption-ticket"
@@ -25,6 +24,9 @@ export * from "./state/balance"
 export * from './state/settings'
 export * from './events/core-vault-manager'
 export * from './events/price'
+// v1.3
+export * from "./events/direct-minting"
+export * from "./events/redemption-v13"
 // underlying data
 export * from "./underlying/block"
 export * from "./underlying/address"

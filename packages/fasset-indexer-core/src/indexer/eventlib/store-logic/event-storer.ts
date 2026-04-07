@@ -777,7 +777,7 @@ export class EventStorer {
       paymentAddress: _paymentAddress, valueUBA, feeUBA,
       firstUnderlyingBlock: Number(firstUnderlyingBlock), lastUnderlyingBlock: Number(lastUnderlyingBlock),
       lastUnderlyingTimestamp: Number(lastUnderlyingTimestamp), paymentReference, executor: _executor, executorFeeNatWei,
-      resolution: shared.RedemptionResolution.NONE
+      kind: 'plain', resolution: shared.RedemptionResolution.NONE
     })
   }
 
@@ -800,15 +800,12 @@ export class EventStorer {
     const _redeemer = evmAddresses.get(redeemer)!
     const _executor = evmAddresses.get(executor)!
     const _paymentAddress = underlyingAddresses.get(paymentAddress)!
-    const redemptionRequested = em.create(Entities.RedemptionRequested, {
+    return em.create(Entities.RedemptionWithTagRequested, {
       evmLog, fasset, agentVault: _agentVault, redeemer: _redeemer, requestId: Number(requestId),
       paymentAddress: _paymentAddress, valueUBA, feeUBA,
       firstUnderlyingBlock: Number(firstUnderlyingBlock), lastUnderlyingBlock: Number(lastUnderlyingBlock),
       lastUnderlyingTimestamp: Number(lastUnderlyingTimestamp), paymentReference, executor: _executor, executorFeeNatWei,
-      resolution: shared.RedemptionResolution.NONE
-    })
-    return em.create(Entities.RedemptionWithTagRequested, {
-      evmLog, fasset, redemptionRequested, destinationTag
+      destinationTag, kind: 'tagged', resolution: shared.RedemptionResolution.NONE
     })
   }
 
@@ -1444,7 +1441,7 @@ export class EventStorer {
     logArgs: AssetManager.TransferToCoreVaultSuccessfulEvent.OutputTuple
   ): Promise<Entities.TransferToCoreVaultSuccessful> {
     const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
-    const [ agentVault, transferRedemptionRequestId, valueUBA ] = logArgs
+    const [ , transferRedemptionRequestId, valueUBA ] = logArgs
     const transferToCoreVaultStarted = await em.findOneOrFail(Entities.TransferToCoreVaultStarted,
       { transferRedemptionRequestId: Number(transferRedemptionRequestId), fasset })
     transferToCoreVaultStarted.resolution = shared.TransferToCoreVaultResolution.SUCCESSFUL

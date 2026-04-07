@@ -7,10 +7,19 @@ import { AgentEventBound, FAssetEventBound } from "./_bound"
 import { BYTES32_LENGTH } from "../../../config/constants"
 
 
-@Entity()
+@Entity({
+  discriminatorColumn: 'kind',
+  discriminatorMap: {
+    plain: 'RedemptionRequested',
+    tagged: 'RedemptionWithTagRequested'
+  }
+})
 @Unique({ properties: ['fasset', 'requestId'] })
 @Unique({ properties: ['fasset', 'paymentReference'] })
 export class RedemptionRequested extends AgentEventBound {
+
+  @Enum({ items: () => ['plain', 'tagged'], default: 'plain' })
+  kind!: 'plain' | 'tagged'
 
   @Property({ type: 'number', index: true })
   requestId!: number
@@ -119,26 +128,6 @@ export class RedemptionRequestIncomplete extends FAssetEventBound {
 
   @Property({ type: new uint256() })
   remainingLots!: bigint
-}
-
-@Entity()
-export class RedemptionAmountIncomplete extends FAssetEventBound {
-
-  @ManyToOne({ entity: () => EvmAddress })
-  redeemer!: EvmAddress
-
-  @Property({ type: new uint256() })
-  remainingAmountUBA!: bigint
-}
-
-@Entity()
-export class RedemptionWithTagRequested extends FAssetEventBound {
-
-  @OneToOne({ entity: () => RedemptionRequested, owner: true })
-  redemptionRequested!: RedemptionRequested
-
-  @Property({ type: new uint256() })
-  destinationTag!: bigint
 }
 
 @Entity()
