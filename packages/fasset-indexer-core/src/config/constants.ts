@@ -48,6 +48,13 @@ export const EVENTS = {
     SELF_MINT: "SelfMint",
     MINTING_PAYMENT_DEFAULT: "MintingPaymentDefault",
     COLLATERAL_RESERVATION_DELETED: "CollateralReservationDeleted",
+    // direct minting
+    DIRECT_MINTING_EXECUTED: "DirectMintingExecuted",
+    DIRECT_MINTING_EXECUTED_TO_SMART_ACCOUNT: "DirectMintingExecutedToSmartAccount",
+    DIRECT_MINTING_PAYMENT_TOO_SMALL_FOR_FEE: "DirectMintingPaymentTooSmallForFee",
+    DIRECT_MINTING_DELAYED: "DirectMintingDelayed",
+    LARGE_DIRECT_MINTING_DELAYED: "LargeDirectMintingDelayed",
+    DIRECT_MINTINGS_UNBLOCKED: "DirectMintingsUnblocked",
     // redemption
     REDEMPTION_REQUESTED: "RedemptionRequested",
     REDEMPTION_PERFORMED: "RedemptionPerformed",

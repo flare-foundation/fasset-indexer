@@ -130,6 +130,24 @@ export class EventStorer {
       } case EVENTS.ASSET_MANAGER.SELF_MINT: {
         await this.onSelfMint(em, evmLog, log.args)
         break
+      } case EVENTS.ASSET_MANAGER.DIRECT_MINTING_EXECUTED: {
+        await this.onDirectMintingExecuted(em, evmLog, log.args)
+        break
+      } case EVENTS.ASSET_MANAGER.DIRECT_MINTING_EXECUTED_TO_SMART_ACCOUNT: {
+        await this.onDirectMintingExecutedToSmartAccount(em, evmLog, log.args)
+        break
+      } case EVENTS.ASSET_MANAGER.DIRECT_MINTING_PAYMENT_TOO_SMALL_FOR_FEE: {
+        await this.onDirectMintingPaymentTooSmallForFee(em, evmLog, log.args)
+        break
+      } case EVENTS.ASSET_MANAGER.DIRECT_MINTING_DELAYED: {
+        await this.onDirectMintingDelayed(em, evmLog, log.args)
+        break
+      } case EVENTS.ASSET_MANAGER.LARGE_DIRECT_MINTING_DELAYED: {
+        await this.onLargeDirectMintingDelayed(em, evmLog, log.args)
+        break
+      } case EVENTS.ASSET_MANAGER.DIRECT_MINTINGS_UNBLOCKED: {
+        await this.onDirectMintingsUnblocked(em, evmLog, log.args)
+        break
       } case EVENTS.ASSET_MANAGER.MINTING_PAYMENT_DEFAULT: {
         await this.onMintingPaymentDefault(em, evmLog, log.args)
         break
@@ -638,6 +656,88 @@ export class EventStorer {
     return em.create(Entities.SelfMint, {
       evmLog, fasset, agentVault: _agentVault, mintFromFreeUnderlying,
        mintedUBA: mintedAmountUBA, depositedUBA: depositedAmountUBA, poolFeeUBA
+    })
+  }
+
+  //////////////////////////////////////////////////////////////////////////////////////////////////////
+  // direct mintings
+
+  protected async onDirectMintingExecuted(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.DirectMintingExecutedEvent.OutputTuple
+  ): Promise<Entities.DirectMintingExecuted> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ transactionId, targetAddress, executor, mintedAmountUBA, mintingFeeUBA, executorFeeUBA ] = logArgs
+    const evmAddresses = await findOrCreateEntities(em, Entities.EvmAddress, 'hex', [targetAddress, executor])
+    const _targetAddress = evmAddresses.get(targetAddress)!
+    const _executor = evmAddresses.get(executor)!
+    return em.create(Entities.DirectMintingExecuted, {
+      evmLog, fasset, transactionId, targetAddress: _targetAddress, executor: _executor,
+      mintedAmountUBA, mintingFeeUBA, executorFeeUBA
+    })
+  }
+
+  protected async onDirectMintingExecutedToSmartAccount(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.DirectMintingExecutedToSmartAccountEvent.OutputTuple
+  ): Promise<Entities.DirectMintingExecutedToSmartAccount> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ transactionId, sourceAddress, executor, mintedAmountUBA, mintingFeeUBA, memoData ] = logArgs
+    const _sourceAddress = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: sourceAddress })
+    const _executor = await findOrCreateEntity(em, Entities.EvmAddress, { hex: executor })
+    return em.create(Entities.DirectMintingExecutedToSmartAccount, {
+      evmLog, fasset, transactionId, sourceAddress: _sourceAddress, executor: _executor,
+      mintedAmountUBA, mintingFeeUBA, memoData
+    })
+  }
+
+  protected async onDirectMintingPaymentTooSmallForFee(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.DirectMintingPaymentTooSmallForFeeEvent.OutputTuple
+  ): Promise<Entities.DirectMintingPaymentTooSmallForFee> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ transactionId, receivedAmountUBA, minimumMintingFeeUBA ] = logArgs
+    return em.create(Entities.DirectMintingPaymentTooSmallForFee, {
+      evmLog, fasset, transactionId, receivedAmountUBA, minimumMintingFeeUBA
+    })
+  }
+
+  protected async onDirectMintingDelayed(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.DirectMintingDelayedEvent.OutputTuple
+  ): Promise<Entities.DirectMintingDelayed> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ transactionId, amount, executionAllowedAt ] = logArgs
+    return em.create(Entities.DirectMintingDelayed, {
+      evmLog, fasset, transactionId, amount, executionAllowedAt
+    })
+  }
+
+  protected async onLargeDirectMintingDelayed(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.LargeDirectMintingDelayedEvent.OutputTuple
+  ): Promise<Entities.LargeDirectMintingDelayed> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ transactionId, amount, executionAllowedAt ] = logArgs
+    return em.create(Entities.LargeDirectMintingDelayed, {
+      evmLog, fasset, transactionId, amount, executionAllowedAt
+    })
+  }
+
+  protected async onDirectMintingsUnblocked(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.DirectMintingsUnblockedEvent.OutputTuple
+  ): Promise<Entities.DirectMintingsUnblocked> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ startedUntilTimestamp ] = logArgs
+    return em.create(Entities.DirectMintingsUnblocked, {
+      evmLog, fasset, startedUntilTimestamp
     })
   }
 
