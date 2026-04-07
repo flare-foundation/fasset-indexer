@@ -4,6 +4,7 @@
 {
 	"name": "FAsset Indexer Container",
     "image": "mcr.microsoft.com/devcontainers/typescript-node:20",
+    "initializeCommand": "mkdir -p ${localEnv:HOME}/.claude && touch ${localEnv:HOME}/.claude.json",
     "postCreateCommand": "npm install -g @anthropic-ai/claude-code",
     "mounts": [
         "source=/dev/null,target=${containerWorkspaceFolder}/.env,type=bind,readonly",
@@ -31,26 +32,8 @@
                 "editor.insertSpaces": true,
                 "editor.detectIndentation": false,
                 "files.trimFinalNewlines": true,
-                "files.trimTrailingWhitespace": true,
-                "yaml.customTags": [
-                    "!reference sequence"
-                ]
+                "files.trimTrailingWhitespace": true
             }
         }
     }
-
-	// Features to add to the dev container. More info: https://containers.dev/features.
-	// "features": {},
-
-	// Use 'forwardPorts' to make a list of ports inside the container available locally.
-	// "forwardPorts": [],
-
-	// Uncomment the next line to run commands after the container is created.
-	// "postCreateCommand": "cat /etc/os-release",
-
-	// Configure tool-specific properties.
-	// "customizations": {},
-
-	// Uncomment to connect as an existing user other than the container default. More info: https://aka.ms/dev-containers-non-root.
-	// "remoteUser": "devcontainer"
 }
