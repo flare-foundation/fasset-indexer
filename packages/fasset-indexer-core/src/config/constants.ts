@@ -102,7 +102,8 @@ export const EVENTS = {
     RETURN_FROM_CORE_VAULT_REQUESTED: 'ReturnFromCoreVaultRequested',
     RETURN_FROM_CORE_VAULT_CONFIRMED: 'ReturnFromCoreVaultConfirmed',
     RETURN_FROM_CORE_VAULT_CANCELLED: 'ReturnFromCoreVaultCancelled',
-    CORE_VAULT_REDEMPTION_REQUESTED: 'CoreVaultRedemptionRequested'
+    CORE_VAULT_REDEMPTION_REQUESTED: 'CoreVaultRedemptionRequested',
+    CORE_VAULT_FUNDS_ADDED: 'CoreVaultFundsAdded'
   },
   COLLATERAL_POOL: {
     ENTER: "Entered",

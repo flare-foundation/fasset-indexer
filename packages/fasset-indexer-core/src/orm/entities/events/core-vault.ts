@@ -96,3 +96,10 @@ export class CoreVaultRedemptionRequested extends FAssetEventBound {
   @Property({ type: new uint256() })
   feeUBA!: bigint
 }
+
+@Entity()
+export class CoreVaultFundsAdded extends FAssetEventBound {
+
+  @Property({ type: new uint256() })
+  amountUBA!: bigint
+}

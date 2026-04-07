@@ -247,6 +247,9 @@ export class EventStorer {
       } case EVENTS.ASSET_MANAGER.CORE_VAULT_REDEMPTION_REQUESTED: {
         await this.onCoreVaultRedemptionRequested(em, evmLog, log.args)
         break
+      } case EVENTS.ASSET_MANAGER.CORE_VAULT_FUNDS_ADDED: {
+        await this.onCoreVaultFundsAdded(em, evmLog, log.args)
+        break
       } case EVENTS.ASSET_MANAGER.EMERGENCY_PAUSE_TRIGGERED: {
         if (log.topic == this.oldEmergencySystemPauseTopic) {
           log.args = AssetManagerEventMigration.migrateEmergencyPauseTriggered(log.args)
@@ -1473,6 +1476,16 @@ export class EventStorer {
       evmLog, fasset, redeemer: _redeemer, paymentAddress: _paymentAddress,
       paymentReference, valueUBA, feeUBA
     })
+  }
+
+  protected async onCoreVaultFundsAdded(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.CoreVaultFundsAddedEvent.OutputTuple
+  ): Promise<Entities.CoreVaultFundsAdded> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ amountUBA ] = logArgs
+    return em.create(Entities.CoreVaultFundsAdded, { evmLog, fasset, amountUBA })
   }
 
   ////////////////////////////////////////////////////////////////////////////////////////////////////////

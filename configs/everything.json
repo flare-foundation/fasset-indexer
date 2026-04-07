@@ -54,6 +54,7 @@
         "ASSET_MANAGER:ReturnFromCoreVaultConfirmed",
         "ASSET_MANAGER:ReturnFromCoreVaultCancelled",
         "ASSET_MANAGER:CoreVaultRedemptionRequested",
+        "ASSET_MANAGER:CoreVaultFundsAdded",
         "COLLATERAL_POOL:Entered",
         "COLLATERAL_POOL:Exited",
         "COLLATERAL_POOL:ClaimedReward",
