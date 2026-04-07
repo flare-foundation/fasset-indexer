@@ -152,6 +152,8 @@ export class EventFixture extends EventGeneration {
         return this.generateCollateralPoolExit()
       } case EVENTS.ERC20.TRANSFER: {
         return this.generateTransfer()
+      } case EVENTS.ASSET_MANAGER.CONFIRMED_CLOSED_MINTING_PAYMENT: {
+        return this.generateConfirmedClosedMintingPayment()
       } case EVENTS.ASSET_MANAGER.AGENT_PING: {
         return this.generateAgentPing()
       } case EVENTS.ASSET_MANAGER.AGENT_PING_RESPONSE: {

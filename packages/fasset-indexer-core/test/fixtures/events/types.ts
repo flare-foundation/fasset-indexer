@@ -39,6 +39,7 @@ import type {
   TransferToCoreVaultDefaultedEvent,
   SettingChangedEvent,
   AgentDestroyAnnouncedEvent,
+  ConfirmedClosedMintingPaymentEvent,
 } from "../../../chain/typechain/assetManager/IAssetManager__latest"
 import type {
   CPClaimedRewardEvent,
@@ -88,6 +89,7 @@ export type EventNameToEventArgs = {
   [EVENTS.ASSET_MANAGER.AGENT_ENTERED_AVAILABLE]: AgentAvailableEvent.OutputTuple
   [EVENTS.ASSET_MANAGER.AGENT_PING]: AgentPingEvent.OutputTuple
   [EVENTS.ASSET_MANAGER.AGENT_PING_RESPONSE]: AgentPingResponseEvent.OutputTuple
+  [EVENTS.ASSET_MANAGER.CONFIRMED_CLOSED_MINTING_PAYMENT]: ConfirmedClosedMintingPaymentEvent.OutputTuple
   [EVENTS.ASSET_MANAGER.EMERGENCY_PAUSE_TRIGGERED]: EmergencyPauseTriggeredEvent.OutputTuple
   [EVENTS.COLLATERAL_POOL.ENTER]: EnteredEvent.OutputTuple
   [EVENTS.COLLATERAL_POOL.EXIT]: ExitedEvent.OutputTuple

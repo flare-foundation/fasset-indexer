@@ -2,6 +2,7 @@ import { Entity, Enum, OneToOne, Property } from "@mikro-orm/core"
 import { uint256, uint64 } from "../../custom/uint"
 import { AgentEventBound, FAssetEventBound } from "./_bound"
 import { UnderlyingWithdrawalResolution } from "../../../shared"
+import { BYTES32_LENGTH } from "../../../config/constants"
 
 
 @Entity()
@@ -109,4 +110,14 @@ export class DustChanged extends AgentEventBound {
 
   @Property({ type: new uint256() })
   dustUBA!: bigint
+}
+
+@Entity()
+export class ConfirmedClosedMintingPayment extends AgentEventBound {
+
+  @Property({ type: 'text', length: BYTES32_LENGTH })
+  transactionHash!: string
+
+  @Property({ type: new uint256() })
+  depositedUBA!: bigint
 }

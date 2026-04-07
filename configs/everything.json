@@ -86,6 +86,7 @@
         "ASSET_MANAGER:UnderlyingBalanceChanged",
         "ASSET_MANAGER:RedemptionPoolFeeMinted",
         "ASSET_MANAGER:DustChanged",
+        "ASSET_MANAGER:ConfirmedClosedMintingPayment",
         "ASSET_MANAGER:EmergencyPauseTriggered",
         "ASSET_MANAGER:EmergencyPauseCanceled",
         "ASSET_MANAGER:EmergencyPauseTransfersTriggered",

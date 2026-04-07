@@ -115,6 +115,9 @@ export class EventStorer {
       } case EVENTS.ASSET_MANAGER.DUST_CHANGED: {
         await this.onDustChanged(em, evmLog, log.args)
         break
+      } case EVENTS.ASSET_MANAGER.CONFIRMED_CLOSED_MINTING_PAYMENT: {
+        await this.onConfirmedClosedMintingPayment(em, evmLog, log.args)
+        break
       } case EVENTS.ASSET_MANAGER.SELF_CLOSE: {
         await this.onSelfClose(em, evmLog, log.args)
         break
@@ -363,7 +366,7 @@ export class EventStorer {
     logArgs: AssetManager.CollateralRatiosChangedEvent.OutputTuple
   ): Promise<Entities.CollateralRatiosChanged> {
     const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
-    const [ collateralClass, collateralToken, minCollateralRatioBIPS, safetyMinCollateralRatioBIPS ] = logArgs
+    const [ , collateralToken, minCollateralRatioBIPS, safetyMinCollateralRatioBIPS ] = logArgs
     const address = await findOrCreateEntity(em, Entities.EvmAddress, { hex: collateralToken })
     const collateralType = await em.findOneOrFail(Entities.CollateralTypeAdded, { address, fasset })
     return em.create(Entities.CollateralRatiosChanged, {
@@ -816,12 +819,12 @@ export class EventStorer {
     em: EntityManager,
     evmLog: Entities.EvmLog,
     logArgs: AssetManager.RedemptionPoolFeeMintedEvent.OutputTuple
-  ): Promise<Entities.RedemptionPoolFeeMintedEvent>
+  ): Promise<Entities.RedemptionPoolFeeMinted>
   {
     const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
-    const [ agentVault, requestId, poolFeeUBA ] = logArgs
+    const [ , requestId, poolFeeUBA ] = logArgs
     const redemptionRequested = await em.findOneOrFail(Entities.RedemptionRequested, { fasset, requestId: Number(requestId) })
-    return em.create(Entities.RedemptionPoolFeeMintedEvent, { evmLog, fasset, redemptionRequested, poolFeeUBA })
+    return em.create(Entities.RedemptionPoolFeeMinted, { evmLog, fasset, redemptionRequested, poolFeeUBA })
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1165,7 +1168,7 @@ export class EventStorer {
     logArgs: AssetManager.UnderlyingWithdrawalCancelledEvent.OutputTuple
   ): Promise<Entities.UnderlyingWithdrawalCancelled> {
     const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
-    const [ agentVault, announcementId ] = logArgs
+    const [ , announcementId ] = logArgs
     const underlyingWithdrawalAnnounced = await em.findOneOrFail(Entities.UnderlyingWithdrawalAnnounced,
       { announcementId , fasset })
     underlyingWithdrawalAnnounced.resolution = shared.UnderlyingWithdrawalResolution.CANCELLED
@@ -1207,6 +1210,18 @@ export class EventStorer {
     const [ agentVault, dustUBA ] = logArgs
     const _agentVault = await em.findOneOrFail(Entities.AgentVault, { address: { hex: agentVault } })
     return em.create(Entities.DustChanged, { evmLog, fasset, agentVault: _agentVault, dustUBA })
+  }
+
+  protected async onConfirmedClosedMintingPayment(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.ConfirmedClosedMintingPaymentEvent.OutputTuple
+  ): Promise<Entities.ConfirmedClosedMintingPayment> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ agentVault, transactionHash, depositedUBA ] = logArgs
+    const _agentVault = await em.findOneOrFail(Entities.AgentVault, { address: { hex: agentVault }})
+    return em.create(Entities.ConfirmedClosedMintingPayment,
+      { evmLog, fasset, agentVault: _agentVault, transactionHash, depositedUBA })
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -1290,7 +1305,7 @@ export class EventStorer {
     logArgs: AssetManager.TransferToCoreVaultDefaultedEvent.OutputTuple
   ): Promise<Entities.TransferToCoreVaultDefaulted> {
     const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
-    const [ agentVault, transferRedemptionRequestId, remintedUBA ] = logArgs
+    const [ , transferRedemptionRequestId, remintedUBA ] = logArgs
     const transferToCoreVaultStarted = await em.findOneOrFail(Entities.TransferToCoreVaultStarted,
       { transferRedemptionRequestId: Number(transferRedemptionRequestId), fasset })
     transferToCoreVaultStarted.resolution = shared.TransferToCoreVaultResolution.DEFAULTED
@@ -1317,7 +1332,7 @@ export class EventStorer {
     logArgs: AssetManager.ReturnFromCoreVaultConfirmedEvent.OutputTuple
   ): Promise<Entities.ReturnFromCoreVaultConfirmed> {
     const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
-    const [ agentVault, requestId, receivedUnderlyingUBA, remintedUBA ] = logArgs
+    const [ , requestId, receivedUnderlyingUBA, remintedUBA ] = logArgs
     const returnFromCoreVaultRequested = await em.findOneOrFail(Entities.ReturnFromCoreVaultRequested,
       { requestId: Number(requestId), fasset })
     returnFromCoreVaultRequested.resolution = shared.ReturnFromCoreVaultResolution.CONFIRMED
@@ -1332,7 +1347,7 @@ export class EventStorer {
     logArgs: AssetManager.ReturnFromCoreVaultCancelledEvent.OutputTuple
   ): Promise<Entities.ReturnFromCoreVaultCancelled> {
     const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
-    const [ agentVault, requestId ] = logArgs
+    const [ , requestId ] = logArgs
     const returnFromCoreVaultRequested = await em.findOneOrFail(Entities.ReturnFromCoreVaultRequested,
       { requestId: Number(requestId), fasset })
     returnFromCoreVaultRequested.resolution = shared.ReturnFromCoreVaultResolution.CANCELLED

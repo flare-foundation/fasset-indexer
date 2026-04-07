@@ -569,6 +569,31 @@ const _abi = [
     anonymous: false,
     inputs: [
       {
+        indexed: true,
+        internalType: "address",
+        name: "agentVault",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "bytes32",
+        name: "transactionHash",
+        type: "bytes32",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "depositedUBA",
+        type: "uint256",
+      },
+    ],
+    name: "ConfirmedClosedMintingPayment",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
         indexed: false,
         internalType: "string",
         name: "name",
@@ -582,6 +607,19 @@ const _abi = [
       },
     ],
     name: "ContractChanged",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amountUBA",
+        type: "uint256",
+      },
+    ],
+    name: "CoreVaultFundsAdded",
     type: "event",
   },
   {
@@ -692,6 +730,155 @@ const _abi = [
     anonymous: false,
     inputs: [
       {
+        indexed: false,
+        internalType: "bytes32",
+        name: "transactionId",
+        type: "bytes32",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "executionAllowedAt",
+        type: "uint256",
+      },
+    ],
+    name: "DirectMintingDelayed",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "bytes32",
+        name: "transactionId",
+        type: "bytes32",
+      },
+      {
+        indexed: false,
+        internalType: "address",
+        name: "targetAddress",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "address",
+        name: "executor",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "mintedAmountUBA",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "mintingFeeUBA",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "executorFeeUBA",
+        type: "uint256",
+      },
+    ],
+    name: "DirectMintingExecuted",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "bytes32",
+        name: "transactionId",
+        type: "bytes32",
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "sourceAddress",
+        type: "string",
+      },
+      {
+        indexed: false,
+        internalType: "address",
+        name: "executor",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "mintedAmountUBA",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "mintingFeeUBA",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "bytes",
+        name: "memoData",
+        type: "bytes",
+      },
+    ],
+    name: "DirectMintingExecutedToSmartAccount",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "bytes32",
+        name: "transactionId",
+        type: "bytes32",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "receivedAmountUBA",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "minimumMintingFeeUBA",
+        type: "uint256",
+      },
+    ],
+    name: "DirectMintingPaymentTooSmallForFee",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "startedUntilTimestamp",
+        type: "uint256",
+      },
+    ],
+    name: "DirectMintingsUnblocked",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
         indexed: true,
         internalType: "address",
         name: "agentVault",
@@ -736,6 +923,12 @@ const _abi = [
     anonymous: false,
     inputs: [],
     name: "EmergencyPauseCanceled",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [],
+    name: "EmergencyPauseTotalDurationReset",
     type: "event",
   },
   {
@@ -862,6 +1055,31 @@ const _abi = [
     anonymous: false,
     inputs: [
       {
+        indexed: false,
+        internalType: "bytes32",
+        name: "transactionId",
+        type: "bytes32",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "amount",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "executionAllowedAt",
+        type: "uint256",
+      },
+    ],
+    name: "LargeDirectMintingDelayed",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
         indexed: true,
         internalType: "address",
         name: "agentVault",
@@ -968,6 +1186,19 @@ const _abi = [
     anonymous: false,
     inputs: [
       {
+        indexed: false,
+        internalType: "bool",
+        name: "paused",
+        type: "bool",
+      },
+    ],
+    name: "MintingPaused",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
         indexed: true,
         internalType: "address",
         name: "agentVault",
@@ -1049,6 +1280,25 @@ const _abi = [
       },
     ],
     name: "RedeemedInCollateral",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "redeemer",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "remainingAmountUBA",
+        type: "uint256",
+      },
+    ],
+    name: "RedemptionAmountIncomplete",
     type: "event",
   },
   {
@@ -1463,6 +1713,91 @@ const _abi = [
       },
     ],
     name: "RedemptionTicketsConsolidated",
+    type: "event",
+  },
+  {
+    anonymous: false,
+    inputs: [
+      {
+        indexed: true,
+        internalType: "address",
+        name: "agentVault",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "address",
+        name: "redeemer",
+        type: "address",
+      },
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "requestId",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "string",
+        name: "paymentAddress",
+        type: "string",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "valueUBA",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "feeUBA",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "firstUnderlyingBlock",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "lastUnderlyingBlock",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "lastUnderlyingTimestamp",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "bytes32",
+        name: "paymentReference",
+        type: "bytes32",
+      },
+      {
+        indexed: false,
+        internalType: "address",
+        name: "executor",
+        type: "address",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "executorFeeNatWei",
+        type: "uint256",
+      },
+      {
+        indexed: false,
+        internalType: "uint256",
+        name: "destinationTag",
+        type: "uint256",
+      },
+    ],
+    name: "RedemptionWithTagRequested",
     type: "event",
   },
   {
@@ -2108,7 +2443,7 @@ const _abi = [
       },
       {
         internalType: "uint256",
-        name: "_valueNATWei",
+        name: "_valuePoolTokenWei",
         type: "uint256",
       },
     ],
@@ -2467,6 +2802,298 @@ const _abi = [
       },
     ],
     stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        components: [
+          {
+            internalType: "bytes32[]",
+            name: "merkleProof",
+            type: "bytes32[]",
+          },
+          {
+            components: [
+              {
+                internalType: "bytes32",
+                name: "attestationType",
+                type: "bytes32",
+              },
+              {
+                internalType: "bytes32",
+                name: "sourceId",
+                type: "bytes32",
+              },
+              {
+                internalType: "uint64",
+                name: "votingRound",
+                type: "uint64",
+              },
+              {
+                internalType: "uint64",
+                name: "lowestUsedTimestamp",
+                type: "uint64",
+              },
+              {
+                components: [
+                  {
+                    internalType: "bytes32",
+                    name: "transactionId",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "uint256",
+                    name: "inUtxo",
+                    type: "uint256",
+                  },
+                  {
+                    internalType: "uint256",
+                    name: "utxo",
+                    type: "uint256",
+                  },
+                ],
+                internalType: "struct IPayment.RequestBody",
+                name: "requestBody",
+                type: "tuple",
+              },
+              {
+                components: [
+                  {
+                    internalType: "uint64",
+                    name: "blockNumber",
+                    type: "uint64",
+                  },
+                  {
+                    internalType: "uint64",
+                    name: "blockTimestamp",
+                    type: "uint64",
+                  },
+                  {
+                    internalType: "bytes32",
+                    name: "sourceAddressHash",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "bytes32",
+                    name: "sourceAddressesRoot",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "bytes32",
+                    name: "receivingAddressHash",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "bytes32",
+                    name: "intendedReceivingAddressHash",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "int256",
+                    name: "spentAmount",
+                    type: "int256",
+                  },
+                  {
+                    internalType: "int256",
+                    name: "intendedSpentAmount",
+                    type: "int256",
+                  },
+                  {
+                    internalType: "int256",
+                    name: "receivedAmount",
+                    type: "int256",
+                  },
+                  {
+                    internalType: "int256",
+                    name: "intendedReceivedAmount",
+                    type: "int256",
+                  },
+                  {
+                    internalType: "bytes32",
+                    name: "standardPaymentReference",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "bool",
+                    name: "oneToOne",
+                    type: "bool",
+                  },
+                  {
+                    internalType: "uint8",
+                    name: "status",
+                    type: "uint8",
+                  },
+                ],
+                internalType: "struct IPayment.ResponseBody",
+                name: "responseBody",
+                type: "tuple",
+              },
+            ],
+            internalType: "struct IPayment.Response",
+            name: "data",
+            type: "tuple",
+          },
+        ],
+        internalType: "struct IPayment.Proof",
+        name: "_payment",
+        type: "tuple",
+      },
+      {
+        internalType: "uint256",
+        name: "_collateralReservationId",
+        type: "uint256",
+      },
+    ],
+    name: "confirmClosedMintingPayment",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        components: [
+          {
+            internalType: "bytes32[]",
+            name: "merkleProof",
+            type: "bytes32[]",
+          },
+          {
+            components: [
+              {
+                internalType: "bytes32",
+                name: "attestationType",
+                type: "bytes32",
+              },
+              {
+                internalType: "bytes32",
+                name: "sourceId",
+                type: "bytes32",
+              },
+              {
+                internalType: "uint64",
+                name: "votingRound",
+                type: "uint64",
+              },
+              {
+                internalType: "uint64",
+                name: "lowestUsedTimestamp",
+                type: "uint64",
+              },
+              {
+                components: [
+                  {
+                    internalType: "bytes32",
+                    name: "transactionId",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "address",
+                    name: "proofOwner",
+                    type: "address",
+                  },
+                ],
+                internalType: "struct IXRPPayment.RequestBody",
+                name: "requestBody",
+                type: "tuple",
+              },
+              {
+                components: [
+                  {
+                    internalType: "uint64",
+                    name: "blockNumber",
+                    type: "uint64",
+                  },
+                  {
+                    internalType: "uint64",
+                    name: "blockTimestamp",
+                    type: "uint64",
+                  },
+                  {
+                    internalType: "string",
+                    name: "sourceAddress",
+                    type: "string",
+                  },
+                  {
+                    internalType: "bytes32",
+                    name: "sourceAddressHash",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "bytes32",
+                    name: "receivingAddressHash",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "bytes32",
+                    name: "intendedReceivingAddressHash",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "int256",
+                    name: "spentAmount",
+                    type: "int256",
+                  },
+                  {
+                    internalType: "int256",
+                    name: "intendedSpentAmount",
+                    type: "int256",
+                  },
+                  {
+                    internalType: "int256",
+                    name: "receivedAmount",
+                    type: "int256",
+                  },
+                  {
+                    internalType: "int256",
+                    name: "intendedReceivedAmount",
+                    type: "int256",
+                  },
+                  {
+                    internalType: "bool",
+                    name: "hasMemoData",
+                    type: "bool",
+                  },
+                  {
+                    internalType: "bytes",
+                    name: "firstMemoData",
+                    type: "bytes",
+                  },
+                  {
+                    internalType: "bool",
+                    name: "hasDestinationTag",
+                    type: "bool",
+                  },
+                  {
+                    internalType: "uint256",
+                    name: "destinationTag",
+                    type: "uint256",
+                  },
+                  {
+                    internalType: "uint8",
+                    name: "status",
+                    type: "uint8",
+                  },
+                ],
+                internalType: "struct IXRPPayment.ResponseBody",
+                name: "responseBody",
+                type: "tuple",
+              },
+            ],
+            internalType: "struct IXRPPayment.Response",
+            name: "data",
+            type: "tuple",
+          },
+        ],
+        internalType: "struct IXRPPayment.Proof",
+        name: "_payment",
+        type: "tuple",
+      },
+    ],
+    name: "confirmCoreVaultDonation",
+    outputs: [],
+    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -3056,6 +3683,157 @@ const _abi = [
   {
     inputs: [
       {
+        components: [
+          {
+            internalType: "bytes32[]",
+            name: "merkleProof",
+            type: "bytes32[]",
+          },
+          {
+            components: [
+              {
+                internalType: "bytes32",
+                name: "attestationType",
+                type: "bytes32",
+              },
+              {
+                internalType: "bytes32",
+                name: "sourceId",
+                type: "bytes32",
+              },
+              {
+                internalType: "uint64",
+                name: "votingRound",
+                type: "uint64",
+              },
+              {
+                internalType: "uint64",
+                name: "lowestUsedTimestamp",
+                type: "uint64",
+              },
+              {
+                components: [
+                  {
+                    internalType: "bytes32",
+                    name: "transactionId",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "address",
+                    name: "proofOwner",
+                    type: "address",
+                  },
+                ],
+                internalType: "struct IXRPPayment.RequestBody",
+                name: "requestBody",
+                type: "tuple",
+              },
+              {
+                components: [
+                  {
+                    internalType: "uint64",
+                    name: "blockNumber",
+                    type: "uint64",
+                  },
+                  {
+                    internalType: "uint64",
+                    name: "blockTimestamp",
+                    type: "uint64",
+                  },
+                  {
+                    internalType: "string",
+                    name: "sourceAddress",
+                    type: "string",
+                  },
+                  {
+                    internalType: "bytes32",
+                    name: "sourceAddressHash",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "bytes32",
+                    name: "receivingAddressHash",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "bytes32",
+                    name: "intendedReceivingAddressHash",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "int256",
+                    name: "spentAmount",
+                    type: "int256",
+                  },
+                  {
+                    internalType: "int256",
+                    name: "intendedSpentAmount",
+                    type: "int256",
+                  },
+                  {
+                    internalType: "int256",
+                    name: "receivedAmount",
+                    type: "int256",
+                  },
+                  {
+                    internalType: "int256",
+                    name: "intendedReceivedAmount",
+                    type: "int256",
+                  },
+                  {
+                    internalType: "bool",
+                    name: "hasMemoData",
+                    type: "bool",
+                  },
+                  {
+                    internalType: "bytes",
+                    name: "firstMemoData",
+                    type: "bytes",
+                  },
+                  {
+                    internalType: "bool",
+                    name: "hasDestinationTag",
+                    type: "bool",
+                  },
+                  {
+                    internalType: "uint256",
+                    name: "destinationTag",
+                    type: "uint256",
+                  },
+                  {
+                    internalType: "uint8",
+                    name: "status",
+                    type: "uint8",
+                  },
+                ],
+                internalType: "struct IXRPPayment.ResponseBody",
+                name: "responseBody",
+                type: "tuple",
+              },
+            ],
+            internalType: "struct IXRPPayment.Response",
+            name: "data",
+            type: "tuple",
+          },
+        ],
+        internalType: "struct IXRPPayment.Proof",
+        name: "_payment",
+        type: "tuple",
+      },
+      {
+        internalType: "uint256",
+        name: "_redemptionRequestId",
+        type: "uint256",
+      },
+    ],
+    name: "confirmXRPRedemptionPayment",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "uint256",
         name: "_firstTicketId",
         type: "uint256",
@@ -3328,6 +4106,48 @@ const _abi = [
     name: "diamondCut",
     outputs: [],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "bytes32",
+        name: "_transactionId",
+        type: "bytes32",
+      },
+    ],
+    name: "directMintingDelayState",
+    outputs: [
+      {
+        internalType: "enum IDirectMinting.DirectMintingDelayState",
+        name: "_delayState",
+        type: "uint8",
+      },
+      {
+        internalType: "uint256",
+        name: "_allowedAt",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_startedAt",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "directMintingPaymentAddress",
+    outputs: [
+      {
+        internalType: "string",
+        name: "",
+        type: "string",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -3647,6 +4467,152 @@ const _abi = [
     name: "executeAgentSettingUpdate",
     outputs: [],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        components: [
+          {
+            internalType: "bytes32[]",
+            name: "merkleProof",
+            type: "bytes32[]",
+          },
+          {
+            components: [
+              {
+                internalType: "bytes32",
+                name: "attestationType",
+                type: "bytes32",
+              },
+              {
+                internalType: "bytes32",
+                name: "sourceId",
+                type: "bytes32",
+              },
+              {
+                internalType: "uint64",
+                name: "votingRound",
+                type: "uint64",
+              },
+              {
+                internalType: "uint64",
+                name: "lowestUsedTimestamp",
+                type: "uint64",
+              },
+              {
+                components: [
+                  {
+                    internalType: "bytes32",
+                    name: "transactionId",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "address",
+                    name: "proofOwner",
+                    type: "address",
+                  },
+                ],
+                internalType: "struct IXRPPayment.RequestBody",
+                name: "requestBody",
+                type: "tuple",
+              },
+              {
+                components: [
+                  {
+                    internalType: "uint64",
+                    name: "blockNumber",
+                    type: "uint64",
+                  },
+                  {
+                    internalType: "uint64",
+                    name: "blockTimestamp",
+                    type: "uint64",
+                  },
+                  {
+                    internalType: "string",
+                    name: "sourceAddress",
+                    type: "string",
+                  },
+                  {
+                    internalType: "bytes32",
+                    name: "sourceAddressHash",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "bytes32",
+                    name: "receivingAddressHash",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "bytes32",
+                    name: "intendedReceivingAddressHash",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "int256",
+                    name: "spentAmount",
+                    type: "int256",
+                  },
+                  {
+                    internalType: "int256",
+                    name: "intendedSpentAmount",
+                    type: "int256",
+                  },
+                  {
+                    internalType: "int256",
+                    name: "receivedAmount",
+                    type: "int256",
+                  },
+                  {
+                    internalType: "int256",
+                    name: "intendedReceivedAmount",
+                    type: "int256",
+                  },
+                  {
+                    internalType: "bool",
+                    name: "hasMemoData",
+                    type: "bool",
+                  },
+                  {
+                    internalType: "bytes",
+                    name: "firstMemoData",
+                    type: "bytes",
+                  },
+                  {
+                    internalType: "bool",
+                    name: "hasDestinationTag",
+                    type: "bool",
+                  },
+                  {
+                    internalType: "uint256",
+                    name: "destinationTag",
+                    type: "uint256",
+                  },
+                  {
+                    internalType: "uint8",
+                    name: "status",
+                    type: "uint8",
+                  },
+                ],
+                internalType: "struct IXRPPayment.ResponseBody",
+                name: "responseBody",
+                type: "tuple",
+              },
+            ],
+            internalType: "struct IXRPPayment.Response",
+            name: "data",
+            type: "tuple",
+          },
+        ],
+        internalType: "struct IXRPPayment.Proof",
+        name: "_payment",
+        type: "tuple",
+      },
+    ],
+    name: "executeDirectMinting",
+    outputs: [],
+    stateMutability: "payable",
     type: "function",
   },
   {
@@ -4786,6 +5752,19 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "getCoreVaultDonationTag",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "getCoreVaultManager",
     outputs: [
       {
@@ -4851,7 +5830,186 @@ const _abi = [
   },
   {
     inputs: [],
+    name: "getCoreVaultTransferDefaultPenaltyBIPS",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
     name: "getCoreVaultTransferTimeExtensionSeconds",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getDirectMintingDailyLimitUBA",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getDirectMintingDailyLimiterState",
+    outputs: [
+      {
+        internalType: "uint64",
+        name: "_windowStartTimestamp",
+        type: "uint64",
+      },
+      {
+        internalType: "uint64",
+        name: "_mintedInCurrentWindow",
+        type: "uint64",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getDirectMintingExecutorFeeUBA",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getDirectMintingFeeBIPS",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getDirectMintingFeeReceiver",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getDirectMintingHourlyLimitUBA",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getDirectMintingHourlyLimiterState",
+    outputs: [
+      {
+        internalType: "uint64",
+        name: "_windowStartTimestamp",
+        type: "uint64",
+      },
+      {
+        internalType: "uint64",
+        name: "_mintedInCurrentWindow",
+        type: "uint64",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getDirectMintingLargeMintingDelaySeconds",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getDirectMintingLargeMintingThresholdUBA",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getDirectMintingMinimumFeeUBA",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getDirectMintingOthersCanExecuteAfterSeconds",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getDirectMintingsUnblockUntilTimestamp",
     outputs: [
       {
         internalType: "uint256",
@@ -4876,6 +6034,19 @@ const _abi = [
         internalType: "uint256",
         name: "",
         type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getMintingTagManager",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
       },
     ],
     stateMutability: "view",
@@ -5191,6 +6362,19 @@ const _abi = [
         internalType: "struct AssetManagerSettings.Data",
         name: "",
         type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "getSmartAccountManager",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
       },
     ],
     stateMutability: "view",
@@ -5525,6 +6709,19 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "bytes32",
+        name: "_transactionId",
+        type: "bytes32",
+      },
+    ],
+    name: "markUnblockedDirectMintingAllowed",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "address",
         name: "_agentVault",
         type: "address",
@@ -5559,6 +6756,19 @@ const _abi = [
       {
         internalType: "uint256",
         name: "_minimumLeftAmountUBA",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "minimumRedeemAmountUBA",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
         type: "uint256",
       },
     ],
@@ -5784,6 +6994,35 @@ const _abi = [
   {
     inputs: [
       {
+        internalType: "uint256",
+        name: "_amountUBA",
+        type: "uint256",
+      },
+      {
+        internalType: "string",
+        name: "_redeemerUnderlyingAddressString",
+        type: "string",
+      },
+      {
+        internalType: "address payable",
+        name: "_executor",
+        type: "address",
+      },
+    ],
+    name: "redeemAmount",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "_redeemedAmountUBA",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
         internalType: "address",
         name: "_agentVault",
         type: "address",
@@ -5853,6 +7092,53 @@ const _abi = [
     name: "redeemFromCoreVault",
     outputs: [],
     stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_amountUBA",
+        type: "uint256",
+      },
+      {
+        internalType: "string",
+        name: "_redeemerUnderlyingAddressString",
+        type: "string",
+      },
+      {
+        internalType: "address payable",
+        name: "_executor",
+        type: "address",
+      },
+      {
+        internalType: "uint256",
+        name: "_destinationTag",
+        type: "uint256",
+      },
+    ],
+    name: "redeemWithTag",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "_redeemedAmountUBA",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "payable",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "redeemWithTagSupported",
+    outputs: [
+      {
+        internalType: "bool",
+        name: "",
+        type: "bool",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -6136,6 +7422,122 @@ const _abi = [
           },
         ],
         internalType: "struct RedemptionRequestInfo.Data",
+        name: "",
+        type: "tuple",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_redemptionRequestId",
+        type: "uint256",
+      },
+    ],
+    name: "redemptionRequestInfoExt",
+    outputs: [
+      {
+        components: [
+          {
+            internalType: "uint64",
+            name: "redemptionRequestId",
+            type: "uint64",
+          },
+          {
+            internalType: "enum RedemptionRequestInfo.Status",
+            name: "status",
+            type: "uint8",
+          },
+          {
+            internalType: "address",
+            name: "agentVault",
+            type: "address",
+          },
+          {
+            internalType: "address",
+            name: "redeemer",
+            type: "address",
+          },
+          {
+            internalType: "string",
+            name: "paymentAddress",
+            type: "string",
+          },
+          {
+            internalType: "bytes32",
+            name: "paymentReference",
+            type: "bytes32",
+          },
+          {
+            internalType: "uint128",
+            name: "valueUBA",
+            type: "uint128",
+          },
+          {
+            internalType: "uint128",
+            name: "feeUBA",
+            type: "uint128",
+          },
+          {
+            internalType: "uint16",
+            name: "poolFeeShareBIPS",
+            type: "uint16",
+          },
+          {
+            internalType: "uint64",
+            name: "firstUnderlyingBlock",
+            type: "uint64",
+          },
+          {
+            internalType: "uint64",
+            name: "lastUnderlyingBlock",
+            type: "uint64",
+          },
+          {
+            internalType: "uint64",
+            name: "lastUnderlyingTimestamp",
+            type: "uint64",
+          },
+          {
+            internalType: "uint64",
+            name: "timestamp",
+            type: "uint64",
+          },
+          {
+            internalType: "bool",
+            name: "poolSelfClose",
+            type: "bool",
+          },
+          {
+            internalType: "bool",
+            name: "transferToCoreVault",
+            type: "bool",
+          },
+          {
+            internalType: "address",
+            name: "executor",
+            type: "address",
+          },
+          {
+            internalType: "uint256",
+            name: "executorFeeNatWei",
+            type: "uint256",
+          },
+          {
+            internalType: "bool",
+            name: "requiresDestinationTag",
+            type: "bool",
+          },
+          {
+            internalType: "uint256",
+            name: "destinationTag",
+            type: "uint256",
+          },
+        ],
+        internalType: "struct RedemptionRequestInfo.DataExt",
         name: "",
         type: "tuple",
       },
@@ -6786,11 +8188,125 @@ const _abi = [
     inputs: [
       {
         internalType: "uint256",
+        name: "_transferDefaultPenaltyBIPS",
+        type: "uint256",
+      },
+    ],
+    name: "setCoreVaultTransferDefaultPenaltyBIPS",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
         name: "_transferTimeExtensionSeconds",
         type: "uint256",
       },
     ],
     name: "setCoreVaultTransferTimeExtensionSeconds",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_dailyLimitUBA",
+        type: "uint256",
+      },
+    ],
+    name: "setDirectMintingDailyLimitUBA",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_executorFeeUBA",
+        type: "uint256",
+      },
+    ],
+    name: "setDirectMintingExecutorFee",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_mintingFeeBIPS",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_minimumMintingFeeUBA",
+        type: "uint256",
+      },
+    ],
+    name: "setDirectMintingFee",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_mintingFeeReceiver",
+        type: "address",
+      },
+    ],
+    name: "setDirectMintingFeeReceiver",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_hourlyLimitUBA",
+        type: "uint256",
+      },
+    ],
+    name: "setDirectMintingHourlyLimitUBA",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_largeMintingThresholdUBA",
+        type: "uint256",
+      },
+      {
+        internalType: "uint256",
+        name: "_largeMintingDelaySeconds",
+        type: "uint256",
+      },
+    ],
+    name: "setDirectMintingLargeMintingThrottling",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_seconds",
+        type: "uint256",
+      },
+    ],
+    name: "setDirectMintingOthersCanExecuteAfterSeconds",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -6921,6 +8437,19 @@ const _abi = [
     inputs: [
       {
         internalType: "uint256",
+        name: "_valueUBA",
+        type: "uint256",
+      },
+    ],
+    name: "setMinimumRedeemAmountUBA",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
         name: "_value",
         type: "uint256",
       },
@@ -6939,6 +8468,19 @@ const _abi = [
       },
     ],
     name: "setMintingPoolHoldingsRequiredBIPS",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_mintingTagManager",
+        type: "address",
+      },
+    ],
+    name: "setMintingTagManager",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -7022,6 +8564,19 @@ const _abi = [
       },
     ],
     name: "setRedemptionPaymentExtensionSeconds",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "address",
+        name: "_smartAccountManager",
+        type: "address",
+      },
+    ],
+    name: "setSmartAccountManager",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -7129,6 +8684,19 @@ const _abi = [
       },
     ],
     name: "transferToCoreVault",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        internalType: "uint256",
+        name: "_timestamp",
+        type: "uint256",
+      },
+    ],
+    name: "unblockDirectMintingsUntil",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -7426,6 +8994,137 @@ const _abi = [
       },
     ],
     name: "upgradeWNatContract",
+    outputs: [],
+    stateMutability: "nonpayable",
+    type: "function",
+  },
+  {
+    inputs: [
+      {
+        components: [
+          {
+            internalType: "bytes32[]",
+            name: "merkleProof",
+            type: "bytes32[]",
+          },
+          {
+            components: [
+              {
+                internalType: "bytes32",
+                name: "attestationType",
+                type: "bytes32",
+              },
+              {
+                internalType: "bytes32",
+                name: "sourceId",
+                type: "bytes32",
+              },
+              {
+                internalType: "uint64",
+                name: "votingRound",
+                type: "uint64",
+              },
+              {
+                internalType: "uint64",
+                name: "lowestUsedTimestamp",
+                type: "uint64",
+              },
+              {
+                components: [
+                  {
+                    internalType: "uint64",
+                    name: "minimalBlockNumber",
+                    type: "uint64",
+                  },
+                  {
+                    internalType: "uint64",
+                    name: "deadlineBlockNumber",
+                    type: "uint64",
+                  },
+                  {
+                    internalType: "uint64",
+                    name: "deadlineTimestamp",
+                    type: "uint64",
+                  },
+                  {
+                    internalType: "bytes32",
+                    name: "destinationAddressHash",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "uint256",
+                    name: "amount",
+                    type: "uint256",
+                  },
+                  {
+                    internalType: "bool",
+                    name: "checkFirstMemoData",
+                    type: "bool",
+                  },
+                  {
+                    internalType: "bytes32",
+                    name: "firstMemoDataHash",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "bool",
+                    name: "checkDestinationTag",
+                    type: "bool",
+                  },
+                  {
+                    internalType: "uint256",
+                    name: "destinationTag",
+                    type: "uint256",
+                  },
+                  {
+                    internalType: "address",
+                    name: "proofOwner",
+                    type: "address",
+                  },
+                ],
+                internalType: "struct IXRPPaymentNonexistence.RequestBody",
+                name: "requestBody",
+                type: "tuple",
+              },
+              {
+                components: [
+                  {
+                    internalType: "uint64",
+                    name: "minimalBlockTimestamp",
+                    type: "uint64",
+                  },
+                  {
+                    internalType: "uint64",
+                    name: "firstOverflowBlockNumber",
+                    type: "uint64",
+                  },
+                  {
+                    internalType: "uint64",
+                    name: "firstOverflowBlockTimestamp",
+                    type: "uint64",
+                  },
+                ],
+                internalType: "struct IXRPPaymentNonexistence.ResponseBody",
+                name: "responseBody",
+                type: "tuple",
+              },
+            ],
+            internalType: "struct IXRPPaymentNonexistence.Response",
+            name: "data",
+            type: "tuple",
+          },
+        ],
+        internalType: "struct IXRPPaymentNonexistence.Proof",
+        name: "_proof",
+        type: "tuple",
+      },
+      {
+        internalType: "uint256",
+        name: "_redemptionRequestId",
+        type: "uint256",
+      },
+    ],
+    name: "xrpRedemptionPaymentDefault",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",

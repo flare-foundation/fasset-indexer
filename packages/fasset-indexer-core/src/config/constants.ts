@@ -41,6 +41,7 @@ export const EVENTS = {
     UNDERLYING_WITHDRAWAL_CANCELLED: "UnderlyingWithdrawalCancelled",
     UNDERLYING_BALANCE_TOPPED_UP: "UnderlyingBalanceToppedUp",
     UNDERLYING_BALANCE_CHANGED: "UnderlyingBalanceChanged",
+    CONFIRMED_CLOSED_MINTING_PAYMENT: "ConfirmedClosedMintingPayment",
     // minting
     COLLATERAL_RESERVED: "CollateralReserved",
     MINTING_EXECUTED: "MintingExecuted",

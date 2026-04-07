@@ -198,6 +198,25 @@ describe("FAsset evm events", () => {
       expect(announceDestroy.allowedAt).to.equal(announceDestroyEvent.args[1])
     })
 
+    it("should store confirmed closed minting payment event", async () => {
+      const assetManagerXrp = context.requireContractAddress(ASSET_MANAGER_FXRP)
+      await fixture.storeInitialAgents(FAssetType.FXRP)
+      const em = context.orm.em.fork()
+      const confirmedClosedMintingPaymentEvent = await fixture.generateEvent(
+        EVENTS.ASSET_MANAGER.CONFIRMED_CLOSED_MINTING_PAYMENT, assetManagerXrp)
+      await storer.processEventUnsafe(em, confirmedClosedMintingPaymentEvent)
+      const confirmedClosedMintingPayment = await em.findOneOrFail(Entities.ConfirmedClosedMintingPayment,
+        { evmLog: { index: confirmedClosedMintingPaymentEvent.index, block: { index: confirmedClosedMintingPaymentEvent.block.index } } },
+        { populate: ['evmLog.block', 'agentVault.address'] }
+      )
+      expect(confirmedClosedMintingPayment).to.exist
+      expect(confirmedClosedMintingPayment.evmLog.index).to.equal(confirmedClosedMintingPaymentEvent.index)
+      expect(confirmedClosedMintingPayment.evmLog.block.index).to.equal(confirmedClosedMintingPaymentEvent.block.index)
+      expect(confirmedClosedMintingPayment.agentVault.address.hex).to.equal(confirmedClosedMintingPaymentEvent.args[0])
+      expect(confirmedClosedMintingPayment.transactionHash).to.equal(confirmedClosedMintingPaymentEvent.args[1])
+      expect(confirmedClosedMintingPayment.depositedUBA).to.equal(confirmedClosedMintingPaymentEvent.args[2])
+    })
+
     it("should store agent ping", async () => {
       const assetManagerXrp = context.requireContractAddress(ASSET_MANAGER_FXRP)
       await fixture.storeInitialAgents(FAssetType.FXRP)

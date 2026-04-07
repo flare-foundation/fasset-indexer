@@ -59,7 +59,8 @@ import type {
   TransferToCoreVaultSuccessfulEvent,
   TransferToCoreVaultDefaultedEvent,
   SettingChangedEvent,
-  AgentDestroyAnnouncedEvent
+  AgentDestroyAnnouncedEvent,
+  ConfirmedClosedMintingPaymentEvent
 } from "../../../chain/typechain/assetManager/IAssetManager__latest"
 import type { TransferEvent } from "../../../chain/typechain/IERC20"
 import type { SettingsUpdatedEvent } from "../../../chain/typechain/ICoreVaultManager"
@@ -427,6 +428,14 @@ export class EventGeneration {
       randomNativeAddress(),
       randomNativeAddress(),
       BigInt(randomNumber(1, 1e6))
+    ]
+  }
+
+  protected async generateConfirmedClosedMintingPayment(): Promise<ConfirmedClosedMintingPaymentEvent.OutputTuple> {
+    return [
+      await this.getRandomAgentVault(),
+      randomHash(),
+      BigInt(randomNumber(1, 1e12))
     ]
   }
 

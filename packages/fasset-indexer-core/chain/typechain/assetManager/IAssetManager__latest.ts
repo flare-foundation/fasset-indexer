@@ -285,6 +285,105 @@ export declare namespace IPayment {
   ] & { merkleProof: string[]; data: IPayment.ResponseStructOutput };
 }
 
+export declare namespace IXRPPayment {
+  export type RequestBodyStruct = {
+    transactionId: BytesLike;
+    proofOwner: AddressLike;
+  };
+
+  export type RequestBodyStructOutput = [
+    transactionId: string,
+    proofOwner: string
+  ] & { transactionId: string; proofOwner: string };
+
+  export type ResponseBodyStruct = {
+    blockNumber: BigNumberish;
+    blockTimestamp: BigNumberish;
+    sourceAddress: string;
+    sourceAddressHash: BytesLike;
+    receivingAddressHash: BytesLike;
+    intendedReceivingAddressHash: BytesLike;
+    spentAmount: BigNumberish;
+    intendedSpentAmount: BigNumberish;
+    receivedAmount: BigNumberish;
+    intendedReceivedAmount: BigNumberish;
+    hasMemoData: boolean;
+    firstMemoData: BytesLike;
+    hasDestinationTag: boolean;
+    destinationTag: BigNumberish;
+    status: BigNumberish;
+  };
+
+  export type ResponseBodyStructOutput = [
+    blockNumber: bigint,
+    blockTimestamp: bigint,
+    sourceAddress: string,
+    sourceAddressHash: string,
+    receivingAddressHash: string,
+    intendedReceivingAddressHash: string,
+    spentAmount: bigint,
+    intendedSpentAmount: bigint,
+    receivedAmount: bigint,
+    intendedReceivedAmount: bigint,
+    hasMemoData: boolean,
+    firstMemoData: string,
+    hasDestinationTag: boolean,
+    destinationTag: bigint,
+    status: bigint
+  ] & {
+    blockNumber: bigint;
+    blockTimestamp: bigint;
+    sourceAddress: string;
+    sourceAddressHash: string;
+    receivingAddressHash: string;
+    intendedReceivingAddressHash: string;
+    spentAmount: bigint;
+    intendedSpentAmount: bigint;
+    receivedAmount: bigint;
+    intendedReceivedAmount: bigint;
+    hasMemoData: boolean;
+    firstMemoData: string;
+    hasDestinationTag: boolean;
+    destinationTag: bigint;
+    status: bigint;
+  };
+
+  export type ResponseStruct = {
+    attestationType: BytesLike;
+    sourceId: BytesLike;
+    votingRound: BigNumberish;
+    lowestUsedTimestamp: BigNumberish;
+    requestBody: IXRPPayment.RequestBodyStruct;
+    responseBody: IXRPPayment.ResponseBodyStruct;
+  };
+
+  export type ResponseStructOutput = [
+    attestationType: string,
+    sourceId: string,
+    votingRound: bigint,
+    lowestUsedTimestamp: bigint,
+    requestBody: IXRPPayment.RequestBodyStructOutput,
+    responseBody: IXRPPayment.ResponseBodyStructOutput
+  ] & {
+    attestationType: string;
+    sourceId: string;
+    votingRound: bigint;
+    lowestUsedTimestamp: bigint;
+    requestBody: IXRPPayment.RequestBodyStructOutput;
+    responseBody: IXRPPayment.ResponseBodyStructOutput;
+  };
+
+  export type ProofStruct = {
+    merkleProof: BytesLike[];
+    data: IXRPPayment.ResponseStruct;
+  };
+
+  export type ProofStructOutput = [
+    merkleProof: string[],
+    data: IXRPPayment.ResponseStructOutput
+  ] & { merkleProof: string[]; data: IXRPPayment.ResponseStructOutput };
+}
+
 export declare namespace IAddressValidity {
   export type RequestBodyStruct = { addressStr: string };
 
@@ -1026,6 +1125,163 @@ export declare namespace RedemptionRequestInfo {
     executor: string;
     executorFeeNatWei: bigint;
   };
+
+  export type DataExtStruct = {
+    redemptionRequestId: BigNumberish;
+    status: BigNumberish;
+    agentVault: AddressLike;
+    redeemer: AddressLike;
+    paymentAddress: string;
+    paymentReference: BytesLike;
+    valueUBA: BigNumberish;
+    feeUBA: BigNumberish;
+    poolFeeShareBIPS: BigNumberish;
+    firstUnderlyingBlock: BigNumberish;
+    lastUnderlyingBlock: BigNumberish;
+    lastUnderlyingTimestamp: BigNumberish;
+    timestamp: BigNumberish;
+    poolSelfClose: boolean;
+    transferToCoreVault: boolean;
+    executor: AddressLike;
+    executorFeeNatWei: BigNumberish;
+    requiresDestinationTag: boolean;
+    destinationTag: BigNumberish;
+  };
+
+  export type DataExtStructOutput = [
+    redemptionRequestId: bigint,
+    status: bigint,
+    agentVault: string,
+    redeemer: string,
+    paymentAddress: string,
+    paymentReference: string,
+    valueUBA: bigint,
+    feeUBA: bigint,
+    poolFeeShareBIPS: bigint,
+    firstUnderlyingBlock: bigint,
+    lastUnderlyingBlock: bigint,
+    lastUnderlyingTimestamp: bigint,
+    timestamp: bigint,
+    poolSelfClose: boolean,
+    transferToCoreVault: boolean,
+    executor: string,
+    executorFeeNatWei: bigint,
+    requiresDestinationTag: boolean,
+    destinationTag: bigint
+  ] & {
+    redemptionRequestId: bigint;
+    status: bigint;
+    agentVault: string;
+    redeemer: string;
+    paymentAddress: string;
+    paymentReference: string;
+    valueUBA: bigint;
+    feeUBA: bigint;
+    poolFeeShareBIPS: bigint;
+    firstUnderlyingBlock: bigint;
+    lastUnderlyingBlock: bigint;
+    lastUnderlyingTimestamp: bigint;
+    timestamp: bigint;
+    poolSelfClose: boolean;
+    transferToCoreVault: boolean;
+    executor: string;
+    executorFeeNatWei: bigint;
+    requiresDestinationTag: boolean;
+    destinationTag: bigint;
+  };
+}
+
+export declare namespace IXRPPaymentNonexistence {
+  export type RequestBodyStruct = {
+    minimalBlockNumber: BigNumberish;
+    deadlineBlockNumber: BigNumberish;
+    deadlineTimestamp: BigNumberish;
+    destinationAddressHash: BytesLike;
+    amount: BigNumberish;
+    checkFirstMemoData: boolean;
+    firstMemoDataHash: BytesLike;
+    checkDestinationTag: boolean;
+    destinationTag: BigNumberish;
+    proofOwner: AddressLike;
+  };
+
+  export type RequestBodyStructOutput = [
+    minimalBlockNumber: bigint,
+    deadlineBlockNumber: bigint,
+    deadlineTimestamp: bigint,
+    destinationAddressHash: string,
+    amount: bigint,
+    checkFirstMemoData: boolean,
+    firstMemoDataHash: string,
+    checkDestinationTag: boolean,
+    destinationTag: bigint,
+    proofOwner: string
+  ] & {
+    minimalBlockNumber: bigint;
+    deadlineBlockNumber: bigint;
+    deadlineTimestamp: bigint;
+    destinationAddressHash: string;
+    amount: bigint;
+    checkFirstMemoData: boolean;
+    firstMemoDataHash: string;
+    checkDestinationTag: boolean;
+    destinationTag: bigint;
+    proofOwner: string;
+  };
+
+  export type ResponseBodyStruct = {
+    minimalBlockTimestamp: BigNumberish;
+    firstOverflowBlockNumber: BigNumberish;
+    firstOverflowBlockTimestamp: BigNumberish;
+  };
+
+  export type ResponseBodyStructOutput = [
+    minimalBlockTimestamp: bigint,
+    firstOverflowBlockNumber: bigint,
+    firstOverflowBlockTimestamp: bigint
+  ] & {
+    minimalBlockTimestamp: bigint;
+    firstOverflowBlockNumber: bigint;
+    firstOverflowBlockTimestamp: bigint;
+  };
+
+  export type ResponseStruct = {
+    attestationType: BytesLike;
+    sourceId: BytesLike;
+    votingRound: BigNumberish;
+    lowestUsedTimestamp: BigNumberish;
+    requestBody: IXRPPaymentNonexistence.RequestBodyStruct;
+    responseBody: IXRPPaymentNonexistence.ResponseBodyStruct;
+  };
+
+  export type ResponseStructOutput = [
+    attestationType: string,
+    sourceId: string,
+    votingRound: bigint,
+    lowestUsedTimestamp: bigint,
+    requestBody: IXRPPaymentNonexistence.RequestBodyStructOutput,
+    responseBody: IXRPPaymentNonexistence.ResponseBodyStructOutput
+  ] & {
+    attestationType: string;
+    sourceId: string;
+    votingRound: bigint;
+    lowestUsedTimestamp: bigint;
+    requestBody: IXRPPaymentNonexistence.RequestBodyStructOutput;
+    responseBody: IXRPPaymentNonexistence.ResponseBodyStructOutput;
+  };
+
+  export type ProofStruct = {
+    merkleProof: BytesLike[];
+    data: IXRPPaymentNonexistence.ResponseStruct;
+  };
+
+  export type ProofStructOutput = [
+    merkleProof: string[],
+    data: IXRPPaymentNonexistence.ResponseStructOutput
+  ] & {
+    merkleProof: string[];
+    data: IXRPPaymentNonexistence.ResponseStructOutput;
+  };
 }
 
 export interface IAssetManager__latestInterface extends Interface {
@@ -1054,10 +1310,13 @@ export interface IAssetManager__latestInterface extends Interface {
       | "cancelUnderlyingWithdrawal"
       | "collateralReservationFee"
       | "collateralReservationInfo"
+      | "confirmClosedMintingPayment"
+      | "confirmCoreVaultDonation"
       | "confirmRedemptionPayment"
       | "confirmReturnFromCoreVault"
       | "confirmTopupPayment"
       | "confirmUnderlyingWithdrawal"
+      | "confirmXRPRedemptionPayment"
       | "consolidateSmallTickets"
       | "controllerAttached"
       | "convertDustToTicket"
@@ -1066,6 +1325,8 @@ export interface IAssetManager__latestInterface extends Interface {
       | "currentUnderlyingBlock"
       | "destroyAgent"
       | "diamondCut"
+      | "directMintingDelayState"
+      | "directMintingPaymentAddress"
       | "doublePaymentChallenge"
       | "emergencyPause"
       | "emergencyPauseDetails"
@@ -1074,6 +1335,7 @@ export interface IAssetManager__latestInterface extends Interface {
       | "emergencyPausedUntil"
       | "endLiquidation"
       | "executeAgentSettingUpdate"
+      | "executeDirectMinting"
       | "executeGovernanceCall"
       | "executeMinting"
       | "exitAvailableAgentList"
@@ -1100,14 +1362,30 @@ export interface IAssetManager__latestInterface extends Interface {
       | "getCollateralPoolTokenTimelockSeconds"
       | "getCollateralType"
       | "getCollateralTypes"
+      | "getCoreVaultDonationTag"
       | "getCoreVaultManager"
       | "getCoreVaultMinimumAmountLeftBIPS"
       | "getCoreVaultMinimumRedeemLots"
       | "getCoreVaultNativeAddress"
       | "getCoreVaultRedemptionFeeBIPS"
+      | "getCoreVaultTransferDefaultPenaltyBIPS"
       | "getCoreVaultTransferTimeExtensionSeconds"
+      | "getDirectMintingDailyLimitUBA"
+      | "getDirectMintingDailyLimiterState"
+      | "getDirectMintingExecutorFeeUBA"
+      | "getDirectMintingFeeBIPS"
+      | "getDirectMintingFeeReceiver"
+      | "getDirectMintingHourlyLimitUBA"
+      | "getDirectMintingHourlyLimiterState"
+      | "getDirectMintingLargeMintingDelaySeconds"
+      | "getDirectMintingLargeMintingThresholdUBA"
+      | "getDirectMintingMinimumFeeUBA"
+      | "getDirectMintingOthersCanExecuteAfterSeconds"
+      | "getDirectMintingsUnblockUntilTimestamp"
       | "getFAssetsBackedByPool"
+      | "getMintingTagManager"
       | "getSettings"
+      | "getSmartAccountManager"
       | "getWNat"
       | "getWorkAddress"
       | "governance"
@@ -1121,8 +1399,10 @@ export interface IAssetManager__latestInterface extends Interface {
       | "liquidate"
       | "lotSize"
       | "makeAgentAvailable"
+      | "markUnblockedDirectMintingAllowed"
       | "maxRedemptionFromAgent"
       | "maximumTransferToCoreVault"
+      | "minimumRedeemAmountUBA"
       | "mintFromFreeUnderlying"
       | "mintingPaused"
       | "mintingPaymentDefault"
@@ -1130,13 +1410,17 @@ export interface IAssetManager__latestInterface extends Interface {
       | "priceReader"
       | "productionMode"
       | "redeem"
+      | "redeemAmount"
       | "redeemFromAgent"
       | "redeemFromAgentInCollateral"
       | "redeemFromCoreVault"
+      | "redeemWithTag"
+      | "redeemWithTagSupported"
       | "redemptionPaymentDefault"
       | "redemptionPaymentExtensionSeconds"
       | "redemptionQueue"
       | "redemptionRequestInfo"
+      | "redemptionRequestInfoExt"
       | "rejectInvalidRedemption"
       | "removeAlwaysAllowedMinterForAgent"
       | "requestReturnFromCoreVault"
@@ -1166,7 +1450,15 @@ export interface IAssetManager__latestInterface extends Interface {
       | "setCoreVaultMinimumRedeemLots"
       | "setCoreVaultNativeAddress"
       | "setCoreVaultRedemptionFeeBIPS"
+      | "setCoreVaultTransferDefaultPenaltyBIPS"
       | "setCoreVaultTransferTimeExtensionSeconds"
+      | "setDirectMintingDailyLimitUBA"
+      | "setDirectMintingExecutorFee"
+      | "setDirectMintingFee"
+      | "setDirectMintingFeeReceiver"
+      | "setDirectMintingHourlyLimitUBA"
+      | "setDirectMintingLargeMintingThrottling"
+      | "setDirectMintingOthersCanExecuteAfterSeconds"
       | "setEmergencyPauseDurationResetAfterSeconds"
       | "setFdcVerification"
       | "setLiquidationPaymentFactors"
@@ -1176,14 +1468,17 @@ export interface IAssetManager__latestInterface extends Interface {
       | "setMaxRedeemedTickets"
       | "setMaxTrustedPriceAgeSeconds"
       | "setMinUpdateRepeatTimeSeconds"
+      | "setMinimumRedeemAmountUBA"
       | "setMintingCapAmg"
       | "setMintingPoolHoldingsRequiredBIPS"
+      | "setMintingTagManager"
       | "setPaymentChallengeReward"
       | "setPoolExitCRChangeTimelockSeconds"
       | "setPriceReader"
       | "setRedemptionDefaultFactorVaultCollateralBIPS"
       | "setRedemptionFeeBips"
       | "setRedemptionPaymentExtensionSeconds"
+      | "setSmartAccountManager"
       | "setTimeForPayment"
       | "setVaultCollateralBuyForFlareFactorBIPS"
       | "setWithdrawalOrDestroyWaitMinSeconds"
@@ -1191,6 +1486,7 @@ export interface IAssetManager__latestInterface extends Interface {
       | "supportsInterface"
       | "switchToProductionMode"
       | "transferToCoreVault"
+      | "unblockDirectMintingsUntil"
       | "unpauseMinting"
       | "unstickMinting"
       | "updateCollateral"
@@ -1200,6 +1496,7 @@ export interface IAssetManager__latestInterface extends Interface {
       | "upgradeAgentVaultsAndPools"
       | "upgradeFAssetImplementation"
       | "upgradeWNatContract"
+      | "xrpRedemptionPaymentDefault"
   ): FunctionFragment;
 
   getEvent(
@@ -1219,26 +1516,37 @@ export interface IAssetManager__latestInterface extends Interface {
       | "CollateralReservationDeleted"
       | "CollateralReserved"
       | "CollateralTypeAdded"
+      | "ConfirmedClosedMintingPayment"
       | "ContractChanged"
+      | "CoreVaultFundsAdded"
       | "CoreVaultRedemptionRequested"
       | "CurrentUnderlyingBlockUpdated"
       | "DiamondCut"
+      | "DirectMintingDelayed"
+      | "DirectMintingExecuted"
+      | "DirectMintingExecutedToSmartAccount"
+      | "DirectMintingPaymentTooSmallForFee"
+      | "DirectMintingsUnblocked"
       | "DuplicatePaymentConfirmed"
       | "DustChanged"
       | "EmergencyPauseCanceled"
+      | "EmergencyPauseTotalDurationReset"
       | "EmergencyPauseTriggered"
       | "FullLiquidationStarted"
       | "GovernanceCallTimelocked"
       | "GovernanceInitialised"
       | "GovernedProductionModeEntered"
       | "IllegalPaymentConfirmed"
+      | "LargeDirectMintingDelayed"
       | "LiquidationEnded"
       | "LiquidationPerformed"
       | "LiquidationStarted"
       | "MintingExecuted"
+      | "MintingPaused"
       | "MintingPaymentDefault"
       | "PoolTokenRedemptionAnnounced"
       | "RedeemedInCollateral"
+      | "RedemptionAmountIncomplete"
       | "RedemptionDefault"
       | "RedemptionPaymentBlocked"
       | "RedemptionPaymentFailed"
@@ -1251,6 +1559,7 @@ export interface IAssetManager__latestInterface extends Interface {
       | "RedemptionTicketDeleted"
       | "RedemptionTicketUpdated"
       | "RedemptionTicketsConsolidated"
+      | "RedemptionWithTagRequested"
       | "ReturnFromCoreVaultCancelled"
       | "ReturnFromCoreVaultConfirmed"
       | "ReturnFromCoreVaultRequested"
@@ -1365,6 +1674,14 @@ export interface IAssetManager__latestInterface extends Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "confirmClosedMintingPayment",
+    values: [IPayment.ProofStruct, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "confirmCoreVaultDonation",
+    values: [IXRPPayment.ProofStruct]
+  ): string;
+  encodeFunctionData(
     functionFragment: "confirmRedemptionPayment",
     values: [IPayment.ProofStruct, BigNumberish]
   ): string;
@@ -1379,6 +1696,10 @@ export interface IAssetManager__latestInterface extends Interface {
   encodeFunctionData(
     functionFragment: "confirmUnderlyingWithdrawal",
     values: [IPayment.ProofStruct, AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "confirmXRPRedemptionPayment",
+    values: [IXRPPayment.ProofStruct, BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "consolidateSmallTickets",
@@ -1411,6 +1732,14 @@ export interface IAssetManager__latestInterface extends Interface {
   encodeFunctionData(
     functionFragment: "diamondCut",
     values: [IDiamond.FacetCutStruct[], AddressLike, BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "directMintingDelayState",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "directMintingPaymentAddress",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "doublePaymentChallenge",
@@ -1447,6 +1776,10 @@ export interface IAssetManager__latestInterface extends Interface {
   encodeFunctionData(
     functionFragment: "executeAgentSettingUpdate",
     values: [AddressLike, string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "executeDirectMinting",
+    values: [IXRPPayment.ProofStruct]
   ): string;
   encodeFunctionData(
     functionFragment: "executeGovernanceCall",
@@ -1547,6 +1880,10 @@ export interface IAssetManager__latestInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "getCoreVaultDonationTag",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "getCoreVaultManager",
     values?: undefined
   ): string;
@@ -1567,7 +1904,59 @@ export interface IAssetManager__latestInterface extends Interface {
     values?: undefined
   ): string;
   encodeFunctionData(
+    functionFragment: "getCoreVaultTransferDefaultPenaltyBIPS",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "getCoreVaultTransferTimeExtensionSeconds",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getDirectMintingDailyLimitUBA",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getDirectMintingDailyLimiterState",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getDirectMintingExecutorFeeUBA",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getDirectMintingFeeBIPS",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getDirectMintingFeeReceiver",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getDirectMintingHourlyLimitUBA",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getDirectMintingHourlyLimiterState",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getDirectMintingLargeMintingDelaySeconds",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getDirectMintingLargeMintingThresholdUBA",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getDirectMintingMinimumFeeUBA",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getDirectMintingOthersCanExecuteAfterSeconds",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getDirectMintingsUnblockUntilTimestamp",
     values?: undefined
   ): string;
   encodeFunctionData(
@@ -1575,7 +1964,15 @@ export interface IAssetManager__latestInterface extends Interface {
     values: [AddressLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "getMintingTagManager",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
     functionFragment: "getSettings",
+    values?: undefined
+  ): string;
+  encodeFunctionData(
+    functionFragment: "getSmartAccountManager",
     values?: undefined
   ): string;
   encodeFunctionData(functionFragment: "getWNat", values?: undefined): string;
@@ -1625,12 +2022,20 @@ export interface IAssetManager__latestInterface extends Interface {
     values: [AddressLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "markUnblockedDirectMintingAllowed",
+    values: [BytesLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "maxRedemptionFromAgent",
     values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "maximumTransferToCoreVault",
     values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "minimumRedeemAmountUBA",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "mintFromFreeUnderlying",
@@ -1661,6 +2066,10 @@ export interface IAssetManager__latestInterface extends Interface {
     values: [BigNumberish, string, AddressLike]
   ): string;
   encodeFunctionData(
+    functionFragment: "redeemAmount",
+    values: [BigNumberish, string, AddressLike]
+  ): string;
+  encodeFunctionData(
     functionFragment: "redeemFromAgent",
     values: [AddressLike, AddressLike, BigNumberish, string, AddressLike]
   ): string;
@@ -1671,6 +2080,14 @@ export interface IAssetManager__latestInterface extends Interface {
   encodeFunctionData(
     functionFragment: "redeemFromCoreVault",
     values: [BigNumberish, string]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "redeemWithTag",
+    values: [BigNumberish, string, AddressLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "redeemWithTagSupported",
+    values?: undefined
   ): string;
   encodeFunctionData(
     functionFragment: "redemptionPaymentDefault",
@@ -1686,6 +2103,10 @@ export interface IAssetManager__latestInterface extends Interface {
   ): string;
   encodeFunctionData(
     functionFragment: "redemptionRequestInfo",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "redemptionRequestInfoExt",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
@@ -1805,7 +2226,39 @@ export interface IAssetManager__latestInterface extends Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "setCoreVaultTransferDefaultPenaltyBIPS",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setCoreVaultTransferTimeExtensionSeconds",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setDirectMintingDailyLimitUBA",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setDirectMintingExecutorFee",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setDirectMintingFee",
+    values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setDirectMintingFeeReceiver",
+    values: [AddressLike]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setDirectMintingHourlyLimitUBA",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setDirectMintingLargeMintingThrottling",
+    values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setDirectMintingOthersCanExecuteAfterSeconds",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
@@ -1845,12 +2298,20 @@ export interface IAssetManager__latestInterface extends Interface {
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
+    functionFragment: "setMinimumRedeemAmountUBA",
+    values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
     functionFragment: "setMintingCapAmg",
     values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "setMintingPoolHoldingsRequiredBIPS",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setMintingTagManager",
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "setPaymentChallengeReward",
@@ -1875,6 +2336,10 @@ export interface IAssetManager__latestInterface extends Interface {
   encodeFunctionData(
     functionFragment: "setRedemptionPaymentExtensionSeconds",
     values: [BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "setSmartAccountManager",
+    values: [AddressLike]
   ): string;
   encodeFunctionData(
     functionFragment: "setTimeForPayment",
@@ -1903,6 +2368,10 @@ export interface IAssetManager__latestInterface extends Interface {
   encodeFunctionData(
     functionFragment: "transferToCoreVault",
     values: [AddressLike, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "unblockDirectMintingsUntil",
+    values: [BigNumberish]
   ): string;
   encodeFunctionData(
     functionFragment: "unpauseMinting",
@@ -1939,6 +2408,10 @@ export interface IAssetManager__latestInterface extends Interface {
   encodeFunctionData(
     functionFragment: "upgradeWNatContract",
     values: [BigNumberish, BigNumberish]
+  ): string;
+  encodeFunctionData(
+    functionFragment: "xrpRedemptionPaymentDefault",
+    values: [IXRPPaymentNonexistence.ProofStruct, BigNumberish]
   ): string;
 
   decodeFunctionResult(
@@ -2031,6 +2504,14 @@ export interface IAssetManager__latestInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "confirmClosedMintingPayment",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "confirmCoreVaultDonation",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "confirmRedemptionPayment",
     data: BytesLike
   ): Result;
@@ -2044,6 +2525,10 @@ export interface IAssetManager__latestInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "confirmUnderlyingWithdrawal",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "confirmXRPRedemptionPayment",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -2076,6 +2561,14 @@ export interface IAssetManager__latestInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "diamondCut", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "directMintingDelayState",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "directMintingPaymentAddress",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "doublePaymentChallenge",
     data: BytesLike
   ): Result;
@@ -2105,6 +2598,10 @@ export interface IAssetManager__latestInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "executeAgentSettingUpdate",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "executeDirectMinting",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -2206,6 +2703,10 @@ export interface IAssetManager__latestInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "getCoreVaultDonationTag",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getCoreVaultManager",
     data: BytesLike
   ): Result;
@@ -2226,7 +2727,59 @@ export interface IAssetManager__latestInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "getCoreVaultTransferDefaultPenaltyBIPS",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getCoreVaultTransferTimeExtensionSeconds",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getDirectMintingDailyLimitUBA",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getDirectMintingDailyLimiterState",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getDirectMintingExecutorFeeUBA",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getDirectMintingFeeBIPS",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getDirectMintingFeeReceiver",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getDirectMintingHourlyLimitUBA",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getDirectMintingHourlyLimiterState",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getDirectMintingLargeMintingDelaySeconds",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getDirectMintingLargeMintingThresholdUBA",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getDirectMintingMinimumFeeUBA",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getDirectMintingOthersCanExecuteAfterSeconds",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getDirectMintingsUnblockUntilTimestamp",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -2234,7 +2787,15 @@ export interface IAssetManager__latestInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "getMintingTagManager",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "getSettings",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "getSmartAccountManager",
     data: BytesLike
   ): Result;
   decodeFunctionResult(functionFragment: "getWNat", data: BytesLike): Result;
@@ -2275,11 +2836,19 @@ export interface IAssetManager__latestInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "markUnblockedDirectMintingAllowed",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "maxRedemptionFromAgent",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "maximumTransferToCoreVault",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "minimumRedeemAmountUBA",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -2308,6 +2877,10 @@ export interface IAssetManager__latestInterface extends Interface {
   ): Result;
   decodeFunctionResult(functionFragment: "redeem", data: BytesLike): Result;
   decodeFunctionResult(
+    functionFragment: "redeemAmount",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "redeemFromAgent",
     data: BytesLike
   ): Result;
@@ -2317,6 +2890,14 @@ export interface IAssetManager__latestInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "redeemFromCoreVault",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "redeemWithTag",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "redeemWithTagSupported",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -2333,6 +2914,10 @@ export interface IAssetManager__latestInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "redemptionRequestInfo",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "redemptionRequestInfoExt",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -2446,7 +3031,39 @@ export interface IAssetManager__latestInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "setCoreVaultTransferDefaultPenaltyBIPS",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "setCoreVaultTransferTimeExtensionSeconds",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setDirectMintingDailyLimitUBA",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setDirectMintingExecutorFee",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setDirectMintingFee",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setDirectMintingFeeReceiver",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setDirectMintingHourlyLimitUBA",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setDirectMintingLargeMintingThrottling",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setDirectMintingOthersCanExecuteAfterSeconds",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -2486,11 +3103,19 @@ export interface IAssetManager__latestInterface extends Interface {
     data: BytesLike
   ): Result;
   decodeFunctionResult(
+    functionFragment: "setMinimumRedeemAmountUBA",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
     functionFragment: "setMintingCapAmg",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
     functionFragment: "setMintingPoolHoldingsRequiredBIPS",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setMintingTagManager",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -2515,6 +3140,10 @@ export interface IAssetManager__latestInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "setRedemptionPaymentExtensionSeconds",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "setSmartAccountManager",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -2543,6 +3172,10 @@ export interface IAssetManager__latestInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "transferToCoreVault",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "unblockDirectMintingsUntil",
     data: BytesLike
   ): Result;
   decodeFunctionResult(
@@ -2579,6 +3212,10 @@ export interface IAssetManager__latestInterface extends Interface {
   ): Result;
   decodeFunctionResult(
     functionFragment: "upgradeWNatContract",
+    data: BytesLike
+  ): Result;
+  decodeFunctionResult(
+    functionFragment: "xrpRedemptionPaymentDefault",
     data: BytesLike
   ): Result;
 }
@@ -2933,12 +3570,46 @@ export namespace CollateralTypeAddedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
+export namespace ConfirmedClosedMintingPaymentEvent {
+  export type InputTuple = [
+    agentVault: AddressLike,
+    transactionHash: BytesLike,
+    depositedUBA: BigNumberish
+  ];
+  export type OutputTuple = [
+    agentVault: string,
+    transactionHash: string,
+    depositedUBA: bigint
+  ];
+  export interface OutputObject {
+    agentVault: string;
+    transactionHash: string;
+    depositedUBA: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
 export namespace ContractChangedEvent {
   export type InputTuple = [name: string, value: AddressLike];
   export type OutputTuple = [name: string, value: string];
   export interface OutputObject {
     name: string;
     value: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace CoreVaultFundsAddedEvent {
+  export type InputTuple = [amountUBA: BigNumberish];
+  export type OutputTuple = [amountUBA: bigint];
+  export interface OutputObject {
+    amountUBA: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -3018,6 +3689,124 @@ export namespace DiamondCutEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
+export namespace DirectMintingDelayedEvent {
+  export type InputTuple = [
+    transactionId: BytesLike,
+    amount: BigNumberish,
+    executionAllowedAt: BigNumberish
+  ];
+  export type OutputTuple = [
+    transactionId: string,
+    amount: bigint,
+    executionAllowedAt: bigint
+  ];
+  export interface OutputObject {
+    transactionId: string;
+    amount: bigint;
+    executionAllowedAt: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace DirectMintingExecutedEvent {
+  export type InputTuple = [
+    transactionId: BytesLike,
+    targetAddress: AddressLike,
+    executor: AddressLike,
+    mintedAmountUBA: BigNumberish,
+    mintingFeeUBA: BigNumberish,
+    executorFeeUBA: BigNumberish
+  ];
+  export type OutputTuple = [
+    transactionId: string,
+    targetAddress: string,
+    executor: string,
+    mintedAmountUBA: bigint,
+    mintingFeeUBA: bigint,
+    executorFeeUBA: bigint
+  ];
+  export interface OutputObject {
+    transactionId: string;
+    targetAddress: string;
+    executor: string;
+    mintedAmountUBA: bigint;
+    mintingFeeUBA: bigint;
+    executorFeeUBA: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace DirectMintingExecutedToSmartAccountEvent {
+  export type InputTuple = [
+    transactionId: BytesLike,
+    sourceAddress: string,
+    executor: AddressLike,
+    mintedAmountUBA: BigNumberish,
+    mintingFeeUBA: BigNumberish,
+    memoData: BytesLike
+  ];
+  export type OutputTuple = [
+    transactionId: string,
+    sourceAddress: string,
+    executor: string,
+    mintedAmountUBA: bigint,
+    mintingFeeUBA: bigint,
+    memoData: string
+  ];
+  export interface OutputObject {
+    transactionId: string;
+    sourceAddress: string;
+    executor: string;
+    mintedAmountUBA: bigint;
+    mintingFeeUBA: bigint;
+    memoData: string;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace DirectMintingPaymentTooSmallForFeeEvent {
+  export type InputTuple = [
+    transactionId: BytesLike,
+    receivedAmountUBA: BigNumberish,
+    minimumMintingFeeUBA: BigNumberish
+  ];
+  export type OutputTuple = [
+    transactionId: string,
+    receivedAmountUBA: bigint,
+    minimumMintingFeeUBA: bigint
+  ];
+  export interface OutputObject {
+    transactionId: string;
+    receivedAmountUBA: bigint;
+    minimumMintingFeeUBA: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace DirectMintingsUnblockedEvent {
+  export type InputTuple = [startedUntilTimestamp: BigNumberish];
+  export type OutputTuple = [startedUntilTimestamp: bigint];
+  export interface OutputObject {
+    startedUntilTimestamp: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
 export namespace DuplicatePaymentConfirmedEvent {
   export type InputTuple = [
     agentVault: AddressLike,
@@ -3054,6 +3843,16 @@ export namespace DustChangedEvent {
 }
 
 export namespace EmergencyPauseCanceledEvent {
+  export type InputTuple = [];
+  export type OutputTuple = [];
+  export interface OutputObject {}
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace EmergencyPauseTotalDurationResetEvent {
   export type InputTuple = [];
   export type OutputTuple = [];
   export interface OutputObject {}
@@ -3163,6 +3962,28 @@ export namespace IllegalPaymentConfirmedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
+export namespace LargeDirectMintingDelayedEvent {
+  export type InputTuple = [
+    transactionId: BytesLike,
+    amount: BigNumberish,
+    executionAllowedAt: BigNumberish
+  ];
+  export type OutputTuple = [
+    transactionId: string,
+    amount: bigint,
+    executionAllowedAt: bigint
+  ];
+  export interface OutputObject {
+    transactionId: string;
+    amount: bigint;
+    executionAllowedAt: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
 export namespace LiquidationEndedEvent {
   export type InputTuple = [agentVault: AddressLike];
   export type OutputTuple = [agentVault: string];
@@ -3244,6 +4065,18 @@ export namespace MintingExecutedEvent {
   export type LogDescription = TypedLogDescription<Event>;
 }
 
+export namespace MintingPausedEvent {
+  export type InputTuple = [paused: boolean];
+  export type OutputTuple = [paused: boolean];
+  export interface OutputObject {
+    paused: boolean;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
 export namespace MintingPaymentDefaultEvent {
   export type InputTuple = [
     agentVault: AddressLike,
@@ -3309,6 +4142,22 @@ export namespace RedeemedInCollateralEvent {
     redeemer: string;
     redemptionAmountUBA: bigint;
     paidVaultCollateralWei: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace RedemptionAmountIncompleteEvent {
+  export type InputTuple = [
+    redeemer: AddressLike,
+    remainingAmountUBA: BigNumberish
+  ];
+  export type OutputTuple = [redeemer: string, remainingAmountUBA: bigint];
+  export interface OutputObject {
+    redeemer: string;
+    remainingAmountUBA: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -3618,6 +4467,58 @@ export namespace RedemptionTicketsConsolidatedEvent {
   export interface OutputObject {
     firstTicketId: bigint;
     nextTicketId: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace RedemptionWithTagRequestedEvent {
+  export type InputTuple = [
+    agentVault: AddressLike,
+    redeemer: AddressLike,
+    requestId: BigNumberish,
+    paymentAddress: string,
+    valueUBA: BigNumberish,
+    feeUBA: BigNumberish,
+    firstUnderlyingBlock: BigNumberish,
+    lastUnderlyingBlock: BigNumberish,
+    lastUnderlyingTimestamp: BigNumberish,
+    paymentReference: BytesLike,
+    executor: AddressLike,
+    executorFeeNatWei: BigNumberish,
+    destinationTag: BigNumberish
+  ];
+  export type OutputTuple = [
+    agentVault: string,
+    redeemer: string,
+    requestId: bigint,
+    paymentAddress: string,
+    valueUBA: bigint,
+    feeUBA: bigint,
+    firstUnderlyingBlock: bigint,
+    lastUnderlyingBlock: bigint,
+    lastUnderlyingTimestamp: bigint,
+    paymentReference: string,
+    executor: string,
+    executorFeeNatWei: bigint,
+    destinationTag: bigint
+  ];
+  export interface OutputObject {
+    agentVault: string;
+    redeemer: string;
+    requestId: bigint;
+    paymentAddress: string;
+    valueUBA: bigint;
+    feeUBA: bigint;
+    firstUnderlyingBlock: bigint;
+    lastUnderlyingBlock: bigint;
+    lastUnderlyingTimestamp: bigint;
+    paymentReference: string;
+    executor: string;
+    executorFeeNatWei: bigint;
+    destinationTag: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
   export type Filter = TypedDeferredTopicFilter<Event>;
@@ -4079,7 +4980,7 @@ export interface IAssetManager__latest extends BaseContract {
   >;
 
   announceAgentPoolTokenRedemption: TypedContractMethod<
-    [_agentVault: AddressLike, _valueNATWei: BigNumberish],
+    [_agentVault: AddressLike, _valuePoolTokenWei: BigNumberish],
     [bigint],
     "nonpayable"
   >;
@@ -4168,6 +5069,18 @@ export interface IAssetManager__latest extends BaseContract {
     "view"
   >;
 
+  confirmClosedMintingPayment: TypedContractMethod<
+    [_payment: IPayment.ProofStruct, _collateralReservationId: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  confirmCoreVaultDonation: TypedContractMethod<
+    [_payment: IXRPPayment.ProofStruct],
+    [void],
+    "nonpayable"
+  >;
+
   confirmRedemptionPayment: TypedContractMethod<
     [_payment: IPayment.ProofStruct, _redemptionRequestId: BigNumberish],
     [void],
@@ -4188,6 +5101,12 @@ export interface IAssetManager__latest extends BaseContract {
 
   confirmUnderlyingWithdrawal: TypedContractMethod<
     [_payment: IPayment.ProofStruct, _agentVault: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  confirmXRPRedemptionPayment: TypedContractMethod<
+    [_payment: IXRPPayment.ProofStruct, _redemptionRequestId: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -4254,6 +5173,20 @@ export interface IAssetManager__latest extends BaseContract {
     "nonpayable"
   >;
 
+  directMintingDelayState: TypedContractMethod<
+    [_transactionId: BytesLike],
+    [
+      [bigint, bigint, bigint] & {
+        _delayState: bigint;
+        _allowedAt: bigint;
+        _startedAt: bigint;
+      }
+    ],
+    "view"
+  >;
+
+  directMintingPaymentAddress: TypedContractMethod<[], [string], "view">;
+
   doublePaymentChallenge: TypedContractMethod<
     [
       _payment1: IBalanceDecreasingTransaction.ProofStruct,
@@ -4300,6 +5233,12 @@ export interface IAssetManager__latest extends BaseContract {
     [_agentVault: AddressLike, _name: string],
     [void],
     "nonpayable"
+  >;
+
+  executeDirectMinting: TypedContractMethod<
+    [_payment: IXRPPayment.ProofStruct],
+    [void],
+    "payable"
   >;
 
   executeGovernanceCall: TypedContractMethod<
@@ -4463,6 +5402,8 @@ export interface IAssetManager__latest extends BaseContract {
     "view"
   >;
 
+  getCoreVaultDonationTag: TypedContractMethod<[], [bigint], "view">;
+
   getCoreVaultManager: TypedContractMethod<[], [string], "view">;
 
   getCoreVaultMinimumAmountLeftBIPS: TypedContractMethod<[], [bigint], "view">;
@@ -4473,7 +5414,71 @@ export interface IAssetManager__latest extends BaseContract {
 
   getCoreVaultRedemptionFeeBIPS: TypedContractMethod<[], [bigint], "view">;
 
+  getCoreVaultTransferDefaultPenaltyBIPS: TypedContractMethod<
+    [],
+    [bigint],
+    "view"
+  >;
+
   getCoreVaultTransferTimeExtensionSeconds: TypedContractMethod<
+    [],
+    [bigint],
+    "view"
+  >;
+
+  getDirectMintingDailyLimitUBA: TypedContractMethod<[], [bigint], "view">;
+
+  getDirectMintingDailyLimiterState: TypedContractMethod<
+    [],
+    [
+      [bigint, bigint] & {
+        _windowStartTimestamp: bigint;
+        _mintedInCurrentWindow: bigint;
+      }
+    ],
+    "view"
+  >;
+
+  getDirectMintingExecutorFeeUBA: TypedContractMethod<[], [bigint], "view">;
+
+  getDirectMintingFeeBIPS: TypedContractMethod<[], [bigint], "view">;
+
+  getDirectMintingFeeReceiver: TypedContractMethod<[], [string], "view">;
+
+  getDirectMintingHourlyLimitUBA: TypedContractMethod<[], [bigint], "view">;
+
+  getDirectMintingHourlyLimiterState: TypedContractMethod<
+    [],
+    [
+      [bigint, bigint] & {
+        _windowStartTimestamp: bigint;
+        _mintedInCurrentWindow: bigint;
+      }
+    ],
+    "view"
+  >;
+
+  getDirectMintingLargeMintingDelaySeconds: TypedContractMethod<
+    [],
+    [bigint],
+    "view"
+  >;
+
+  getDirectMintingLargeMintingThresholdUBA: TypedContractMethod<
+    [],
+    [bigint],
+    "view"
+  >;
+
+  getDirectMintingMinimumFeeUBA: TypedContractMethod<[], [bigint], "view">;
+
+  getDirectMintingOthersCanExecuteAfterSeconds: TypedContractMethod<
+    [],
+    [bigint],
+    "view"
+  >;
+
+  getDirectMintingsUnblockUntilTimestamp: TypedContractMethod<
     [],
     [bigint],
     "view"
@@ -4485,11 +5490,15 @@ export interface IAssetManager__latest extends BaseContract {
     "view"
   >;
 
+  getMintingTagManager: TypedContractMethod<[], [string], "view">;
+
   getSettings: TypedContractMethod<
     [],
     [AssetManagerSettings.DataStructOutput],
     "view"
   >;
+
+  getSmartAccountManager: TypedContractMethod<[], [string], "view">;
 
   getWNat: TypedContractMethod<[], [string], "view">;
 
@@ -4558,6 +5567,12 @@ export interface IAssetManager__latest extends BaseContract {
     "nonpayable"
   >;
 
+  markUnblockedDirectMintingAllowed: TypedContractMethod<
+    [_transactionId: BytesLike],
+    [void],
+    "nonpayable"
+  >;
+
   maxRedemptionFromAgent: TypedContractMethod<
     [_agentVault: AddressLike],
     [bigint],
@@ -4574,6 +5589,8 @@ export interface IAssetManager__latest extends BaseContract {
     ],
     "view"
   >;
+
+  minimumRedeemAmountUBA: TypedContractMethod<[], [bigint], "view">;
 
   mintFromFreeUnderlying: TypedContractMethod<
     [_agentVault: AddressLike, _lots: BigNumberish],
@@ -4601,6 +5618,16 @@ export interface IAssetManager__latest extends BaseContract {
   redeem: TypedContractMethod<
     [
       _lots: BigNumberish,
+      _redeemerUnderlyingAddressString: string,
+      _executor: AddressLike
+    ],
+    [bigint],
+    "payable"
+  >;
+
+  redeemAmount: TypedContractMethod<
+    [
+      _amountUBA: BigNumberish,
       _redeemerUnderlyingAddressString: string,
       _executor: AddressLike
     ],
@@ -4636,6 +5663,19 @@ export interface IAssetManager__latest extends BaseContract {
     "nonpayable"
   >;
 
+  redeemWithTag: TypedContractMethod<
+    [
+      _amountUBA: BigNumberish,
+      _redeemerUnderlyingAddressString: string,
+      _executor: AddressLike,
+      _destinationTag: BigNumberish
+    ],
+    [bigint],
+    "payable"
+  >;
+
+  redeemWithTagSupported: TypedContractMethod<[], [boolean], "view">;
+
   redemptionPaymentDefault: TypedContractMethod<
     [
       _proof: IReferencedPaymentNonexistence.ProofStruct,
@@ -4661,6 +5701,12 @@ export interface IAssetManager__latest extends BaseContract {
   redemptionRequestInfo: TypedContractMethod<
     [_redemptionRequestId: BigNumberish],
     [RedemptionRequestInfo.DataStructOutput],
+    "view"
+  >;
+
+  redemptionRequestInfoExt: TypedContractMethod<
+    [_redemptionRequestId: BigNumberish],
+    [RedemptionRequestInfo.DataExtStructOutput],
     "view"
   >;
 
@@ -4852,8 +5898,59 @@ export interface IAssetManager__latest extends BaseContract {
     "nonpayable"
   >;
 
+  setCoreVaultTransferDefaultPenaltyBIPS: TypedContractMethod<
+    [_transferDefaultPenaltyBIPS: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
   setCoreVaultTransferTimeExtensionSeconds: TypedContractMethod<
     [_transferTimeExtensionSeconds: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  setDirectMintingDailyLimitUBA: TypedContractMethod<
+    [_dailyLimitUBA: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  setDirectMintingExecutorFee: TypedContractMethod<
+    [_executorFeeUBA: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  setDirectMintingFee: TypedContractMethod<
+    [_mintingFeeBIPS: BigNumberish, _minimumMintingFeeUBA: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  setDirectMintingFeeReceiver: TypedContractMethod<
+    [_mintingFeeReceiver: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
+  setDirectMintingHourlyLimitUBA: TypedContractMethod<
+    [_hourlyLimitUBA: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  setDirectMintingLargeMintingThrottling: TypedContractMethod<
+    [
+      _largeMintingThresholdUBA: BigNumberish,
+      _largeMintingDelaySeconds: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
+
+  setDirectMintingOthersCanExecuteAfterSeconds: TypedContractMethod<
+    [_seconds: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -4915,6 +6012,12 @@ export interface IAssetManager__latest extends BaseContract {
     "nonpayable"
   >;
 
+  setMinimumRedeemAmountUBA: TypedContractMethod<
+    [_valueUBA: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
   setMintingCapAmg: TypedContractMethod<
     [_value: BigNumberish],
     [void],
@@ -4923,6 +6026,12 @@ export interface IAssetManager__latest extends BaseContract {
 
   setMintingPoolHoldingsRequiredBIPS: TypedContractMethod<
     [_value: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  setMintingTagManager: TypedContractMethod<
+    [_mintingTagManager: AddressLike],
     [void],
     "nonpayable"
   >;
@@ -4963,6 +6072,12 @@ export interface IAssetManager__latest extends BaseContract {
     "nonpayable"
   >;
 
+  setSmartAccountManager: TypedContractMethod<
+    [_smartAccountManager: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+
   setTimeForPayment: TypedContractMethod<
     [_underlyingBlocks: BigNumberish, _underlyingSeconds: BigNumberish],
     [void],
@@ -4997,6 +6112,12 @@ export interface IAssetManager__latest extends BaseContract {
 
   transferToCoreVault: TypedContractMethod<
     [_agentVault: AddressLike, _amountUBA: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  unblockDirectMintingsUntil: TypedContractMethod<
+    [_timestamp: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -5050,6 +6171,15 @@ export interface IAssetManager__latest extends BaseContract {
 
   upgradeWNatContract: TypedContractMethod<
     [_start: BigNumberish, _end: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+
+  xrpRedemptionPaymentDefault: TypedContractMethod<
+    [
+      _proof: IXRPPaymentNonexistence.ProofStruct,
+      _redemptionRequestId: BigNumberish
+    ],
     [void],
     "nonpayable"
   >;
@@ -5108,7 +6238,7 @@ export interface IAssetManager__latest extends BaseContract {
   getFunction(
     nameOrSignature: "announceAgentPoolTokenRedemption"
   ): TypedContractMethod<
-    [_agentVault: AddressLike, _valueNATWei: BigNumberish],
+    [_agentVault: AddressLike, _valuePoolTokenWei: BigNumberish],
     [bigint],
     "nonpayable"
   >;
@@ -5181,6 +6311,20 @@ export interface IAssetManager__latest extends BaseContract {
     "view"
   >;
   getFunction(
+    nameOrSignature: "confirmClosedMintingPayment"
+  ): TypedContractMethod<
+    [_payment: IPayment.ProofStruct, _collateralReservationId: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "confirmCoreVaultDonation"
+  ): TypedContractMethod<
+    [_payment: IXRPPayment.ProofStruct],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
     nameOrSignature: "confirmRedemptionPayment"
   ): TypedContractMethod<
     [_payment: IPayment.ProofStruct, _redemptionRequestId: BigNumberish],
@@ -5205,6 +6349,13 @@ export interface IAssetManager__latest extends BaseContract {
     nameOrSignature: "confirmUnderlyingWithdrawal"
   ): TypedContractMethod<
     [_payment: IPayment.ProofStruct, _agentVault: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "confirmXRPRedemptionPayment"
+  ): TypedContractMethod<
+    [_payment: IXRPPayment.ProofStruct, _redemptionRequestId: BigNumberish],
     [void],
     "nonpayable"
   >;
@@ -5271,6 +6422,22 @@ export interface IAssetManager__latest extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "directMintingDelayState"
+  ): TypedContractMethod<
+    [_transactionId: BytesLike],
+    [
+      [bigint, bigint, bigint] & {
+        _delayState: bigint;
+        _allowedAt: bigint;
+        _startedAt: bigint;
+      }
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "directMintingPaymentAddress"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
     nameOrSignature: "doublePaymentChallenge"
   ): TypedContractMethod<
     [
@@ -5321,6 +6488,13 @@ export interface IAssetManager__latest extends BaseContract {
     [_agentVault: AddressLike, _name: string],
     [void],
     "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "executeDirectMinting"
+  ): TypedContractMethod<
+    [_payment: IXRPPayment.ProofStruct],
+    [void],
+    "payable"
   >;
   getFunction(
     nameOrSignature: "executeGovernanceCall"
@@ -5458,6 +6632,9 @@ export interface IAssetManager__latest extends BaseContract {
     nameOrSignature: "getCollateralTypes"
   ): TypedContractMethod<[], [CollateralType.DataStructOutput[]], "view">;
   getFunction(
+    nameOrSignature: "getCoreVaultDonationTag"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "getCoreVaultManager"
   ): TypedContractMethod<[], [string], "view">;
   getFunction(
@@ -5473,14 +6650,77 @@ export interface IAssetManager__latest extends BaseContract {
     nameOrSignature: "getCoreVaultRedemptionFeeBIPS"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
+    nameOrSignature: "getCoreVaultTransferDefaultPenaltyBIPS"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
     nameOrSignature: "getCoreVaultTransferTimeExtensionSeconds"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getDirectMintingDailyLimitUBA"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getDirectMintingDailyLimiterState"
+  ): TypedContractMethod<
+    [],
+    [
+      [bigint, bigint] & {
+        _windowStartTimestamp: bigint;
+        _mintedInCurrentWindow: bigint;
+      }
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "getDirectMintingExecutorFeeUBA"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getDirectMintingFeeBIPS"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getDirectMintingFeeReceiver"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
+    nameOrSignature: "getDirectMintingHourlyLimitUBA"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getDirectMintingHourlyLimiterState"
+  ): TypedContractMethod<
+    [],
+    [
+      [bigint, bigint] & {
+        _windowStartTimestamp: bigint;
+        _mintedInCurrentWindow: bigint;
+      }
+    ],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "getDirectMintingLargeMintingDelaySeconds"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getDirectMintingLargeMintingThresholdUBA"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getDirectMintingMinimumFeeUBA"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getDirectMintingOthersCanExecuteAfterSeconds"
+  ): TypedContractMethod<[], [bigint], "view">;
+  getFunction(
+    nameOrSignature: "getDirectMintingsUnblockUntilTimestamp"
   ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "getFAssetsBackedByPool"
   ): TypedContractMethod<[_agentVault: AddressLike], [bigint], "view">;
   getFunction(
+    nameOrSignature: "getMintingTagManager"
+  ): TypedContractMethod<[], [string], "view">;
+  getFunction(
     nameOrSignature: "getSettings"
   ): TypedContractMethod<[], [AssetManagerSettings.DataStructOutput], "view">;
+  getFunction(
+    nameOrSignature: "getSmartAccountManager"
+  ): TypedContractMethod<[], [string], "view">;
   getFunction(
     nameOrSignature: "getWNat"
   ): TypedContractMethod<[], [string], "view">;
@@ -5546,6 +6786,9 @@ export interface IAssetManager__latest extends BaseContract {
     nameOrSignature: "makeAgentAvailable"
   ): TypedContractMethod<[_agentVault: AddressLike], [void], "nonpayable">;
   getFunction(
+    nameOrSignature: "markUnblockedDirectMintingAllowed"
+  ): TypedContractMethod<[_transactionId: BytesLike], [void], "nonpayable">;
+  getFunction(
     nameOrSignature: "maxRedemptionFromAgent"
   ): TypedContractMethod<[_agentVault: AddressLike], [bigint], "view">;
   getFunction(
@@ -5560,6 +6803,9 @@ export interface IAssetManager__latest extends BaseContract {
     ],
     "view"
   >;
+  getFunction(
+    nameOrSignature: "minimumRedeemAmountUBA"
+  ): TypedContractMethod<[], [bigint], "view">;
   getFunction(
     nameOrSignature: "mintFromFreeUnderlying"
   ): TypedContractMethod<
@@ -5601,6 +6847,17 @@ export interface IAssetManager__latest extends BaseContract {
     "payable"
   >;
   getFunction(
+    nameOrSignature: "redeemAmount"
+  ): TypedContractMethod<
+    [
+      _amountUBA: BigNumberish,
+      _redeemerUnderlyingAddressString: string,
+      _executor: AddressLike
+    ],
+    [bigint],
+    "payable"
+  >;
+  getFunction(
     nameOrSignature: "redeemFromAgent"
   ): TypedContractMethod<
     [
@@ -5632,6 +6889,21 @@ export interface IAssetManager__latest extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "redeemWithTag"
+  ): TypedContractMethod<
+    [
+      _amountUBA: BigNumberish,
+      _redeemerUnderlyingAddressString: string,
+      _executor: AddressLike,
+      _destinationTag: BigNumberish
+    ],
+    [bigint],
+    "payable"
+  >;
+  getFunction(
+    nameOrSignature: "redeemWithTagSupported"
+  ): TypedContractMethod<[], [boolean], "view">;
+  getFunction(
     nameOrSignature: "redemptionPaymentDefault"
   ): TypedContractMethod<
     [
@@ -5661,6 +6933,13 @@ export interface IAssetManager__latest extends BaseContract {
   ): TypedContractMethod<
     [_redemptionRequestId: BigNumberish],
     [RedemptionRequestInfo.DataStructOutput],
+    "view"
+  >;
+  getFunction(
+    nameOrSignature: "redemptionRequestInfoExt"
+  ): TypedContractMethod<
+    [_redemptionRequestId: BigNumberish],
+    [RedemptionRequestInfo.DataExtStructOutput],
     "view"
   >;
   getFunction(
@@ -5809,12 +7088,55 @@ export interface IAssetManager__latest extends BaseContract {
     "nonpayable"
   >;
   getFunction(
+    nameOrSignature: "setCoreVaultTransferDefaultPenaltyBIPS"
+  ): TypedContractMethod<
+    [_transferDefaultPenaltyBIPS: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
     nameOrSignature: "setCoreVaultTransferTimeExtensionSeconds"
   ): TypedContractMethod<
     [_transferTimeExtensionSeconds: BigNumberish],
     [void],
     "nonpayable"
   >;
+  getFunction(
+    nameOrSignature: "setDirectMintingDailyLimitUBA"
+  ): TypedContractMethod<[_dailyLimitUBA: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setDirectMintingExecutorFee"
+  ): TypedContractMethod<[_executorFeeUBA: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setDirectMintingFee"
+  ): TypedContractMethod<
+    [_mintingFeeBIPS: BigNumberish, _minimumMintingFeeUBA: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setDirectMintingFeeReceiver"
+  ): TypedContractMethod<
+    [_mintingFeeReceiver: AddressLike],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setDirectMintingHourlyLimitUBA"
+  ): TypedContractMethod<[_hourlyLimitUBA: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setDirectMintingLargeMintingThrottling"
+  ): TypedContractMethod<
+    [
+      _largeMintingThresholdUBA: BigNumberish,
+      _largeMintingDelaySeconds: BigNumberish
+    ],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "setDirectMintingOthersCanExecuteAfterSeconds"
+  ): TypedContractMethod<[_seconds: BigNumberish], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "setEmergencyPauseDurationResetAfterSeconds"
   ): TypedContractMethod<[_value: BigNumberish], [void], "nonpayable">;
@@ -5850,11 +7172,21 @@ export interface IAssetManager__latest extends BaseContract {
     nameOrSignature: "setMinUpdateRepeatTimeSeconds"
   ): TypedContractMethod<[_value: BigNumberish], [void], "nonpayable">;
   getFunction(
+    nameOrSignature: "setMinimumRedeemAmountUBA"
+  ): TypedContractMethod<[_valueUBA: BigNumberish], [void], "nonpayable">;
+  getFunction(
     nameOrSignature: "setMintingCapAmg"
   ): TypedContractMethod<[_value: BigNumberish], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "setMintingPoolHoldingsRequiredBIPS"
   ): TypedContractMethod<[_value: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setMintingTagManager"
+  ): TypedContractMethod<
+    [_mintingTagManager: AddressLike],
+    [void],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "setPaymentChallengeReward"
   ): TypedContractMethod<
@@ -5877,6 +7209,13 @@ export interface IAssetManager__latest extends BaseContract {
   getFunction(
     nameOrSignature: "setRedemptionPaymentExtensionSeconds"
   ): TypedContractMethod<[_value: BigNumberish], [void], "nonpayable">;
+  getFunction(
+    nameOrSignature: "setSmartAccountManager"
+  ): TypedContractMethod<
+    [_smartAccountManager: AddressLike],
+    [void],
+    "nonpayable"
+  >;
   getFunction(
     nameOrSignature: "setTimeForPayment"
   ): TypedContractMethod<
@@ -5906,6 +7245,9 @@ export interface IAssetManager__latest extends BaseContract {
     [void],
     "nonpayable"
   >;
+  getFunction(
+    nameOrSignature: "unblockDirectMintingsUntil"
+  ): TypedContractMethod<[_timestamp: BigNumberish], [void], "nonpayable">;
   getFunction(
     nameOrSignature: "unpauseMinting"
   ): TypedContractMethod<[], [void], "nonpayable">;
@@ -5961,6 +7303,16 @@ export interface IAssetManager__latest extends BaseContract {
     nameOrSignature: "upgradeWNatContract"
   ): TypedContractMethod<
     [_start: BigNumberish, _end: BigNumberish],
+    [void],
+    "nonpayable"
+  >;
+  getFunction(
+    nameOrSignature: "xrpRedemptionPaymentDefault"
+  ): TypedContractMethod<
+    [
+      _proof: IXRPPaymentNonexistence.ProofStruct,
+      _redemptionRequestId: BigNumberish
+    ],
     [void],
     "nonpayable"
   >;
@@ -6071,11 +7423,25 @@ export interface IAssetManager__latest extends BaseContract {
     CollateralTypeAddedEvent.OutputObject
   >;
   getEvent(
+    key: "ConfirmedClosedMintingPayment"
+  ): TypedContractEvent<
+    ConfirmedClosedMintingPaymentEvent.InputTuple,
+    ConfirmedClosedMintingPaymentEvent.OutputTuple,
+    ConfirmedClosedMintingPaymentEvent.OutputObject
+  >;
+  getEvent(
     key: "ContractChanged"
   ): TypedContractEvent<
     ContractChangedEvent.InputTuple,
     ContractChangedEvent.OutputTuple,
     ContractChangedEvent.OutputObject
+  >;
+  getEvent(
+    key: "CoreVaultFundsAdded"
+  ): TypedContractEvent<
+    CoreVaultFundsAddedEvent.InputTuple,
+    CoreVaultFundsAddedEvent.OutputTuple,
+    CoreVaultFundsAddedEvent.OutputObject
   >;
   getEvent(
     key: "CoreVaultRedemptionRequested"
@@ -6099,6 +7465,41 @@ export interface IAssetManager__latest extends BaseContract {
     DiamondCutEvent.OutputObject
   >;
   getEvent(
+    key: "DirectMintingDelayed"
+  ): TypedContractEvent<
+    DirectMintingDelayedEvent.InputTuple,
+    DirectMintingDelayedEvent.OutputTuple,
+    DirectMintingDelayedEvent.OutputObject
+  >;
+  getEvent(
+    key: "DirectMintingExecuted"
+  ): TypedContractEvent<
+    DirectMintingExecutedEvent.InputTuple,
+    DirectMintingExecutedEvent.OutputTuple,
+    DirectMintingExecutedEvent.OutputObject
+  >;
+  getEvent(
+    key: "DirectMintingExecutedToSmartAccount"
+  ): TypedContractEvent<
+    DirectMintingExecutedToSmartAccountEvent.InputTuple,
+    DirectMintingExecutedToSmartAccountEvent.OutputTuple,
+    DirectMintingExecutedToSmartAccountEvent.OutputObject
+  >;
+  getEvent(
+    key: "DirectMintingPaymentTooSmallForFee"
+  ): TypedContractEvent<
+    DirectMintingPaymentTooSmallForFeeEvent.InputTuple,
+    DirectMintingPaymentTooSmallForFeeEvent.OutputTuple,
+    DirectMintingPaymentTooSmallForFeeEvent.OutputObject
+  >;
+  getEvent(
+    key: "DirectMintingsUnblocked"
+  ): TypedContractEvent<
+    DirectMintingsUnblockedEvent.InputTuple,
+    DirectMintingsUnblockedEvent.OutputTuple,
+    DirectMintingsUnblockedEvent.OutputObject
+  >;
+  getEvent(
     key: "DuplicatePaymentConfirmed"
   ): TypedContractEvent<
     DuplicatePaymentConfirmedEvent.InputTuple,
@@ -6118,6 +7519,13 @@ export interface IAssetManager__latest extends BaseContract {
     EmergencyPauseCanceledEvent.InputTuple,
     EmergencyPauseCanceledEvent.OutputTuple,
     EmergencyPauseCanceledEvent.OutputObject
+  >;
+  getEvent(
+    key: "EmergencyPauseTotalDurationReset"
+  ): TypedContractEvent<
+    EmergencyPauseTotalDurationResetEvent.InputTuple,
+    EmergencyPauseTotalDurationResetEvent.OutputTuple,
+    EmergencyPauseTotalDurationResetEvent.OutputObject
   >;
   getEvent(
     key: "EmergencyPauseTriggered"
@@ -6162,6 +7570,13 @@ export interface IAssetManager__latest extends BaseContract {
     IllegalPaymentConfirmedEvent.OutputObject
   >;
   getEvent(
+    key: "LargeDirectMintingDelayed"
+  ): TypedContractEvent<
+    LargeDirectMintingDelayedEvent.InputTuple,
+    LargeDirectMintingDelayedEvent.OutputTuple,
+    LargeDirectMintingDelayedEvent.OutputObject
+  >;
+  getEvent(
     key: "LiquidationEnded"
   ): TypedContractEvent<
     LiquidationEndedEvent.InputTuple,
@@ -6190,6 +7605,13 @@ export interface IAssetManager__latest extends BaseContract {
     MintingExecutedEvent.OutputObject
   >;
   getEvent(
+    key: "MintingPaused"
+  ): TypedContractEvent<
+    MintingPausedEvent.InputTuple,
+    MintingPausedEvent.OutputTuple,
+    MintingPausedEvent.OutputObject
+  >;
+  getEvent(
     key: "MintingPaymentDefault"
   ): TypedContractEvent<
     MintingPaymentDefaultEvent.InputTuple,
@@ -6209,6 +7631,13 @@ export interface IAssetManager__latest extends BaseContract {
     RedeemedInCollateralEvent.InputTuple,
     RedeemedInCollateralEvent.OutputTuple,
     RedeemedInCollateralEvent.OutputObject
+  >;
+  getEvent(
+    key: "RedemptionAmountIncomplete"
+  ): TypedContractEvent<
+    RedemptionAmountIncompleteEvent.InputTuple,
+    RedemptionAmountIncompleteEvent.OutputTuple,
+    RedemptionAmountIncompleteEvent.OutputObject
   >;
   getEvent(
     key: "RedemptionDefault"
@@ -6293,6 +7722,13 @@ export interface IAssetManager__latest extends BaseContract {
     RedemptionTicketsConsolidatedEvent.InputTuple,
     RedemptionTicketsConsolidatedEvent.OutputTuple,
     RedemptionTicketsConsolidatedEvent.OutputObject
+  >;
+  getEvent(
+    key: "RedemptionWithTagRequested"
+  ): TypedContractEvent<
+    RedemptionWithTagRequestedEvent.InputTuple,
+    RedemptionWithTagRequestedEvent.OutputTuple,
+    RedemptionWithTagRequestedEvent.OutputObject
   >;
   getEvent(
     key: "ReturnFromCoreVaultCancelled"
@@ -6594,6 +8030,17 @@ export interface IAssetManager__latest extends BaseContract {
       CollateralTypeAddedEvent.OutputObject
     >;
 
+    "ConfirmedClosedMintingPayment(address,bytes32,uint256)": TypedContractEvent<
+      ConfirmedClosedMintingPaymentEvent.InputTuple,
+      ConfirmedClosedMintingPaymentEvent.OutputTuple,
+      ConfirmedClosedMintingPaymentEvent.OutputObject
+    >;
+    ConfirmedClosedMintingPayment: TypedContractEvent<
+      ConfirmedClosedMintingPaymentEvent.InputTuple,
+      ConfirmedClosedMintingPaymentEvent.OutputTuple,
+      ConfirmedClosedMintingPaymentEvent.OutputObject
+    >;
+
     "ContractChanged(string,address)": TypedContractEvent<
       ContractChangedEvent.InputTuple,
       ContractChangedEvent.OutputTuple,
@@ -6603,6 +8050,17 @@ export interface IAssetManager__latest extends BaseContract {
       ContractChangedEvent.InputTuple,
       ContractChangedEvent.OutputTuple,
       ContractChangedEvent.OutputObject
+    >;
+
+    "CoreVaultFundsAdded(uint256)": TypedContractEvent<
+      CoreVaultFundsAddedEvent.InputTuple,
+      CoreVaultFundsAddedEvent.OutputTuple,
+      CoreVaultFundsAddedEvent.OutputObject
+    >;
+    CoreVaultFundsAdded: TypedContractEvent<
+      CoreVaultFundsAddedEvent.InputTuple,
+      CoreVaultFundsAddedEvent.OutputTuple,
+      CoreVaultFundsAddedEvent.OutputObject
     >;
 
     "CoreVaultRedemptionRequested(address,string,bytes32,uint256,uint256)": TypedContractEvent<
@@ -6638,6 +8096,61 @@ export interface IAssetManager__latest extends BaseContract {
       DiamondCutEvent.OutputObject
     >;
 
+    "DirectMintingDelayed(bytes32,uint256,uint256)": TypedContractEvent<
+      DirectMintingDelayedEvent.InputTuple,
+      DirectMintingDelayedEvent.OutputTuple,
+      DirectMintingDelayedEvent.OutputObject
+    >;
+    DirectMintingDelayed: TypedContractEvent<
+      DirectMintingDelayedEvent.InputTuple,
+      DirectMintingDelayedEvent.OutputTuple,
+      DirectMintingDelayedEvent.OutputObject
+    >;
+
+    "DirectMintingExecuted(bytes32,address,address,uint256,uint256,uint256)": TypedContractEvent<
+      DirectMintingExecutedEvent.InputTuple,
+      DirectMintingExecutedEvent.OutputTuple,
+      DirectMintingExecutedEvent.OutputObject
+    >;
+    DirectMintingExecuted: TypedContractEvent<
+      DirectMintingExecutedEvent.InputTuple,
+      DirectMintingExecutedEvent.OutputTuple,
+      DirectMintingExecutedEvent.OutputObject
+    >;
+
+    "DirectMintingExecutedToSmartAccount(bytes32,string,address,uint256,uint256,bytes)": TypedContractEvent<
+      DirectMintingExecutedToSmartAccountEvent.InputTuple,
+      DirectMintingExecutedToSmartAccountEvent.OutputTuple,
+      DirectMintingExecutedToSmartAccountEvent.OutputObject
+    >;
+    DirectMintingExecutedToSmartAccount: TypedContractEvent<
+      DirectMintingExecutedToSmartAccountEvent.InputTuple,
+      DirectMintingExecutedToSmartAccountEvent.OutputTuple,
+      DirectMintingExecutedToSmartAccountEvent.OutputObject
+    >;
+
+    "DirectMintingPaymentTooSmallForFee(bytes32,uint256,uint256)": TypedContractEvent<
+      DirectMintingPaymentTooSmallForFeeEvent.InputTuple,
+      DirectMintingPaymentTooSmallForFeeEvent.OutputTuple,
+      DirectMintingPaymentTooSmallForFeeEvent.OutputObject
+    >;
+    DirectMintingPaymentTooSmallForFee: TypedContractEvent<
+      DirectMintingPaymentTooSmallForFeeEvent.InputTuple,
+      DirectMintingPaymentTooSmallForFeeEvent.OutputTuple,
+      DirectMintingPaymentTooSmallForFeeEvent.OutputObject
+    >;
+
+    "DirectMintingsUnblocked(uint256)": TypedContractEvent<
+      DirectMintingsUnblockedEvent.InputTuple,
+      DirectMintingsUnblockedEvent.OutputTuple,
+      DirectMintingsUnblockedEvent.OutputObject
+    >;
+    DirectMintingsUnblocked: TypedContractEvent<
+      DirectMintingsUnblockedEvent.InputTuple,
+      DirectMintingsUnblockedEvent.OutputTuple,
+      DirectMintingsUnblockedEvent.OutputObject
+    >;
+
     "DuplicatePaymentConfirmed(address,bytes32,bytes32)": TypedContractEvent<
       DuplicatePaymentConfirmedEvent.InputTuple,
       DuplicatePaymentConfirmedEvent.OutputTuple,
@@ -6669,6 +8182,17 @@ export interface IAssetManager__latest extends BaseContract {
       EmergencyPauseCanceledEvent.InputTuple,
       EmergencyPauseCanceledEvent.OutputTuple,
       EmergencyPauseCanceledEvent.OutputObject
+    >;
+
+    "EmergencyPauseTotalDurationReset()": TypedContractEvent<
+      EmergencyPauseTotalDurationResetEvent.InputTuple,
+      EmergencyPauseTotalDurationResetEvent.OutputTuple,
+      EmergencyPauseTotalDurationResetEvent.OutputObject
+    >;
+    EmergencyPauseTotalDurationReset: TypedContractEvent<
+      EmergencyPauseTotalDurationResetEvent.InputTuple,
+      EmergencyPauseTotalDurationResetEvent.OutputTuple,
+      EmergencyPauseTotalDurationResetEvent.OutputObject
     >;
 
     "EmergencyPauseTriggered(uint8,uint256,uint8,uint256)": TypedContractEvent<
@@ -6737,6 +8261,17 @@ export interface IAssetManager__latest extends BaseContract {
       IllegalPaymentConfirmedEvent.OutputObject
     >;
 
+    "LargeDirectMintingDelayed(bytes32,uint256,uint256)": TypedContractEvent<
+      LargeDirectMintingDelayedEvent.InputTuple,
+      LargeDirectMintingDelayedEvent.OutputTuple,
+      LargeDirectMintingDelayedEvent.OutputObject
+    >;
+    LargeDirectMintingDelayed: TypedContractEvent<
+      LargeDirectMintingDelayedEvent.InputTuple,
+      LargeDirectMintingDelayedEvent.OutputTuple,
+      LargeDirectMintingDelayedEvent.OutputObject
+    >;
+
     "LiquidationEnded(address)": TypedContractEvent<
       LiquidationEndedEvent.InputTuple,
       LiquidationEndedEvent.OutputTuple,
@@ -6781,6 +8316,17 @@ export interface IAssetManager__latest extends BaseContract {
       MintingExecutedEvent.OutputObject
     >;
 
+    "MintingPaused(bool)": TypedContractEvent<
+      MintingPausedEvent.InputTuple,
+      MintingPausedEvent.OutputTuple,
+      MintingPausedEvent.OutputObject
+    >;
+    MintingPaused: TypedContractEvent<
+      MintingPausedEvent.InputTuple,
+      MintingPausedEvent.OutputTuple,
+      MintingPausedEvent.OutputObject
+    >;
+
     "MintingPaymentDefault(address,address,uint256,uint256)": TypedContractEvent<
       MintingPaymentDefaultEvent.InputTuple,
       MintingPaymentDefaultEvent.OutputTuple,
@@ -6812,6 +8358,17 @@ export interface IAssetManager__latest extends BaseContract {
       RedeemedInCollateralEvent.InputTuple,
       RedeemedInCollateralEvent.OutputTuple,
       RedeemedInCollateralEvent.OutputObject
+    >;
+
+    "RedemptionAmountIncomplete(address,uint256)": TypedContractEvent<
+      RedemptionAmountIncompleteEvent.InputTuple,
+      RedemptionAmountIncompleteEvent.OutputTuple,
+      RedemptionAmountIncompleteEvent.OutputObject
+    >;
+    RedemptionAmountIncomplete: TypedContractEvent<
+      RedemptionAmountIncompleteEvent.InputTuple,
+      RedemptionAmountIncompleteEvent.OutputTuple,
+      RedemptionAmountIncompleteEvent.OutputObject
     >;
 
     "RedemptionDefault(address,address,uint256,uint256,uint256,uint256)": TypedContractEvent<
@@ -6944,6 +8501,17 @@ export interface IAssetManager__latest extends BaseContract {
       RedemptionTicketsConsolidatedEvent.InputTuple,
       RedemptionTicketsConsolidatedEvent.OutputTuple,
       RedemptionTicketsConsolidatedEvent.OutputObject
+    >;
+
+    "RedemptionWithTagRequested(address,address,uint256,string,uint256,uint256,uint256,uint256,uint256,bytes32,address,uint256,uint256)": TypedContractEvent<
+      RedemptionWithTagRequestedEvent.InputTuple,
+      RedemptionWithTagRequestedEvent.OutputTuple,
+      RedemptionWithTagRequestedEvent.OutputObject
+    >;
+    RedemptionWithTagRequested: TypedContractEvent<
+      RedemptionWithTagRequestedEvent.InputTuple,
+      RedemptionWithTagRequestedEvent.OutputTuple,
+      RedemptionWithTagRequestedEvent.OutputObject
     >;
 
     "ReturnFromCoreVaultCancelled(address,uint256)": TypedContractEvent<
