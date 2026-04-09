@@ -101,6 +101,15 @@ export class ExplorerController {
     return apiResponse(this.service.returnFromCoreVaultTransactionDetails(hash), 200)
   }
 
+  @Get('transaction-details/direct-mint')
+  @ApiOperation({ summary: 'Details for the given direct mint transaction' })
+  @ApiQuery({ name: 'hash', type: String })
+  getDirectMintTransactionDetails(
+    @Query('hash') hash: string
+  ): Promise<ApiResponse<Types.DirectMintTransactionDetails>> {
+    return apiResponse(this.service.directMintTransactionDetails(hash), 200)
+  }
+
   @Get('transaction-details/self-mint')
   @ApiOperation({ summary: 'Progression details for the given self mint transaction' })
   @ApiQuery({ name: 'hash', type: String })
@@ -160,6 +169,7 @@ export class ExplorerController {
     return types.map(t => Types.TransactionType[t])
   }
 
+  // eslint-disable-next-line
   private restrictPoints(end: number, npoints: number, start?: number): Error | null {
     if (npoints > MAX_TIMESERIES_PTS) {
       return new Error(`Cannot request more than ${MAX_TIMESERIES_PTS} points`)

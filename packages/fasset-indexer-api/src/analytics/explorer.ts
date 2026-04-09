@@ -116,6 +116,25 @@ export class ExplorerAnalytics extends SharedAnalytics {
     return { flows }
   }
 
+  async directMintTransactionDetails(
+    hash: string
+  ): Promise<ExplorerType.DirectMintTransactionDetails> {
+    const em = this.orm.em.fork()
+    const [directMints, directMintsSA] = await Promise.all([
+      em.find(Entities.DirectMintingExecuted,
+        { evmLog: { transaction: { hash } } },
+        { populate: ['evmLog.block', 'evmLog.transaction.source', 'targetAddress', 'executor'] }),
+      em.find(Entities.DirectMintingExecutedToSmartAccount,
+        { evmLog: { transaction: { hash } } },
+        { populate: ['evmLog.block', 'evmLog.transaction.source', 'sourceAddress', 'executor'] })
+    ])
+    const flows: ExplorerType.DirectMintEventDetails[] = [
+      ...directMints.map(dm => ({ events: { original: dm as Entities.DirectMintingExecuted | Entities.DirectMintingExecutedToSmartAccount } })),
+      ...directMintsSA.map(dm => ({ events: { original: dm as Entities.DirectMintingExecuted | Entities.DirectMintingExecutedToSmartAccount } }))
+    ]
+    return { flows }
+  }
+
   async redemptionTransactionDetails(
     hash: string
   ): Promise<ExplorerType.RedeemTransactionDetails> {
@@ -392,12 +411,15 @@ export class ExplorerAnalytics extends SharedAnalytics {
       case EVENTS.ASSET_MANAGER.COLLATERAL_RESERVED:
         return log
       case EVENTS.ASSET_MANAGER.REDEMPTION_REQUESTED:
+      case EVENTS.ASSET_MANAGER.REDEMPTION_WITH_TAG_REQUESTED:
         return log
       case EVENTS.ASSET_MANAGER.TRANSFER_TO_CORE_VAULT_STARTED:
         return log
       case EVENTS.ASSET_MANAGER.RETURN_FROM_CORE_VAULT_REQUESTED:
         return log
       case EVENTS.ASSET_MANAGER.SELF_MINT:
+      case EVENTS.ASSET_MANAGER.DIRECT_MINTING_EXECUTED:
+      case EVENTS.ASSET_MANAGER.DIRECT_MINTING_EXECUTED_TO_SMART_ACCOUNT:
         return log
       case EVENTS.ASSET_MANAGER.UNDERLYING_BALANCE_TOPPED_UP:
         return log
@@ -514,25 +536,42 @@ export class ExplorerAnalytics extends SharedAnalytics {
   }
 
   protected async mintStats(em: EntityManager, start: number, end: number): Promise<ExplorerType.ExplorerStatistics> {
-    const resp = await em.createQueryBuilder(Entities.MintingExecuted, 'me')
-      .select([
-        'cr.fasset',
-        raw('count(me.evm_log_id) as count'),
-        raw('sum(cr.value_uba) as value'),
-        raw('sum(meeb.timestamp - creb.timestamp) as time')
-      ])
-      .join('me.collateralReserved', 'cr')
-      .join('me.evmLog', 'meel')
-      .join('cr.evmLog', 'crel')
-      .join('meel.block', 'meeb')
-      .join('crel.block', 'creb')
-      .where({ 'meeb.timestamp': { $gte: start, $lt: end } })
-      .groupBy('cr.fasset')
-      .execute() as { fasset: core.FAssetType, count: number, value: string, time: number }[]
+    // eslint-disable-next-line
+    const directMintQuery = (entity: new () => any) =>
+      em.createQueryBuilder(entity, 'dm')
+        .select(['dm.fasset', raw('count(dm.evm_log_id) as count'), raw('sum(dm.minted_amount_uba) as value')])
+        .join('dm.evmLog', 'el').join('el.block', 'eb')
+        .where({ 'eb.timestamp': { $gte: start, $lt: end } })
+        .groupBy('dm.fasset')
+        .execute() as Promise<{ fasset: core.FAssetType, count: number, value: string }[]>
+    const [standard, direct, directSA] = await Promise.all([
+      em.createQueryBuilder(Entities.MintingExecuted, 'me')
+        .select([
+          'cr.fasset',
+          raw('count(me.evm_log_id) as count'),
+          raw('sum(cr.value_uba) as value'),
+          raw('sum(meeb.timestamp - creb.timestamp) as time')
+        ])
+        .join('me.collateralReserved', 'cr')
+        .join('me.evmLog', 'meel')
+        .join('cr.evmLog', 'crel')
+        .join('meel.block', 'meeb')
+        .join('crel.block', 'creb')
+        .where({ 'meeb.timestamp': { $gte: start, $lt: end } })
+        .groupBy('cr.fasset')
+        .execute() as Promise<{ fasset: core.FAssetType, count: number, value: string, time: number }[]>,
+      directMintQuery(Entities.DirectMintingExecuted),
+      directMintQuery(Entities.DirectMintingExecutedToSmartAccount)
+    ])
+    const count = [standard, direct, directSA]
+      .map(r => this.convertOrmResultToFAssetAmountResult(r, 'count'))
+      .reduce((acc, r) => this.transformFAssetAmountResults(acc, r, (a, b) => a + b))
+    const value = [standard, direct, directSA]
+      .map(r => this.convertOrmResultToFAssetValueResult(r, 'value'))
+      .reduce((acc, r) => this.transformFAssetValueResults(acc, r, (a, b) => a + b))
     return {
-      count: this.convertOrmResultToFAssetAmountResult(resp, 'count'),
-      value: this.convertOrmResultToFAssetValueResult(resp, 'value'),
-      time: this.convertOrmResultToFAssetAmountResult(resp, 'time')
+      count, value,
+      time: this.convertOrmResultToFAssetAmountResult(standard, 'time')
     }
   }
 
@@ -587,6 +626,7 @@ export class ExplorerAnalytics extends SharedAnalytics {
       case 'CollateralReserved':
         return ExplorerType.TransactionType.Mint
       case 'RedemptionRequested':
+      case 'RedemptionWithTagRequested':
         return ExplorerType.TransactionType.Redeem
       case 'TransferToCoreVaultStarted':
         return ExplorerType.TransactionType.TransferToCV
@@ -598,6 +638,9 @@ export class ExplorerAnalytics extends SharedAnalytics {
         return ExplorerType.TransactionType.Withdrawal
       case 'UnderlyingBalanceToppedUp':
         return ExplorerType.TransactionType.Topup
+      case 'DirectMintingExecuted':
+      case 'DirectMintingExecutedToSmartAccount':
+        return ExplorerType.TransactionType.DirectMint
       default:
         throw new Error(`event name ${name} cannot be mapped to transaction type`)
     }
@@ -618,6 +661,7 @@ export class ExplorerAnalytics extends SharedAnalytics {
       case ExplorerType.TransactionType.SelfMint:
         return undefined
       case ExplorerType.TransactionType.Topup:
+      case ExplorerType.TransactionType.DirectMint:
         return undefined
       default:
         throw new Error(`invalid transaction type ${type}`)

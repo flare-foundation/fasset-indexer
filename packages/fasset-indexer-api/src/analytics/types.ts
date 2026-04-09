@@ -42,7 +42,8 @@ export enum TransactionType {
   ReturnFromCV = 3,
   SelfMint = 4,
   Withdrawal = 5,
-  Topup = 6
+  Topup = 6,
+  DirectMint = 7
 }
 
 export interface ExplorerAggregateStatistics {
@@ -68,8 +69,8 @@ export interface TransactionInfo {
   hash: string
   timestamp: number
   value: bigint
-  agentVault: string
-  agentName: string
+  agentVault?: string
+  agentName?: string
   resolution?: string
   payment: boolean
 }
@@ -83,6 +84,7 @@ export type MintTransactionDetails = TransactionDetails<MintEventDetails, void>
 export type RedeemTransactionDetails = TransactionDetails<RedeemEventDetails, Entities.RedemptionRequestIncomplete[]>
 export type TransferToCoreVaultTransactionDetails = TransactionDetails<TransferToCoreVaultEventDetails, void>
 export type ReturnFromCoreVaultTransactionDetails = TransactionDetails<ReturnFromCoreVaultEventDetails, void>
+export type DirectMintTransactionDetails = TransactionDetails<DirectMintEventDetails, void>
 export type SelfMintTransactionDetails = TransactionDetails<SelfMintEventDetails, void>
 export type BalanceTopupTransactionDetails = TransactionDetails<BalanceTopupEventDetails, void>
 export type WithdrawalTransactionDetails = TransactionDetails<WithdrawalEventDetails, void>
@@ -113,6 +115,7 @@ export type ReturnFromCoreVaultEventDetails = EventDetails<
     | Entities.ReturnFromCoreVaultCancelled
 >
 
+export type DirectMintEventDetails = EventDetails<Entities.DirectMintingExecuted | Entities.DirectMintingExecutedToSmartAccount, void>
 export type SelfMintEventDetails = EventDetails<Entities.SelfMint, void>
 export type BalanceTopupEventDetails = EventDetails<Entities.UnderlyingBalanceToppedUp, void>
 export type WithdrawalEventDetails = EventDetails<

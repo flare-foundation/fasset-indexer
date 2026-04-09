@@ -339,6 +339,7 @@ export class DashboardController {
     return null
   }
 
+  // eslint-disable-next-line
   private restrictPoints(end: number, npoints: number, start?: number): Error | null {
     if (npoints > MAX_TIMESERIES_PTS) {
       return new Error(`Cannot request more than ${MAX_TIMESERIES_PTS} points`)

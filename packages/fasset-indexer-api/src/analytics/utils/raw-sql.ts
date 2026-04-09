@@ -133,6 +133,13 @@ const explorerQueryTransactions = new Map([
   [TransactionType.Topup, `
     SELECT tp.evm_log_id, tp.agent_vault_address_id, tp.deposited_uba as value_uba, NULL::integer as user_id, NULL::integer as resolution, NULL::text as payment_reference
     FROM underlying_balance_topped_up tp`
+  ],
+  [TransactionType.DirectMint, `
+    SELECT dm.evm_log_id, NULL::integer as agent_vault_address_id, dm.minted_amount_uba as value_uba, dm.target_address_id as user_id, NULL::integer as resolution, NULL::text as payment_reference
+    FROM direct_minting_executed dm
+    UNION ALL
+    SELECT dms.evm_log_id, NULL::integer as agent_vault_address_id, dms.minted_amount_uba as value_uba, NULL::integer as user_id, NULL::integer as resolution, NULL::text as payment_reference
+    FROM direct_minting_executed_to_smart_account dms`
   ]
 ])
 
@@ -178,12 +185,12 @@ FROM (
 JOIN evm_log el ON el.id = t.evm_log_id
 JOIN evm_block eb ON eb.index = el.block_index
 JOIN evm_transaction et ON et.id = el.transaction_id
-JOIN evm_address eaa ON eaa.id = t.agent_vault_address_id
+LEFT JOIN evm_address eaa ON eaa.id = t.agent_vault_address_id
 JOIN evm_address eao ON eao.id = et.source_id
 LEFT JOIN evm_address eau ON eau.id = t.user_id
-JOIN agent_vault av ON av.address_id = t.agent_vault_address_id
-JOIN agent_owner ao ON av.vaults = ao.id
-JOIN agent_manager am ON am.address_id = ao.agents
+LEFT JOIN agent_vault av ON av.address_id = t.agent_vault_address_id
+LEFT JOIN agent_owner ao ON av.vaults = ao.id
+LEFT JOIN agent_manager am ON am.address_id = ao.agents
 LEFT JOIN LATERAL (
   SELECT ur.id
   FROM underlying_reference ur
