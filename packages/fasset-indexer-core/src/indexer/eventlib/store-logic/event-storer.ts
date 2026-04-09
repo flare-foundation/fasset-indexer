@@ -8,7 +8,7 @@ import { AssetManagerEventMigration } from "../migrations/asset-manager-migratio
 import { SmartAccountsEventStorer } from './smart-accounts'
 import { OftAdapterEventStorer } from './oft-adapter'
 import { EVENTS } from '../../../config/constants'
-import type { EntityManager } from "@mikro-orm/knex"
+import type { EntityManager, RequiredEntityData } from "@mikro-orm/knex"
 import type { ORM } from "../../../orm/interface"
 import type { Event } from "../types"
 import type * as AssetManager from "../../../../chain/typechain/assetManager/IAssetManager__latest"
@@ -758,6 +758,32 @@ export class EventStorer {
     evmLog: Entities.EvmLog,
     logArgs: AssetManager.RedemptionRequestedEvent.OutputTuple
   ): Promise<Entities.RedemptionRequested> {
+    return this.createRedemptionRequest(em, evmLog, Entities.RedemptionRequested, logArgs, {})
+  }
+
+  protected async onRedemptionWithTagRequested(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.RedemptionWithTagRequestedEvent.OutputTuple
+  ): Promise<Entities.RedemptionWithTagRequested> {
+    const [, , , , , , , , , , , , destinationTag] = logArgs
+    return this.createRedemptionRequest(em, evmLog, Entities.RedemptionWithTagRequested, logArgs, { destinationTag })
+  }
+
+  /**
+   * Persist a (plain or tagged) redemption request. Both kinds share the
+   * same RedemptionRequested table via single table inheritance, so the only
+   * thing that differs is the entity class and the extra subclass fields.
+   */
+  private async createRedemptionRequest<T extends Entities.RedemptionRequested>(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    entityClass: { new (): T },
+    logArgs:
+      | AssetManager.RedemptionRequestedEvent.OutputTuple
+      | AssetManager.RedemptionWithTagRequestedEvent.OutputTuple,
+    extra: Partial<T>
+  ): Promise<T> {
     const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
     const [
       agentVault, redeemer, requestId, paymentAddress, valueUBA, feeUBA,
@@ -769,44 +795,22 @@ export class EventStorer {
       findOrCreateEntities(em, Entities.EvmAddress, 'hex', [redeemer, executor]),
       findOrCreateEntities(em, Entities.UnderlyingAddress, 'text', [paymentAddress])
     ])
-    const _redeemer = evmAddresses.get(redeemer)!
-    const _executor = evmAddresses.get(executor)!
-    const _paymentAddress = underlyingAddresses.get(paymentAddress)!
-    return em.create(Entities.RedemptionRequested, {
-      evmLog, fasset, agentVault: _agentVault, redeemer: _redeemer, requestId: Number(requestId),
-      paymentAddress: _paymentAddress, valueUBA, feeUBA,
-      firstUnderlyingBlock: Number(firstUnderlyingBlock), lastUnderlyingBlock: Number(lastUnderlyingBlock),
-      lastUnderlyingTimestamp: Number(lastUnderlyingTimestamp), paymentReference, executor: _executor, executorFeeNatWei,
-      kind: 'plain', resolution: shared.RedemptionResolution.NONE
-    })
-  }
-
-  protected async onRedemptionWithTagRequested(
-    em: EntityManager,
-    evmLog: Entities.EvmLog,
-    logArgs: AssetManager.RedemptionWithTagRequestedEvent.OutputTuple
-  ): Promise<Entities.RedemptionWithTagRequested> {
-    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
-    const [
-      agentVault, redeemer, requestId, paymentAddress, valueUBA, feeUBA,
-      firstUnderlyingBlock, lastUnderlyingBlock, lastUnderlyingTimestamp,
-      paymentReference, executor, executorFeeNatWei, destinationTag
-    ] = logArgs
-    const [_agentVault, evmAddresses, underlyingAddresses] = await Promise.all([
-      em.findOneOrFail(Entities.AgentVault, { address: { hex: agentVault }}),
-      findOrCreateEntities(em, Entities.EvmAddress, 'hex', [redeemer, executor]),
-      findOrCreateEntities(em, Entities.UnderlyingAddress, 'text', [paymentAddress])
-    ])
-    const _redeemer = evmAddresses.get(redeemer)!
-    const _executor = evmAddresses.get(executor)!
-    const _paymentAddress = underlyingAddresses.get(paymentAddress)!
-    return em.create(Entities.RedemptionWithTagRequested, {
-      evmLog, fasset, agentVault: _agentVault, redeemer: _redeemer, requestId: Number(requestId),
-      paymentAddress: _paymentAddress, valueUBA, feeUBA,
-      firstUnderlyingBlock: Number(firstUnderlyingBlock), lastUnderlyingBlock: Number(lastUnderlyingBlock),
-      lastUnderlyingTimestamp: Number(lastUnderlyingTimestamp), paymentReference, executor: _executor, executorFeeNatWei,
-      destinationTag, kind: 'tagged', resolution: shared.RedemptionResolution.NONE
-    })
+    return em.create(entityClass, {
+      evmLog, fasset,
+      agentVault: _agentVault,
+      redeemer: evmAddresses.get(redeemer)!,
+      requestId: Number(requestId),
+      paymentAddress: underlyingAddresses.get(paymentAddress)!,
+      valueUBA, feeUBA,
+      firstUnderlyingBlock: Number(firstUnderlyingBlock),
+      lastUnderlyingBlock: Number(lastUnderlyingBlock),
+      lastUnderlyingTimestamp: Number(lastUnderlyingTimestamp),
+      paymentReference,
+      executor: evmAddresses.get(executor)!,
+      executorFeeNatWei,
+      resolution: shared.RedemptionResolution.NONE,
+      ...extra
+    } as RequiredEntityData<T>)
   }
 
   protected async onRedemptionPerformed(
