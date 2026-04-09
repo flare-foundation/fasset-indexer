@@ -1,6 +1,6 @@
 import { FAssetType } from "fasset-indexer-core"
 import { getVar, setVar, type EntityManager, findOrCreateEntity } from "fasset-indexer-core/orm"
-import { UnderlyingBlock, UnderlyingAddress, UnderlyingVoutReference, UnderlyingTransaction } from "fasset-indexer-core/entities"
+import { UnderlyingBlock, UnderlyingAddress, UnderlyingReference, UnderlyingTransaction } from "fasset-indexer-core/entities"
 import { PaymentReference } from "fasset-indexer-core/utils"
 import { logger } from "fasset-indexer-core/logger"
 import { DogeDeforker } from "./deforker"
@@ -90,11 +90,11 @@ export class DogeIndexer {
   private async storeVoutReference(
     em: EntityManager, reference: string, transaction: IDogeTx,
     address: UnderlyingAddress, block: UnderlyingBlock
-  ): Promise<UnderlyingVoutReference> {
+  ): Promise<UnderlyingReference> {
     const _transaction = await findOrCreateEntity(em, UnderlyingTransaction, {
       hash: transaction.hash, block, value: BigInt(0), source: address
     })
-    return em.create(UnderlyingVoutReference, {
+    return em.create(UnderlyingReference, {
       fasset: FAssetType.FDOGE, reference, transaction: _transaction, address, block
     })
   }

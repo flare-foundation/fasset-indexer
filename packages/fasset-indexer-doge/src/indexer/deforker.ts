@@ -1,5 +1,5 @@
 import { setVar, type EntityManager } from "fasset-indexer-core/orm"
-import { UnderlyingBlock, UnderlyingVoutReference } from "fasset-indexer-core/entities"
+import { UnderlyingBlock, UnderlyingReference } from "fasset-indexer-core/entities"
 import { logger } from "fasset-indexer-core/logger"
 import { DogeContext } from "../context"
 
@@ -26,7 +26,7 @@ export class DogeDeforker {
   protected async purgeDataAtHeight(height: number): Promise<void> {
     await this.context.orm.em.transactional(async (em: EntityManager) => {
       await em.nativeDelete(UnderlyingBlock, { height })
-      await em.nativeDelete(UnderlyingVoutReference, { block: { height } })
+      await em.nativeDelete(UnderlyingReference, { block: { height } })
       await setVar(em, this.context.firstUnhandledBlockDbKey, height.toString())
     })
   }

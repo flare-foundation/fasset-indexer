@@ -127,7 +127,7 @@ interface TransactionDetails<T,U> {
 }
 
 interface EventDetails<T,U> {
-  underlyingTransaction?: Entities.UnderlyingVoutReference | Entities.UnderlyingVoutReference[]
+  underlyingTransaction?: Entities.UnderlyingReference | Entities.UnderlyingReference[]
   events: {
     original: T
     resolution?: U

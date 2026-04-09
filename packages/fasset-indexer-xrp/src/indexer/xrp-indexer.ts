@@ -188,8 +188,8 @@ export class XrpIndexer {
     transaction: Entities.UnderlyingTransaction,
     address: Entities.UnderlyingAddress,
     block: Entities.UnderlyingBlock
-  ): Promise<Entities.UnderlyingVoutReference> {
-    return em.create(Entities.UnderlyingVoutReference, {
+  ): Promise<Entities.UnderlyingReference> {
+    return em.create(Entities.UnderlyingReference, {
       fasset: FAssetType.FXRP, reference, transaction, address, block
     })
   }

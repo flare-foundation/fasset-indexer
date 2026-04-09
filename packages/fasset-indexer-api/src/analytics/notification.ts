@@ -28,7 +28,7 @@ export class NotificationAnalytics {
     const defaulted = await em.findOne(Entities.RedemptionDefault,
       { redemptionRequested: redemption }, { populate: ['evmLog.block'] })
     if (defaulted != null) return defaulted
-    const underlying = await em.findOne(Entities.UnderlyingVoutReference,
+    const underlying = await em.findOne(Entities.UnderlyingReference,
       { reference: redemption.paymentReference, fasset }, { populate: ['block'] })
     if (underlying != null) return underlying
     return null

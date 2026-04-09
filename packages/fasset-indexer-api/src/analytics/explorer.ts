@@ -39,8 +39,10 @@ export class ExplorerAnalytics extends SharedAnalytics {
     if (end == null) {
       end = Date.now() / 1000
     }
-    const mint = await this.mintStats(em, start, end)
-    const redeem = await this.redeemStats(em, start, end)
+    const [mint, redeem] = await Promise.all([
+      this.mintStats(em, start, end),
+      this.redeemStats(em, start, end)
+    ])
     return { mint, redeem }
   }
 
@@ -75,7 +77,7 @@ export class ExplorerAnalytics extends SharedAnalytics {
       const transactionType = this.eventNameToTransactionType(name)
       const resolutionString = this.resolutionFromTransactionType(transactionType, resolution)
       info.push({
-        name: ExplorerType.TransactionType[transactionType] as any,
+        name: ExplorerType.TransactionType[transactionType] as keyof typeof ExplorerType.TransactionType,
         agentVault: agent_vault, agentName: agent_name, user,
         timestamp, origin: source, hash, value: BigInt(value_uba ?? 0),
         resolution: resolutionString, payment: underlying_payment != null
@@ -108,11 +110,9 @@ export class ExplorerAnalytics extends SharedAnalytics {
         'minter', 'paymentAddress', 'executor'
       ] }
     )
-    const flows: ExplorerType.MintEventDetails[] = []
-    for (const collateralReserved of collateralReservations) {
-      const details = await this.mintingEventDetails(em, collateralReserved)
-      flows.push(details)
-    }
+    const flows = await Promise.all(
+      collateralReservations.map(cr => this.mintingEventDetails(em, cr))
+    )
     return { flows }
   }
 
@@ -120,20 +120,20 @@ export class ExplorerAnalytics extends SharedAnalytics {
     hash: string
   ): Promise<ExplorerType.RedeemTransactionDetails> {
     const em = this.orm.em.fork()
-    const redemptionRequests = await em.find(Entities.RedemptionRequested,
-      { evmLog: { transaction: { hash } } },
-      { populate: [
-        'evmLog.block', 'evmLog.transaction.source',
-        'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager',
-        'redeemer', 'paymentAddress', 'executor'
-      ] })
-    const flows: ExplorerType.RedeemEventDetails[] = []
-    for (const redemptionRequested of redemptionRequests) {
-      const details = await this.redemptionEventDetails(em, redemptionRequested)
-      flows.push(details)
-    }
-    const redemptionRequestIncompletes = await em.find(Entities.RedemptionRequestIncomplete,
-      { evmLog: { transaction: { hash } }}, { populate: [ 'evmLog.block', 'redeemer' ] })
+    const [redemptionRequests, redemptionRequestIncompletes] = await Promise.all([
+      em.find(Entities.RedemptionRequested,
+        { evmLog: { transaction: { hash } } },
+        { populate: [
+          'evmLog.block', 'evmLog.transaction.source',
+          'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager',
+          'redeemer', 'paymentAddress', 'executor'
+        ] }),
+      em.find(Entities.RedemptionRequestIncomplete,
+        { evmLog: { transaction: { hash } }}, { populate: [ 'evmLog.block', 'redeemer' ] })
+    ])
+    const flows = await Promise.all(
+      redemptionRequests.map(rr => this.redemptionEventDetails(em, rr))
+    )
     return { flows, flags: redemptionRequestIncompletes }
   }
 
@@ -148,11 +148,9 @@ export class ExplorerAnalytics extends SharedAnalytics {
         'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
       ] }
     )
-    const flows: ExplorerType.TransferToCoreVaultEventDetails[] = []
-    for (const transferToCoreVaultStarted of transferToCoreVaultRequests) {
-      const details = await this.transferToCoreVaultEventDetails(em, transferToCoreVaultStarted)
-      flows.push(details)
-    }
+    const flows = await Promise.all(
+      transferToCoreVaultRequests.map(t => this.transferToCoreVaultEventDetails(em, t))
+    )
     return { flows }
   }
 
@@ -166,11 +164,9 @@ export class ExplorerAnalytics extends SharedAnalytics {
         'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
       ] }
     )
-    const flows: ExplorerType.ReturnFromCoreVaultEventDetails[] = []
-    for (const returnFromCoreVaultRequested of returnFromCoreVaultRequests) {
-      const details = await this.returnFromCoreVaultEventDetails(em, returnFromCoreVaultRequested)
-      flows.push(details)
-    }
+    const flows = await Promise.all(
+      returnFromCoreVaultRequests.map(r => this.returnFromCoreVaultEventDetails(em, r))
+    )
     return { flows }
   }
 
@@ -184,11 +180,9 @@ export class ExplorerAnalytics extends SharedAnalytics {
         'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
       ]}
     )
-    const flows: ExplorerType.SelfMintEventDetails[] = []
-    for (const selfMint of selfMints) {
-      const details = await this.selfMintEventDetails(em, selfMint)
-      flows.push(details)
-    }
+    const flows = await Promise.all(
+      selfMints.map(s => this.selfMintEventDetails(em, s))
+    )
     return { flows }
   }
 
@@ -202,11 +196,9 @@ export class ExplorerAnalytics extends SharedAnalytics {
         'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
       ]}
     )
-    const flows: ExplorerType.BalanceTopupEventDetails[] = []
-    for (const topup of topups) {
-      const details = await this.underlyingBalanceToppedUpEventDetails(em, topup)
-      flows.push(details)
-    }
+    const flows = await Promise.all(
+      topups.map(t => this.underlyingBalanceToppedUpEventDetails(em, t))
+    )
     return { flows }
   }
 
@@ -219,11 +211,9 @@ export class ExplorerAnalytics extends SharedAnalytics {
         'evmLog.block', 'evmLog.transaction.source',
         'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
       ]})
-    const flows: ExplorerType.WithdrawalEventDetails[] = []
-    for (const withdrawal of withdrawals) {
-      const details = await this.underlyingWithdrawalEventDetails(em, withdrawal)
-      flows.push(details)
-    }
+    const flows = await Promise.all(
+      withdrawals.map(w => this.underlyingWithdrawalEventDetails(em, w))
+    )
     return { flows }
   }
 
@@ -382,23 +372,19 @@ export class ExplorerAnalytics extends SharedAnalytics {
     em: EntityManager, underlyingTopup: Entities.UnderlyingBalanceToppedUp
   ): Promise<ExplorerType.BalanceTopupEventDetails> {
     const hash = underlyingTopup.transactionHash.slice(2).toUpperCase()
-    const underlyingTransaction = await em.findOneOrFail(Entities.UnderlyingVoutReference,
+    const underlyingTransaction = await em.findOneOrFail(Entities.UnderlyingReference,
       { transaction: { hash }}, { populate: [ 'transaction.block', 'transaction.source', 'transaction.target' ] })
     return { events: { original: underlyingTopup }, underlyingTransaction }
   }
 
   protected async nativeTransactionClassification(em: EntityManager, hash: string): Promise<ExplorerType.GenericTransactionClassification> {
-    const ret: ExplorerType.GenericTransactionClassification = []
     const logs = await em.find(Entities.EvmLog, { transaction: { hash } }, { populate: [ 'transaction' ]})
-    for (const log of logs) {
+    const classified = await Promise.all(logs.map(async log => {
       const oglog = await this.nativeEventClassification(em, log)
-      if (oglog == null) continue
-      ret.push({
-        eventName: log.name,
-        transactionHash: oglog.transaction.hash
-      })
-    }
-    return ret
+      if (oglog == null) return null
+      return { eventName: log.name, transactionHash: oglog.transaction.hash }
+    }))
+    return classified.filter(x => x != null) as ExplorerType.GenericTransactionClassification
   }
 
   protected async nativeEventClassification(em: EntityManager, log: Entities.EvmLog): Promise<Entities.EvmLog | null> {
@@ -481,7 +467,7 @@ export class ExplorerAnalytics extends SharedAnalytics {
   protected async rippleTransactionClassification(em: EntityManager, hash: string): Promise<ExplorerType.GenericTransactionClassification> {
     let oglog: { evmLog: Entities.EvmLog | null } = null
     const fasset = core.FAssetType.FXRP
-    const reference = await em.findOneOrFail(Entities.UnderlyingVoutReference,
+    const reference = await em.findOneOrFail(Entities.UnderlyingReference,
       { transaction: { hash } }, { populate: [ 'transaction.block' ] })
     if (PaymentReference.isMint(reference.reference)) {
       oglog = await em.findOneOrFail(Entities.CollateralReserved,
@@ -581,9 +567,9 @@ export class ExplorerAnalytics extends SharedAnalytics {
     em: EntityManager,
     fasset: core.FAssetType,
     reference: string,
-    filters: FilterQuery<Entities.UnderlyingVoutReference> = {}
-  ): Promise<Entities.UnderlyingVoutReference | Entities.UnderlyingVoutReference[] | null> {
-    const transactions = await em.find(Entities.UnderlyingVoutReference,
+    filters: FilterQuery<Entities.UnderlyingReference> = {}
+  ): Promise<Entities.UnderlyingReference | Entities.UnderlyingReference[] | null> {
+    const transactions = await em.find(Entities.UnderlyingReference,
       { fasset, reference, ...filters as object },
       {
         populate: [ 'transaction.block', 'transaction.source', 'transaction.target' ],
