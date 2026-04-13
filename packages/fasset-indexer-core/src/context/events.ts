@@ -1,4 +1,6 @@
-import { Interface, Log, LogDescription } from "ethers"
+import { Interface, Log, LogDescription, AbiCoder, toUtf8String, getBytes, Result } from "ethers"
+
+type ParsedLog = { name: string, args: Result | unknown[] }
 import {
   IAssetManager__latest__factory, IERC20__factory, ICollateralPool__latest__factory,
   IAssetManager__initial__factory, ICollateralPool__initial__factory,
@@ -65,15 +67,57 @@ export class EventInterface {
     }
   }
 
-  parseLog(contract: string, log: Log): LogDescription | null {
+  parseLog(contract: string, log: Log): ParsedLog | null {
     const ifaces = this.contractToIface(contract)
     for (const iface of ifaces) {
       const parsed = iface.parseLog(log)
       if (parsed != null) {
-        return parsed
+        return this.sanitizeParsedLog(parsed, log.data)
       }
     }
     return null
+  }
+
+  /**
+   * Ethers v6 throws a deferred error when decoding string fields with
+   * invalid UTF-8 (e.g. a raw 0xff byte in a paymentAddress). Since
+   * `string` and `bytes` share the same ABI encoding, we re-decode with
+   * `bytes` and convert via `toUtf8String` using the replacement character.
+   */
+  private sanitizeParsedLog(parsed: LogDescription, data: string): ParsedLog {
+    const inputs = parsed.fragment.inputs
+    const nonIndexedInputs = inputs.filter(i => !i.indexed)
+    if (!nonIndexedInputs.some(i => i.type === 'string')) return parsed
+    // probe string fields for deferred UTF-8 errors
+    let needsFix = false
+    for (let i = 0; i < inputs.length; i++) {
+      if (inputs[i].type === 'string' && !inputs[i].indexed) {
+        try { void parsed.args[i] } catch { needsFix = true; break }
+      }
+    }
+    if (!needsFix) return parsed
+    // re-decode non-indexed params with 'bytes' in place of 'string'
+    const bytesTypes = nonIndexedInputs.map(i => i.type === 'string' ? 'bytes' : i.type)
+    const decoded = AbiCoder.defaultAbiCoder().decode(bytesTypes, data)
+    // rebuild args: indexed from topics (safe), non-indexed from re-decoded data
+    const safeArgs: unknown[] = []
+    let nonIndexedIdx = 0
+    for (const input of inputs) {
+      if (input.indexed) {
+        safeArgs.push(parsed.args[input.name])
+      } else {
+        if (input.type === 'string') {
+          safeArgs.push(toUtf8String(getBytes(decoded[nonIndexedIdx]), (_reason, offset, _bytes, output) => {
+            output.push(0xFFFD)
+            return offset + 1
+          }))
+        } else {
+          safeArgs.push(decoded[nonIndexedIdx])
+        }
+        nonIndexedIdx++
+      }
+    }
+    return { name: parsed.name, args: safeArgs }
   }
 
   getTopicToIfaceMap(eventNames?: string[]): Map<string, FAssetIface[]> {

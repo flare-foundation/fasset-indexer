@@ -5,6 +5,7 @@ import chaiAsPromised from "chai-as-promised"
 import { FAssetType, RedemptionResolution } from "../src"
 import * as Entities from "../src/orm/entities"
 import { Context } from "../src/context/context"
+import { EventInterface } from "../src/context/events"
 import { EventStorer } from "../src/indexer/eventlib/store-logic/event-storer"
 import { EventFixture } from "./fixtures/events/event"
 import { TestConfigLoader } from "./fixtures/config"
@@ -458,6 +459,25 @@ describe("FAsset evm events", () => {
       const redemtpionRequestedAfter = await em.findOneOrFail(Entities.RedemptionRequested,
         { evmLog: { index: redemptionRequestedEvent.index, block: { index: redemptionRequestedEvent.block.index } } })
       expect(redemtpionRequestedAfter.resolution).to.equal(RedemptionResolution.PERFORMED)
+    })
+
+    it("should handle 0xff paymentAddress in RedemptionRequested", () => {
+      // from coston2 tx 0x6f761917af803715c0174cd8a8c176f80458a903c81bc784e3a54243b3102cf1, log index 1
+      // paymentAddress is a raw 0xff byte (invalid UTF-8)
+      const events = new EventInterface()
+      const parsed = events.parseLog('ASSET_MANAGER', {
+        topics: [
+          "0x8cbbd73a8d1b8b02a53c4c3b0ee34b472fe3099cc19bcfb57f1aae09e8a9847e",
+          "0x00000000000000000000000055c815260cbe6c45fe5bfe5ff32e3c7d746f14dc",
+          "0x000000000000000000000000751988a4afa634896dde04ca37c6f0a67599dee7",
+          "0x00000000000000000000000000000000000000000000000000000000019ee09e",
+        ],
+        data: "0x00000000000000000000000000000000000000000000000000000000000001200000000000000000000000000000000000000000000000000000000000989680000000000000000000000000000000000000000000000000000000000000c3500000000000000000000000000000000000000000000000000000000000fbe9d30000000000000000000000000000000000000000000000000000000000fbebc90000000000000000000000000000000000000000000000000000000069dd25f146425052664100020000000000000000000000000000000000000000019ee09e000000000000000000000000751988a4afa634896dde04ca37c6f0a67599dee700000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001ff00000000000000000000000000000000000000000000000000000000000000",
+      } as any)
+      expect(parsed).to.not.be.null
+      expect(parsed!.name).to.equal("RedemptionRequested")
+      // 0xff is replaced with U+FFFD replacement character
+      expect(parsed!.args[3]).to.equal("\uFFFD")
     })
   })
 
