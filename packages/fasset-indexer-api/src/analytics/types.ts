@@ -129,8 +129,13 @@ interface TransactionDetails<T,U> {
   flags?: U
 }
 
+type UnderlyingData = Entities.UnderlyingReference
+  | Entities.UnderlyingTransaction
+  | Entities.UnderlyingReference[]
+  | Entities.UnderlyingTransaction[]
+
 interface EventDetails<T,U> {
-  underlyingTransaction?: Entities.UnderlyingReference | Entities.UnderlyingReference[]
+  underlyingTransaction?: UnderlyingData
   events: {
     original: T
     resolution?: U

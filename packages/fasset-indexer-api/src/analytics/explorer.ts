@@ -399,8 +399,8 @@ export class ExplorerAnalytics extends SharedAnalytics {
     em: EntityManager, directMint: Entities.DirectMintingExecuted | Entities.DirectMintingExecutedToSmartAccount
   ): Promise<ExplorerType.DirectMintEventDetails> {
     const hash = directMint.transactionId.slice(2).toUpperCase()
-    const underlyingTransaction = await em.findOne(Entities.UnderlyingReference,
-      { transaction: { hash }}, { populate: [ 'transaction.block', 'transaction.source', 'transaction.target' ] })
+    const underlyingTransaction = await em.findOne(Entities.UnderlyingTransaction,
+      { hash }, { populate: [ 'block', 'source', 'target' ] })
     return { events: { original: directMint }, underlyingTransaction }
   }
 
