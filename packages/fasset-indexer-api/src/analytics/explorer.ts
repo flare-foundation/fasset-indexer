@@ -128,10 +128,9 @@ export class ExplorerAnalytics extends SharedAnalytics {
         { evmLog: { transaction: { hash } } },
         { populate: ['evmLog.block', 'evmLog.transaction.source', 'sourceAddress', 'executor'] })
     ])
-    const flows: ExplorerType.DirectMintEventDetails[] = [
-      ...directMints.map(dm => ({ events: { original: dm as Entities.DirectMintingExecuted | Entities.DirectMintingExecutedToSmartAccount } })),
-      ...directMintsSA.map(dm => ({ events: { original: dm as Entities.DirectMintingExecuted | Entities.DirectMintingExecutedToSmartAccount } }))
-    ]
+    const flows = await Promise.all(
+      [...directMints, ...directMintsSA].map(dm => this.directMintEventDetails(em, dm))
+    )
     return { flows }
   }
 
@@ -394,6 +393,15 @@ export class ExplorerAnalytics extends SharedAnalytics {
     const underlyingTransaction = await em.findOneOrFail(Entities.UnderlyingReference,
       { transaction: { hash }}, { populate: [ 'transaction.block', 'transaction.source', 'transaction.target' ] })
     return { events: { original: underlyingTopup }, underlyingTransaction }
+  }
+
+  protected async directMintEventDetails(
+    em: EntityManager, directMint: Entities.DirectMintingExecuted | Entities.DirectMintingExecutedToSmartAccount
+  ): Promise<ExplorerType.DirectMintEventDetails> {
+    const hash = directMint.transactionId.slice(2).toUpperCase()
+    const underlyingTransaction = await em.findOne(Entities.UnderlyingReference,
+      { transaction: { hash }}, { populate: [ 'transaction.block', 'transaction.source', 'transaction.target' ] })
+    return { events: { original: directMint }, underlyingTransaction }
   }
 
   protected async nativeTransactionClassification(em: EntityManager, hash: string): Promise<ExplorerType.GenericTransactionClassification> {
