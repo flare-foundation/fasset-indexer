@@ -499,60 +499,63 @@ export class ExplorerAnalytics extends SharedAnalytics {
     const fasset = core.FAssetType.FXRP
     const reference = await em.findOne(Entities.UnderlyingReference,
       { transaction: { hash } }, { populate: [ 'transaction.block' ] })
-    if (reference == null || PaymentReference.isDirectMinting(reference.reference)) {
-      const transactionId = '0x' + hash.toLowerCase()
-      const [directMints, directMintsSA] = await Promise.all([
-        em.find(Entities.DirectMintingExecuted,
-          { transactionId, fasset }, { populate: [ 'evmLog.transaction' ] }),
-        em.find(Entities.DirectMintingExecutedToSmartAccount,
-          { transactionId, fasset }, { populate: [ 'evmLog.transaction' ] })
-      ])
-      return [...directMints, ...directMintsSA].map(dm => ({
-        eventName: dm.evmLog.name, transactionHash: dm.evmLog.transaction.hash
-      }))
-    }
-    if (PaymentReference.isMint(reference.reference)) {
-      oglog = await em.findOneOrFail(Entities.CollateralReserved,
-        { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ] })
-    } else if (PaymentReference.isRedeem(reference.reference)) {
-      const requestId = PaymentReference.decodeId(reference.reference)
-      oglog = await em.findOne(Entities.TransferToCoreVaultStarted,
-        { transferRedemptionRequestId: Number(requestId), fasset }, { populate: [ 'evmLog.transaction' ] })
-      if (oglog == null) {
-        oglog = await em.findOneOrFail(Entities.RedemptionRequested,
+    if (reference != null) {
+      if (PaymentReference.isMint(reference.reference)) {
+        oglog = await em.findOneOrFail(Entities.CollateralReserved,
           { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ] })
+      } else if (PaymentReference.isRedeem(reference.reference)) {
+        const requestId = PaymentReference.decodeId(reference.reference)
+        oglog = await em.findOne(Entities.TransferToCoreVaultStarted,
+          { transferRedemptionRequestId: Number(requestId), fasset }, { populate: [ 'evmLog.transaction' ] })
+        if (oglog == null) {
+          oglog = await em.findOneOrFail(Entities.RedemptionRequested,
+            { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ] })
+        }
+      } else if (PaymentReference.isReturnFromCoreVault(reference.reference)) {
+        oglog = await em.findOneOrFail(Entities.ReturnFromCoreVaultRequested,
+          { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ] })
+      } else if (PaymentReference.isRedeemFromCoreVault(reference.reference)) {
+        oglog = await em.findOneOrFail(Entities.CoreVaultRedemptionRequested,
+          { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ]})
+      } else if (PaymentReference.isWithdrawal(reference.reference)) {
+        oglog = await em.findOneOrFail(Entities.UnderlyingWithdrawalAnnounced,
+          { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ]})
+      } else if (PaymentReference.isTopup(reference.reference)) {
+        const transactionHash = '0x' + hash.toLowerCase()
+        oglog = await em.findOneOrFail(Entities.UnderlyingBalanceToppedUp,
+          { transactionHash, fasset }, { populate: [ 'evmLog.transaction' ]})
+      } else if (PaymentReference.isSelfMint(reference.reference)) {
+        const hex = PaymentReference.decodeAddress(reference.reference)
+        const resp = await em.createQueryBuilder(Entities.SelfMint, 'sm')
+          .select(['el.name', 'et.hash'])
+          .join('sm.evmLog', 'el')
+          .join('el.block', 'eb')
+          .join('el.transaction', 'et')
+          .join('sm.agentVault', 'av')
+          .join('av.address', 'ea')
+          .where({
+            'ea.hex': hex,
+            'eb.timestamp': { $gte: reference.transaction.block.timestamp }
+          })
+          .orderBy({ 'eb.timestamp': 'asc' })
+          .execute() as [ { name: string, hash: string }]
+        return resp.map(({ name, hash}) => ({ eventName: name, transactionHash: hash }))
       }
-    } else if (PaymentReference.isReturnFromCoreVault(reference.reference)) {
-      oglog = await em.findOneOrFail(Entities.ReturnFromCoreVaultRequested,
-        { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ] })
-    } else if (PaymentReference.isRedeemFromCoreVault(reference.reference)) {
-      oglog = await em.findOneOrFail(Entities.CoreVaultRedemptionRequested,
-        { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ]})
-    } else if (PaymentReference.isWithdrawal(reference.reference)) {
-      oglog = await em.findOneOrFail(Entities.UnderlyingWithdrawalAnnounced,
-        { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ]})
-    } else if (PaymentReference.isTopup(reference.reference)) {
-      const transactionHash = '0x' + hash.toLowerCase()
-      oglog = await em.findOneOrFail(Entities.UnderlyingBalanceToppedUp,
-        { transactionHash, fasset }, { populate: [ 'evmLog.transaction' ]})
-    } else if (PaymentReference.isSelfMint(reference.reference)) {
-      const hex = PaymentReference.decodeAddress(reference.reference)
-      const resp = await em.createQueryBuilder(Entities.SelfMint, 'sm')
-        .select(['el.name', 'et.hash'])
-        .join('sm.evmLog', 'el')
-        .join('el.block', 'eb')
-        .join('el.transaction', 'et')
-        .join('sm.agentVault', 'av')
-        .join('av.address', 'ea')
-        .where({
-          'ea.hex': hex,
-          'eb.timestamp': { $gte: reference.transaction.block.timestamp }
-        })
-        .orderBy({ 'eb.timestamp': 'asc' })
-        .execute() as [ { name: string, hash: string }]
-      return resp.map(({ name, hash}) => ({ eventName: name, transactionHash: hash }))
+      if (oglog != null) {
+        return [{ eventName: oglog.evmLog.name, transactionHash: oglog.evmLog.transaction.hash }]
+      }
     }
-    return [{ eventName: oglog.evmLog.name, transactionHash: oglog.evmLog.transaction.hash }]
+    // fallback: direct minting (no reference, or unrecognized reference)
+    const transactionId = '0x' + hash.toLowerCase()
+    const [directMints, directMintsSA] = await Promise.all([
+      em.find(Entities.DirectMintingExecuted,
+        { transactionId, fasset }, { populate: [ 'evmLog.transaction' ] }),
+      em.find(Entities.DirectMintingExecutedToSmartAccount,
+        { transactionId, fasset }, { populate: [ 'evmLog.transaction' ] })
+    ])
+    return [...directMints, ...directMintsSA].map(dm => ({
+      eventName: dm.evmLog.name, transactionHash: dm.evmLog.transaction.hash
+    }))
   }
 
   protected async mintStats(em: EntityManager, start: number, end: number): Promise<ExplorerType.ExplorerStatistics> {

@@ -9,8 +9,6 @@ export namespace PaymentReference {
   const REDEEM_FROM_CORE_VAULT_PREFIX = '0x4642505266410005'
   const TOPUP_PREFIX = '0x4642505266410011'
   const SELF_MINT_PREFIX = '0x4642505266410012'
-  const DIRECT_MINTING_PREFIX = '0x4642505266410018'
-  const DIRECT_MINTING_EX_PREFIX = '0x4642505266410021'
   // shifts
   const TYPE_SHIFT = BigInt(192)
   const LOW_BITS_MASK = (BigInt(1) << TYPE_SHIFT) - BigInt(1)
@@ -94,10 +92,6 @@ export namespace PaymentReference {
 
   export function isSelfMint(reference: string): boolean {
     return reference.startsWith(SELF_MINT_PREFIX)
-  }
-
-  export function isDirectMinting(reference: string): boolean {
-    return reference.startsWith(DIRECT_MINTING_PREFIX) || reference.startsWith(DIRECT_MINTING_EX_PREFIX)
   }
 
   function toHex(value: bigint, length: number): string {
