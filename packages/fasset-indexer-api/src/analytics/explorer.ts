@@ -497,8 +497,20 @@ export class ExplorerAnalytics extends SharedAnalytics {
   protected async rippleTransactionClassification(em: EntityManager, hash: string): Promise<ExplorerType.GenericTransactionClassification> {
     let oglog: { evmLog: Entities.EvmLog | null } = null
     const fasset = core.FAssetType.FXRP
-    const reference = await em.findOneOrFail(Entities.UnderlyingReference,
+    const reference = await em.findOne(Entities.UnderlyingReference,
       { transaction: { hash } }, { populate: [ 'transaction.block' ] })
+    if (reference == null || PaymentReference.isDirectMinting(reference.reference)) {
+      const transactionId = '0x' + hash.toLowerCase()
+      const [directMints, directMintsSA] = await Promise.all([
+        em.find(Entities.DirectMintingExecuted,
+          { transactionId, fasset }, { populate: [ 'evmLog.transaction' ] }),
+        em.find(Entities.DirectMintingExecutedToSmartAccount,
+          { transactionId, fasset }, { populate: [ 'evmLog.transaction' ] })
+      ])
+      return [...directMints, ...directMintsSA].map(dm => ({
+        eventName: dm.evmLog.name, transactionHash: dm.evmLog.transaction.hash
+      }))
+    }
     if (PaymentReference.isMint(reference.reference)) {
       oglog = await em.findOneOrFail(Entities.CollateralReserved,
         { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ] })
