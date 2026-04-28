@@ -26,6 +26,7 @@ export interface IXrpTransaction {
     TransactionResult: string
   }
   Destination?: string
+  DestinationTag?: number
   ledger_index: number
   date: number
 }

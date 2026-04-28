@@ -139,7 +139,7 @@ export class XrpIndexer {
   ): Promise<Entities.UnderlyingTransaction> {
     let source = undefined
     let target = undefined
-    const { Account, Destination, Amount } = transaction
+    const { Account, Destination, DestinationTag, Amount } = transaction
     if (Account != null) {
       source = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: Account })
     }
@@ -151,7 +151,8 @@ export class XrpIndexer {
         block, source, target,
         value: BigInt(Amount ?? 0),
         result: transaction?.metaData?.TransactionResult,
-        fee: BigInt(transaction.Fee ?? 0)
+        fee: BigInt(transaction.Fee ?? 0),
+        destinationTag: DestinationTag
        }
     )
   }
