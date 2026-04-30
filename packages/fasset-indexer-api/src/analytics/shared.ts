@@ -106,7 +106,7 @@ export abstract class SharedAnalytics {
     transformer: (x: bigint, y: bigint) => bigint
   ): FAssetValueResult {
     const res = {} as FAssetValueResult
-    for (let fasset of this.supportedFAssets) {
+    for (const fasset of this.supportedFAssets) {
       const x = res1[fasset]?.value ?? BigInt(0)
       const y = res2[fasset]?.value ?? BigInt(0)
       res[fasset] = { value: transformer(x, y) }
@@ -120,7 +120,7 @@ export abstract class SharedAnalytics {
     transformer: (x: number, y: number) => number
   ): FAssetAmountResult {
     const res = {} as FAssetAmountResult
-    for (let fasset of this.supportedFAssets) {
+    for (const fasset of this.supportedFAssets) {
       const x = res1[fasset]?.amount ?? 0
       const y = res2[fasset]?.amount ?? 0
       res[fasset] = { amount: transformer(x, y) }
