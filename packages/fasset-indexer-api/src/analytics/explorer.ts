@@ -567,7 +567,18 @@ export class ExplorerAnalytics extends SharedAnalytics {
         .where({ 'eb.timestamp': { $gte: start, $lt: end } })
         .groupBy('dm.fasset')
         .execute() as Promise<{ fasset: core.FAssetType, count: number, value: string }[]>
-    const [standard, direct, directSA] = await Promise.all([
+    const directMintTimeQuery = (table: string) =>
+      em.getConnection('read').execute(`
+        SELECT dm.fasset, SUM(eb.timestamp - ub.timestamp) AS time
+        FROM ${table} dm
+        JOIN evm_log el ON el.id = dm.evm_log_id
+        JOIN evm_block eb ON eb.index = el.block_index
+        JOIN underlying_transaction ut ON ut.hash = UPPER(SUBSTR(dm.transaction_id, 3))
+        JOIN underlying_block ub ON ub.height = ut.block_height
+        WHERE eb.timestamp >= ? AND eb.timestamp < ?
+        GROUP BY dm.fasset
+      `, [start, end]) as Promise<{ fasset: core.FAssetType, time: number }[]>
+    const [standard, direct, directSA, directTime, directSATime] = await Promise.all([
       em.createQueryBuilder(Entities.MintingExecuted, 'me')
         .select([
           'cr.fasset',
@@ -584,7 +595,9 @@ export class ExplorerAnalytics extends SharedAnalytics {
         .groupBy('cr.fasset')
         .execute() as Promise<{ fasset: core.FAssetType, count: number, value: string, time: number }[]>,
       directMintQuery(Entities.DirectMintingExecuted),
-      directMintQuery(Entities.DirectMintingExecutedToSmartAccount)
+      directMintQuery(Entities.DirectMintingExecutedToSmartAccount),
+      directMintTimeQuery('direct_minting_executed'),
+      directMintTimeQuery('direct_minting_executed_to_smart_account')
     ])
     const count = [standard, direct, directSA]
       .map(r => this.convertOrmResultToFAssetAmountResult(r, 'count'))
@@ -592,10 +605,10 @@ export class ExplorerAnalytics extends SharedAnalytics {
     const value = [standard, direct, directSA]
       .map(r => this.convertOrmResultToFAssetValueResult(r, 'value'))
       .reduce((acc, r) => this.transformFAssetValueResults(acc, r, (a, b) => a + b))
-    return {
-      count, value,
-      time: this.convertOrmResultToFAssetAmountResult(standard, 'time')
-    }
+    const time = [standard, directTime, directSATime]
+      .map(r => this.convertOrmResultToFAssetAmountResult(r, 'time'))
+      .reduce((acc, r) => this.transformFAssetAmountResults(acc, r, (a, b) => a + b))
+    return { count, value, time }
   }
 
   protected async redeemStats(em: EntityManager, start: number, end: number): Promise<ExplorerType.ExplorerStatistics> {
