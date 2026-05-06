@@ -4,7 +4,8 @@ WORKDIR /app
 FROM base AS builder
 COPY . ./
 ENV NODE_ENV=production
-RUN corepack enable \
+RUN npm install -g corepack@latest \
+    && corepack enable \
     && yarn install --immutable \
     && yarn build \
     && yarn cache clean
