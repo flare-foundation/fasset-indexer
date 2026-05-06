@@ -19,14 +19,15 @@ export class VisualiserAnalytics extends DashboardAnalytics {
   async systemOverview(): Promise<VT.SystemOverview> {
     const em = this.orm.em.fork()
     const now = unixnow()
-    const [latestBlock, lots, supplyTs, backingResult, prices, agentCount] = await Promise.all([
-      em.findOne(Entities.EvmBlock, {}, { orderBy: { index: 'desc' } }),
+    const [latestBlocks, lots, supplyTs, backingResult, prices, agentCount] = await Promise.all([
+      em.find(Entities.EvmBlock, {}, { orderBy: { index: 'desc' }, limit: 1 }),
       this.lotSizeUBA(),
       this.fAssetSupplyTimespan([now]),
       this.trackedAgentUnderlyingBacking(),
       this.prices(),
       this.agentCounts()
     ])
+    const latestBlock = latestBlocks[0]
     const lotSizesUBA: Partial<Record<FAsset, bigint>> = {}
     for (const [fasset, v] of Object.entries(lots)) {
       lotSizesUBA[fasset as FAsset] = v.value
