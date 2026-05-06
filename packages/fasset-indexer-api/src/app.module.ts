@@ -12,6 +12,8 @@ import { ExplorerService } from './services/explorer.service'
 import { ExplorerController } from './controllers/explorer.controller'
 import { FxrpLaunchService } from './services/fxrp-launch.service'
 import { FxrpLaunch } from './controllers/fxrp-launch.controller'
+import { VisualiserService } from './services/visualiser.service'
+import { VisualiserController } from './controllers/visualiser.controller'
 import { ApiConfigLoader } from './config/config'
 import { ApiContext } from './config/context'
 import { CACHE_MAX_ENTRIES, CACHE_TTL_MS } from './config/constants'
@@ -36,7 +38,8 @@ const apiContextProvider = {
     NotificationController,
     MetadataController,
     StatisticsController,
-    FxrpLaunch
+    FxrpLaunch,
+    VisualiserController
   ],
   providers: [
     apiContextProvider,
@@ -45,7 +48,8 @@ const apiContextProvider = {
     NotificationService,
     MetadataService,
     StatisticsService,
-    FxrpLaunchService
+    FxrpLaunchService,
+    VisualiserService
   ]
 })
 export class FAssetIndexerModule {}
