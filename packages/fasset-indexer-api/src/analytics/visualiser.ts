@@ -420,10 +420,17 @@ export class VisualiserAnalytics extends DashboardAnalytics {
         { populate: ['evmLog.block', 'evmLog.transaction', 'agentVault.address'] })
       if (r != null) flow = this.returnFlowFromRequested(r, this.returnStatus(r.resolution))
     } else if (parsed.kind === 'directMint') {
-      const r = await em.findOne(Entities.DirectMintingExecuted,
-        { fasset: fassetEnum, transactionId: parsed.id as string },
-        { populate: ['evmLog.block', 'evmLog.transaction'] })
-      if (r != null) flow = this.directMintFlow(r)
+      const txId = parsed.id as string
+      const [regular, smartAccount] = await Promise.all([
+        em.findOne(Entities.DirectMintingExecuted,
+          { fasset: fassetEnum, transactionId: txId },
+          { populate: ['evmLog.block', 'evmLog.transaction', 'targetAddress'] }),
+        em.findOne(Entities.DirectMintingExecutedToSmartAccount,
+          { fasset: fassetEnum, transactionId: txId },
+          { populate: ['evmLog.block', 'evmLog.transaction', 'sourceAddress'] })
+      ])
+      if (regular != null) flow = this.directMintFlow(regular)
+      else if (smartAccount != null) flow = this.directMintToSmartAccountFlow(smartAccount)
     }
     if (flow == null) return null
     await this.attachUnderlyingPayments(em, [flow])
@@ -448,7 +455,7 @@ export class VisualiserAnalytics extends DashboardAnalytics {
 
     // Parents touched in window (covers active flows starting in window).
     const [
-      reservations, redemptions, transfers, returns, directMints,
+      reservations, redemptions, transfers, returns, directMints, directMintsToSmartAccount,
       mintingExecuted, mintingDefault, mintingDeleted,
       redemptionPerformed, redemptionDefault, redemptionRejected,
       redemptionPaymentBlocked, redemptionPaymentFailed,
@@ -468,7 +475,10 @@ export class VisualiserAnalytics extends DashboardAnalytics {
         populate: ['evmLog.block', 'evmLog.transaction', 'agentVault.address'], ...limitOpt
       }),
       em.find(Entities.DirectMintingExecuted, { ...baseWhere, ...tsWhere }, {
-        populate: ['evmLog.block', 'evmLog.transaction'], ...limitOpt
+        populate: ['evmLog.block', 'evmLog.transaction', 'targetAddress'], ...limitOpt
+      }),
+      em.find(Entities.DirectMintingExecutedToSmartAccount, { ...baseWhere, ...tsWhere }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'sourceAddress'], ...limitOpt
       }),
       // Resolution events touched in window — populate parent so we can re-emit the parent flow.
       em.find(Entities.MintingExecuted, { ...baseWhere, ...tsWhere }, {
@@ -523,6 +533,7 @@ export class VisualiserAnalytics extends DashboardAnalytics {
     for (const r of transfers) upsert(this.transferFlowFromStarted(r, this.transferStatus(r.resolution)), r.evmLog.block.timestamp, r.evmLog.block.index)
     for (const r of returns) upsert(this.returnFlowFromRequested(r, this.returnStatus(r.resolution)), r.evmLog.block.timestamp, r.evmLog.block.index)
     for (const e of directMints) upsert(this.directMintFlow(e), e.evmLog.block.timestamp, e.evmLog.block.index)
+    for (const e of directMintsToSmartAccount) upsert(this.directMintToSmartAccountFlow(e), e.evmLog.block.timestamp, e.evmLog.block.index)
     for (const e of mintingExecuted) upsert(this.mintFlowFromReservation(e.collateralReserved, 'completed', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
     for (const e of mintingDefault) upsert(this.mintFlowFromReservation(e.collateralReserved, 'defaulted', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
     for (const e of mintingDeleted) upsert(this.mintFlowFromReservation(e.collateralReserved, 'cancelled', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
@@ -709,6 +720,24 @@ export class VisualiserAnalytics extends DashboardAnalytics {
       kind: 'directMint',
       fasset: FAssetType[r.fasset] as FAsset,
       status: 'completed',
+      user: r.targetAddress.hex,
+      valueUBA: r.mintedAmountUBA,
+      feeUBA: r.mintingFeeUBA,
+      startedAtTimestamp: r.evmLog.block.timestamp,
+      startedTxHash: r.evmLog.transaction.hash,
+      resolvedAtTimestamp: r.evmLog.block.timestamp,
+      resolvedTxHash: r.evmLog.transaction.hash,
+      underlyingPayment: null
+    }
+  }
+
+  private directMintToSmartAccountFlow(r: Entities.DirectMintingExecutedToSmartAccount): VT.Flow {
+    return {
+      flowId: this.directMintFlowId(r.fasset, r.transactionId),
+      kind: 'directMint',
+      fasset: FAssetType[r.fasset] as FAsset,
+      status: 'completed',
+      paymentAddress: r.sourceAddress.text,
       valueUBA: r.mintedAmountUBA,
       feeUBA: r.mintingFeeUBA,
       startedAtTimestamp: r.evmLog.block.timestamp,
@@ -895,7 +924,7 @@ export class VisualiserAnalytics extends DashboardAnalytics {
     }
 
     const [
-      collateralReserved, mintingExecuted, mintingDefault, mintingDeleted, directMint, selfMint,
+      collateralReserved, mintingExecuted, mintingDefault, mintingDeleted, directMint, directMintToSmartAccount, selfMint,
       redemptionRequested, redemptionPerformed, redemptionDefault, redemptionRejected,
       redemptionPaymentBlocked, redemptionPaymentFailed,
       liquidationStarted, liquidationPerformed, liquidationEnded, fullLiquidationStarted,
@@ -909,6 +938,10 @@ export class VisualiserAnalytics extends DashboardAnalytics {
       fetch('MintingPaymentDefault', Entities.MintingPaymentDefault, [...populateFasset, 'collateralReserved.agentVault.address', 'collateralReserved.collateralReservationId']),
       fetch('CollateralReservationDeleted', Entities.CollateralReservationDeleted, [...populateFasset, 'collateralReserved.agentVault.address', 'collateralReserved.collateralReservationId']),
       fetch('DirectMintingExecuted', Entities.DirectMintingExecuted, populateFasset),
+      // DirectMintingExecutedToSmartAccount surfaces under the same DirectMintingExecuted event kind:
+      // both represent a completed directMint flow; they only differ in target shape (EVM target
+      // vs underlying source + memo). The flowId namespace is shared (transactionId is disjoint).
+      fetch('DirectMintingExecuted', Entities.DirectMintingExecutedToSmartAccount, populateFasset),
       fetch('SelfMint', Entities.SelfMint, populateBound),
       fetch('RedemptionRequested', Entities.RedemptionRequested, [...populateBound, 'redeemer', 'paymentReference']),
       fetchForConfirm('RedemptionPerformed', Entities.RedemptionPerformed, [...populateFasset, 'redemptionRequested.agentVault.address', 'redemptionRequested.requestId']),
@@ -982,6 +1015,12 @@ export class VisualiserAnalytics extends DashboardAnalytics {
       })
     }
     for (const e of directMint) {
+      if (wants('DirectMintingExecuted')) pushEvent('DirectMintingExecuted', e, {
+        valueUBA: e.mintedAmountUBA,
+        flowId: this.directMintFlowId(e.fasset, e.transactionId), flowKind: 'directMint'
+      })
+    }
+    for (const e of directMintToSmartAccount) {
       if (wants('DirectMintingExecuted')) pushEvent('DirectMintingExecuted', e, {
         valueUBA: e.mintedAmountUBA,
         flowId: this.directMintFlowId(e.fasset, e.transactionId), flowKind: 'directMint'
