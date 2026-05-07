@@ -131,6 +131,44 @@ export interface ChallengeEvent {
   details: Record<string, string | number | bigint>
 }
 
+// flows
+
+export type FlowKind = 'mint' | 'redemption' | 'transferToCoreVault' | 'returnFromCoreVault' | 'directMint'
+
+export type FlowStatus = 'active' | 'completed' | 'defaulted' | 'cancelled' | 'failed'
+
+export interface UnderlyingPayment {
+  txId: string
+  blockHeight: number
+  blockTimestamp: number
+  amountUBA: bigint
+}
+
+export interface Flow {
+  flowId: string
+  kind: FlowKind
+  fasset: FAsset
+  status: FlowStatus
+  agentVault?: string
+  user?: string
+  paymentAddress?: string
+  paymentReference?: string
+  valueUBA: bigint
+  feeUBA?: bigint
+  startedAtTimestamp: number
+  startedTxHash: string
+  resolvedAtTimestamp?: number
+  resolvedTxHash?: string
+  paymentDeadlineTimestamp?: number
+  underlyingPayment: UnderlyingPayment | null
+}
+
+export interface FlowsFeed {
+  flows: Flow[]
+  cursor: { timestamp: number, blockIndex: number } | null
+  hasMore: boolean
+}
+
 // delta event feed
 
 export type VisualiserEventKind =
@@ -158,6 +196,11 @@ export type VisualiserEventKind =
   | 'TransferToCoreVaultStarted'
   | 'TransferToCoreVaultSuccessful'
   | 'TransferToCoreVaultDefaulted'
+  | 'ReturnFromCoreVaultRequested'
+  | 'ReturnFromCoreVaultConfirmed'
+  | 'ReturnFromCoreVaultCancelled'
+  | 'UnderlyingPaymentObserved'
+  | 'UnderlyingPaymentConfirmed'
 
 export interface VisualiserEvent {
   kind: VisualiserEventKind
@@ -168,10 +211,29 @@ export interface VisualiserEvent {
   timestamp: number
   blockIndex: number
   txHash: string
+  flowId?: string
+  flowKind?: FlowKind
 }
 
 export interface VisualiserEventFeed {
   events: VisualiserEvent[]
   cursor: { timestamp: number, blockIndex: number } | null
   hasMore: boolean
+}
+
+// bundled snapshots
+
+export interface SceneSnapshot {
+  overview: SystemOverview
+  agents: AgentOverview[]
+  mintings: ActiveMinting[]
+  redemptions: ActiveRedemption[]
+}
+
+export interface AgentState {
+  agent: AgentOverview
+  activeMintings: ActiveMinting[]
+  activeRedemptions: ActiveRedemption[]
+  activeTickets: ActiveRedemptionTicket[]
+  liquidation?: ActiveLiquidation
 }

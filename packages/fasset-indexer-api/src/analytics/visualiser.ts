@@ -1,4 +1,9 @@
-import { FAsset, FAssetType, CollateralReservationResolution, RedemptionResolution } from "fasset-indexer-core"
+import {
+  FAsset, FAssetType,
+  CollateralReservationResolution, RedemptionResolution,
+  TransferToCoreVaultResolution, ReturnFromCoreVaultResolution
+} from "fasset-indexer-core"
+import { PaymentReference } from "fasset-indexer-core/utils"
 import * as Entities from "fasset-indexer-core/entities"
 import { unixnow } from "../shared/utils"
 import { DashboardAnalytics } from "./dashboard"
@@ -309,13 +314,561 @@ export class VisualiserAnalytics extends DashboardAnalytics {
   }
 
   ////////////////////////////////////////////////////////////////////////
+  // bundled snapshots
+
+  async scene(): Promise<VT.SceneSnapshot> {
+    const [overview, agents, mintings, redemptions] = await Promise.all([
+      this.systemOverview(),
+      this.agents(),
+      this.activeMintings(),
+      this.activeRedemptions()
+    ])
+    return { overview, agents, mintings, redemptions }
+  }
+
+  async agentState(vault: string): Promise<VT.AgentState | null> {
+    const agent = await this.agent(vault)
+    if (agent == null) return null
+    const [activeMintings, activeRedemptions, activeTickets] = await Promise.all([
+      this.activeMintings(undefined, vault),
+      this.activeRedemptions(undefined, vault),
+      this.activeRedemptionTickets(undefined, vault)
+    ])
+    const inLiquidation = (
+      agent.status === VT.AgentStatus.CCB
+      || agent.status === VT.AgentStatus.Liquidation
+      || agent.status === VT.AgentStatus.FullLiquidation
+    )
+    const liquidation: VT.ActiveLiquidation | undefined = inLiquidation ? {
+      agentVault: agent.vault,
+      fasset: agent.fasset,
+      status: agent.status,
+      ccbStartTimestamp: agent.ccbStartTimestamp,
+      liquidationStartTimestamp: agent.liquidationStartTimestamp,
+      maxLiquidationAmountUBA: agent.maxLiquidationAmountUBA,
+      liquidationPaymentFactorVaultBIPS: agent.liquidationPaymentFactorVaultBIPS,
+      liquidationPaymentFactorPoolBIPS: agent.liquidationPaymentFactorPoolBIPS,
+      vaultCollateralRatioBIPS: agent.vaultCollateralRatioBIPS,
+      poolCollateralRatioBIPS: agent.poolCollateralRatioBIPS,
+      mintedUBA: agent.mintedUBA
+    } : undefined
+    return { agent, activeMintings, activeRedemptions, activeTickets, liquidation }
+  }
+
+  ////////////////////////////////////////////////////////////////////////
+  // flows
+
+  async activeFlows(filter?: { fasset?: FAsset, agentVault?: string }): Promise<VT.Flow[]> {
+    const em = this.orm.em.fork()
+    const fassetEnum = filter?.fasset != null ? FAssetType[filter.fasset] : undefined
+    const where: Record<string, unknown> = {}
+    if (fassetEnum != null) where.fasset = fassetEnum
+
+    const [reservations, redemptions, transfers, returns] = await Promise.all([
+      em.find(Entities.CollateralReserved, { ...where, resolution: CollateralReservationResolution.NONE }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'agentVault.address', 'minter', 'paymentAddress']
+      }),
+      em.find(Entities.RedemptionRequested, { ...where, resolution: RedemptionResolution.NONE }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'agentVault.address', 'redeemer', 'paymentAddress']
+      }),
+      em.find(Entities.TransferToCoreVaultStarted, { ...where, resolution: TransferToCoreVaultResolution.NONE }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'agentVault.address']
+      }),
+      em.find(Entities.ReturnFromCoreVaultRequested, { ...where, resolution: ReturnFromCoreVaultResolution.NONE }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'agentVault.address']
+      })
+    ])
+
+    const flows: VT.Flow[] = []
+    for (const r of reservations) flows.push(this.mintFlowFromReservation(r, 'active'))
+    for (const r of redemptions) flows.push(this.redemptionFlowFromRequest(r, 'active'))
+    for (const r of transfers) flows.push(this.transferFlowFromStarted(r, 'active'))
+    for (const r of returns) flows.push(this.returnFlowFromRequested(r, 'active'))
+
+    const filtered = filter?.agentVault != null
+      ? flows.filter(f => f.agentVault?.toLowerCase() === filter.agentVault!.toLowerCase())
+      : flows
+
+    await this.attachUnderlyingPayments(em, filtered)
+    return filtered.sort((a, b) => b.startedAtTimestamp - a.startedAtTimestamp)
+  }
+
+  async flowById(flowId: string): Promise<VT.Flow | null> {
+    const parsed = this.parseFlowId(flowId)
+    if (parsed == null) return null
+    const em = this.orm.em.fork()
+    const fassetEnum = FAssetType[parsed.fasset]
+    let flow: VT.Flow | null = null
+    if (parsed.kind === 'mint') {
+      const r = await em.findOne(Entities.CollateralReserved,
+        { fasset: fassetEnum, collateralReservationId: Number(parsed.id) },
+        { populate: ['evmLog.block', 'evmLog.transaction', 'agentVault.address', 'minter', 'paymentAddress'] })
+      if (r != null) flow = this.mintFlowFromReservation(r, this.mintStatus(r.resolution))
+    } else if (parsed.kind === 'redemption') {
+      const r = await em.findOne(Entities.RedemptionRequested,
+        { fasset: fassetEnum, requestId: Number(parsed.id) },
+        { populate: ['evmLog.block', 'evmLog.transaction', 'agentVault.address', 'redeemer', 'paymentAddress'] })
+      if (r != null) flow = this.redemptionFlowFromRequest(r, this.redemptionStatus(r.resolution))
+    } else if (parsed.kind === 'transferToCoreVault') {
+      const r = await em.findOne(Entities.TransferToCoreVaultStarted,
+        { fasset: fassetEnum, transferRedemptionRequestId: Number(parsed.id) },
+        { populate: ['evmLog.block', 'evmLog.transaction', 'agentVault.address'] })
+      if (r != null) flow = this.transferFlowFromStarted(r, this.transferStatus(r.resolution))
+    } else if (parsed.kind === 'returnFromCoreVault') {
+      const r = await em.findOne(Entities.ReturnFromCoreVaultRequested,
+        { fasset: fassetEnum, requestId: Number(parsed.id) },
+        { populate: ['evmLog.block', 'evmLog.transaction', 'agentVault.address'] })
+      if (r != null) flow = this.returnFlowFromRequested(r, this.returnStatus(r.resolution))
+    } else if (parsed.kind === 'directMint') {
+      const r = await em.findOne(Entities.DirectMintingExecuted,
+        { fasset: fassetEnum, transactionId: parsed.id as string },
+        { populate: ['evmLog.block', 'evmLog.transaction'] })
+      if (r != null) flow = this.directMintFlow(r)
+    }
+    if (flow == null) return null
+    await this.attachUnderlyingPayments(em, [flow])
+    return flow
+  }
+
+  /**
+   * Delta feed: returns flows whose latest state-changing event is at timestamp >= since.
+   * "Latest state-changing event" = parent creation event for active flows, or the
+   * resolution event for resolved flows. Each flow appears at most once with the
+   * current status.
+   */
+  async flowsSince(sinceTimestamp: number, limit = 200, filter?: { fasset?: FAsset, agentVault?: string }): Promise<VT.FlowsFeed> {
+    const em = this.orm.em.fork()
+    const cap = Math.min(limit, 500)
+    const fassetEnum = filter?.fasset != null ? FAssetType[filter.fasset] : undefined
+    const baseWhere: Record<string, unknown> = {}
+    if (fassetEnum != null) baseWhere.fasset = fassetEnum
+    const tsWhere = { evmLog: { block: { timestamp: { $gte: sinceTimestamp } } } }
+    const order = { evmLog: { block: { timestamp: 'asc' as const, index: 'asc' as const } } }
+    const limitOpt = { orderBy: order, limit: cap }
+
+    // Parents touched in window (covers active flows starting in window).
+    const [
+      reservations, redemptions, transfers, returns, directMints,
+      mintingExecuted, mintingDefault, mintingDeleted,
+      redemptionPerformed, redemptionDefault, redemptionRejected,
+      redemptionPaymentBlocked, redemptionPaymentFailed,
+      transferSuccess, transferDefault,
+      returnConfirmed, returnCancelled
+    ] = await Promise.all([
+      em.find(Entities.CollateralReserved, { ...baseWhere, ...tsWhere }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'agentVault.address', 'minter', 'paymentAddress'], ...limitOpt
+      }),
+      em.find(Entities.RedemptionRequested, { ...baseWhere, ...tsWhere }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'agentVault.address', 'redeemer', 'paymentAddress'], ...limitOpt
+      }),
+      em.find(Entities.TransferToCoreVaultStarted, { ...baseWhere, ...tsWhere }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'agentVault.address'], ...limitOpt
+      }),
+      em.find(Entities.ReturnFromCoreVaultRequested, { ...baseWhere, ...tsWhere }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'agentVault.address'], ...limitOpt
+      }),
+      em.find(Entities.DirectMintingExecuted, { ...baseWhere, ...tsWhere }, {
+        populate: ['evmLog.block', 'evmLog.transaction'], ...limitOpt
+      }),
+      // Resolution events touched in window — populate parent so we can re-emit the parent flow.
+      em.find(Entities.MintingExecuted, { ...baseWhere, ...tsWhere }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'collateralReserved.evmLog.block', 'collateralReserved.evmLog.transaction', 'collateralReserved.agentVault.address', 'collateralReserved.minter', 'collateralReserved.paymentAddress'], ...limitOpt
+      }),
+      em.find(Entities.MintingPaymentDefault, { ...baseWhere, ...tsWhere }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'collateralReserved.evmLog.block', 'collateralReserved.evmLog.transaction', 'collateralReserved.agentVault.address', 'collateralReserved.minter', 'collateralReserved.paymentAddress'], ...limitOpt
+      }),
+      em.find(Entities.CollateralReservationDeleted, { ...baseWhere, ...tsWhere }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'collateralReserved.evmLog.block', 'collateralReserved.evmLog.transaction', 'collateralReserved.agentVault.address', 'collateralReserved.minter', 'collateralReserved.paymentAddress'], ...limitOpt
+      }),
+      em.find(Entities.RedemptionPerformed, { ...baseWhere, ...tsWhere }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'redemptionRequested.evmLog.block', 'redemptionRequested.evmLog.transaction', 'redemptionRequested.agentVault.address', 'redemptionRequested.redeemer', 'redemptionRequested.paymentAddress'], ...limitOpt
+      }),
+      em.find(Entities.RedemptionDefault, { ...baseWhere, ...tsWhere }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'redemptionRequested.evmLog.block', 'redemptionRequested.evmLog.transaction', 'redemptionRequested.agentVault.address', 'redemptionRequested.redeemer', 'redemptionRequested.paymentAddress'], ...limitOpt
+      }),
+      em.find(Entities.RedemptionRejected, { ...baseWhere, ...tsWhere }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'redemptionRequested.evmLog.block', 'redemptionRequested.evmLog.transaction', 'redemptionRequested.agentVault.address', 'redemptionRequested.redeemer', 'redemptionRequested.paymentAddress'], ...limitOpt
+      }),
+      em.find(Entities.RedemptionPaymentBlocked, { ...baseWhere, ...tsWhere }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'redemptionRequested.evmLog.block', 'redemptionRequested.evmLog.transaction', 'redemptionRequested.agentVault.address', 'redemptionRequested.redeemer', 'redemptionRequested.paymentAddress'], ...limitOpt
+      }),
+      em.find(Entities.RedemptionPaymentFailed, { ...baseWhere, ...tsWhere }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'redemptionRequested.evmLog.block', 'redemptionRequested.evmLog.transaction', 'redemptionRequested.agentVault.address', 'redemptionRequested.redeemer', 'redemptionRequested.paymentAddress'], ...limitOpt
+      }),
+      em.find(Entities.TransferToCoreVaultSuccessful, { ...baseWhere, ...tsWhere }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'transferToCoreVaultStarted.evmLog.block', 'transferToCoreVaultStarted.evmLog.transaction', 'transferToCoreVaultStarted.agentVault.address'], ...limitOpt
+      }),
+      em.find(Entities.TransferToCoreVaultDefaulted, { ...baseWhere, ...tsWhere }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'transferToCoreVaultStarted.evmLog.block', 'transferToCoreVaultStarted.evmLog.transaction', 'transferToCoreVaultStarted.agentVault.address'], ...limitOpt
+      }),
+      em.find(Entities.ReturnFromCoreVaultConfirmed, { ...baseWhere, ...tsWhere }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'returnFromCoreVaultRequested.evmLog.block', 'returnFromCoreVaultRequested.evmLog.transaction', 'returnFromCoreVaultRequested.agentVault.address'], ...limitOpt
+      }),
+      em.find(Entities.ReturnFromCoreVaultCancelled, { ...baseWhere, ...tsWhere }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'returnFromCoreVaultRequested.evmLog.block', 'returnFromCoreVaultRequested.evmLog.transaction', 'returnFromCoreVaultRequested.agentVault.address'], ...limitOpt
+      })
+    ])
+
+    type Snapshot = { flow: VT.Flow, latest: { timestamp: number, blockIndex: number } }
+    const byId = new Map<string, Snapshot>()
+    const upsert = (flow: VT.Flow, eventTs: number, eventBlockIndex: number) => {
+      const existing = byId.get(flow.flowId)
+      if (existing == null || eventTs > existing.latest.timestamp
+        || (eventTs === existing.latest.timestamp && eventBlockIndex > existing.latest.blockIndex)) {
+        byId.set(flow.flowId, { flow, latest: { timestamp: eventTs, blockIndex: eventBlockIndex } })
+      }
+    }
+    for (const r of reservations) upsert(this.mintFlowFromReservation(r, this.mintStatus(r.resolution)), r.evmLog.block.timestamp, r.evmLog.block.index)
+    for (const r of redemptions) upsert(this.redemptionFlowFromRequest(r, this.redemptionStatus(r.resolution)), r.evmLog.block.timestamp, r.evmLog.block.index)
+    for (const r of transfers) upsert(this.transferFlowFromStarted(r, this.transferStatus(r.resolution)), r.evmLog.block.timestamp, r.evmLog.block.index)
+    for (const r of returns) upsert(this.returnFlowFromRequested(r, this.returnStatus(r.resolution)), r.evmLog.block.timestamp, r.evmLog.block.index)
+    for (const e of directMints) upsert(this.directMintFlow(e), e.evmLog.block.timestamp, e.evmLog.block.index)
+    for (const e of mintingExecuted) upsert(this.mintFlowFromReservation(e.collateralReserved, 'completed', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
+    for (const e of mintingDefault) upsert(this.mintFlowFromReservation(e.collateralReserved, 'defaulted', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
+    for (const e of mintingDeleted) upsert(this.mintFlowFromReservation(e.collateralReserved, 'cancelled', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
+    for (const e of redemptionPerformed) upsert(this.redemptionFlowFromRequest(e.redemptionRequested, 'completed', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
+    for (const e of redemptionDefault) upsert(this.redemptionFlowFromRequest(e.redemptionRequested, 'defaulted', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
+    for (const e of redemptionRejected) upsert(this.redemptionFlowFromRequest(e.redemptionRequested, 'cancelled', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
+    for (const e of redemptionPaymentBlocked) upsert(this.redemptionFlowFromRequest(e.redemptionRequested, 'failed', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
+    for (const e of redemptionPaymentFailed) upsert(this.redemptionFlowFromRequest(e.redemptionRequested, 'failed', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
+    for (const e of transferSuccess) upsert(this.transferFlowFromStarted(e.transferToCoreVaultStarted, 'completed', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
+    for (const e of transferDefault) upsert(this.transferFlowFromStarted(e.transferToCoreVaultStarted, 'defaulted', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
+    for (const e of returnConfirmed) upsert(this.returnFlowFromRequested(e.returnFromCoreVaultRequested, 'completed', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
+    for (const e of returnCancelled) upsert(this.returnFlowFromRequested(e.returnFromCoreVaultRequested, 'cancelled', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
+
+    let snapshots = Array.from(byId.values())
+    if (filter?.agentVault != null) {
+      const target = filter.agentVault.toLowerCase()
+      snapshots = snapshots.filter(s => s.flow.agentVault?.toLowerCase() === target)
+    }
+    snapshots.sort((a, b) => a.latest.timestamp - b.latest.timestamp || a.latest.blockIndex - b.latest.blockIndex)
+    const truncated = snapshots.slice(0, cap)
+
+    await this.attachUnderlyingPayments(em, truncated.map(s => s.flow))
+
+    const last = truncated[truncated.length - 1]
+    const cursor = last != null ? { timestamp: last.latest.timestamp, blockIndex: last.latest.blockIndex } : null
+    return { flows: truncated.map(s => s.flow), cursor, hasMore: snapshots.length > cap }
+  }
+
+  ////////////////////////////////////////////////////////////////////////
+  // flow helpers
+
+  private mintFlowId(fasset: FAssetType, id: number): string {
+    return `mint:${FAssetType[fasset]}:${id}`
+  }
+  private redemptionFlowId(fasset: FAssetType, id: number): string {
+    return `redemption:${FAssetType[fasset]}:${id}`
+  }
+  private transferFlowId(fasset: FAssetType, id: number): string {
+    return `transferToCoreVault:${FAssetType[fasset]}:${id}`
+  }
+  private returnFlowId(fasset: FAssetType, id: number): string {
+    return `returnFromCoreVault:${FAssetType[fasset]}:${id}`
+  }
+  private directMintFlowId(fasset: FAssetType, transactionId: string): string {
+    return `directMint:${FAssetType[fasset]}:${transactionId}`
+  }
+
+  private parseFlowId(flowId: string): { kind: VT.FlowKind, fasset: FAsset, id: number | string } | null {
+    const parts = flowId.split(':')
+    if (parts.length < 3) return null
+    const [kind, fasset, ...rest] = parts
+    const id = rest.join(':')
+    if (!['mint', 'redemption', 'transferToCoreVault', 'returnFromCoreVault', 'directMint'].includes(kind)) return null
+    if (kind === 'directMint') return { kind: kind as VT.FlowKind, fasset: fasset as FAsset, id }
+    const numId = Number(id)
+    if (!Number.isFinite(numId)) return null
+    return { kind: kind as VT.FlowKind, fasset: fasset as FAsset, id: numId }
+  }
+
+  private mintStatus(r: CollateralReservationResolution): VT.FlowStatus {
+    switch (r) {
+      case CollateralReservationResolution.EXECUTED: return 'completed'
+      case CollateralReservationResolution.DEFAULTED: return 'defaulted'
+      case CollateralReservationResolution.DELETED: return 'cancelled'
+      default: return 'active'
+    }
+  }
+  private redemptionStatus(r: RedemptionResolution): VT.FlowStatus {
+    switch (r) {
+      case RedemptionResolution.PERFORMED: return 'completed'
+      case RedemptionResolution.DEFAULTED: return 'defaulted'
+      case RedemptionResolution.REJECTED: return 'cancelled'
+      case RedemptionResolution.BLOCKED:
+      case RedemptionResolution.FAILED: return 'failed'
+      default: return 'active'
+    }
+  }
+  private transferStatus(r: TransferToCoreVaultResolution): VT.FlowStatus {
+    switch (r) {
+      case TransferToCoreVaultResolution.SUCCESSFUL: return 'completed'
+      case TransferToCoreVaultResolution.DEFAULTED: return 'defaulted'
+      default: return 'active'
+    }
+  }
+  private returnStatus(r: ReturnFromCoreVaultResolution): VT.FlowStatus {
+    switch (r) {
+      case ReturnFromCoreVaultResolution.CONFIRMED: return 'completed'
+      case ReturnFromCoreVaultResolution.CANCELLED: return 'cancelled'
+      default: return 'active'
+    }
+  }
+
+  private mintFlowFromReservation(
+    r: Entities.CollateralReserved, status: VT.FlowStatus,
+    resolvedAtTimestamp?: number, resolvedTxHash?: string
+  ): VT.Flow {
+    return {
+      flowId: this.mintFlowId(r.fasset, r.collateralReservationId),
+      kind: 'mint',
+      fasset: FAssetType[r.fasset] as FAsset,
+      status,
+      agentVault: r.agentVault.address.hex,
+      user: r.minter.hex,
+      paymentAddress: r.paymentAddress.text,
+      paymentReference: r.paymentReference,
+      valueUBA: r.valueUBA,
+      feeUBA: r.feeUBA,
+      startedAtTimestamp: r.evmLog.block.timestamp,
+      startedTxHash: r.evmLog.transaction.hash,
+      resolvedAtTimestamp,
+      resolvedTxHash,
+      paymentDeadlineTimestamp: r.lastUnderlyingTimestamp,
+      underlyingPayment: null
+    }
+  }
+
+  private redemptionFlowFromRequest(
+    r: Entities.RedemptionRequested, status: VT.FlowStatus,
+    resolvedAtTimestamp?: number, resolvedTxHash?: string
+  ): VT.Flow {
+    return {
+      flowId: this.redemptionFlowId(r.fasset, r.requestId),
+      kind: 'redemption',
+      fasset: FAssetType[r.fasset] as FAsset,
+      status,
+      agentVault: r.agentVault.address.hex,
+      user: r.redeemer.hex,
+      paymentAddress: r.paymentAddress.text,
+      paymentReference: r.paymentReference,
+      valueUBA: r.valueUBA,
+      feeUBA: r.feeUBA,
+      startedAtTimestamp: r.evmLog.block.timestamp,
+      startedTxHash: r.evmLog.transaction.hash,
+      resolvedAtTimestamp,
+      resolvedTxHash,
+      paymentDeadlineTimestamp: r.lastUnderlyingTimestamp,
+      underlyingPayment: null
+    }
+  }
+
+  private transferFlowFromStarted(
+    r: Entities.TransferToCoreVaultStarted, status: VT.FlowStatus,
+    resolvedAtTimestamp?: number, resolvedTxHash?: string
+  ): VT.Flow {
+    return {
+      flowId: this.transferFlowId(r.fasset, r.transferRedemptionRequestId),
+      kind: 'transferToCoreVault',
+      fasset: FAssetType[r.fasset] as FAsset,
+      status,
+      agentVault: r.agentVault.address.hex,
+      paymentReference: PaymentReference.redemption(r.transferRedemptionRequestId),
+      valueUBA: r.valueUBA,
+      startedAtTimestamp: r.evmLog.block.timestamp,
+      startedTxHash: r.evmLog.transaction.hash,
+      resolvedAtTimestamp,
+      resolvedTxHash,
+      underlyingPayment: null
+    }
+  }
+
+  private returnFlowFromRequested(
+    r: Entities.ReturnFromCoreVaultRequested, status: VT.FlowStatus,
+    resolvedAtTimestamp?: number, resolvedTxHash?: string
+  ): VT.Flow {
+    return {
+      flowId: this.returnFlowId(r.fasset, r.requestId),
+      kind: 'returnFromCoreVault',
+      fasset: FAssetType[r.fasset] as FAsset,
+      status,
+      agentVault: r.agentVault.address.hex,
+      paymentReference: r.paymentReference,
+      valueUBA: r.valueUBA,
+      startedAtTimestamp: r.evmLog.block.timestamp,
+      startedTxHash: r.evmLog.transaction.hash,
+      resolvedAtTimestamp,
+      resolvedTxHash,
+      underlyingPayment: null
+    }
+  }
+
+  private directMintFlow(r: Entities.DirectMintingExecuted): VT.Flow {
+    return {
+      flowId: this.directMintFlowId(r.fasset, r.transactionId),
+      kind: 'directMint',
+      fasset: FAssetType[r.fasset] as FAsset,
+      status: 'completed',
+      valueUBA: r.mintedAmountUBA,
+      feeUBA: r.mintingFeeUBA,
+      startedAtTimestamp: r.evmLog.block.timestamp,
+      startedTxHash: r.evmLog.transaction.hash,
+      resolvedAtTimestamp: r.evmLog.block.timestamp,
+      resolvedTxHash: r.evmLog.transaction.hash,
+      underlyingPayment: null
+    }
+  }
+
+  /**
+   * Batch-loads underlying payments for the given flows (mutates `flow.underlyingPayment`).
+   * Joins UnderlyingReference by (fasset, paymentReference) for mint/redemption/transfer/return,
+   * and UnderlyingTransaction by hash for direct mints.
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async attachUnderlyingPayments(em: any, flows: VT.Flow[]): Promise<void> {
+    if (flows.length === 0) return
+    const referenceKeys: { fasset: FAssetType, reference: string }[] = []
+    const directTxHashes: string[] = []
+    for (const f of flows) {
+      if (f.kind === 'directMint') {
+        const flowIdParts = f.flowId.split(':')
+        const txId = flowIdParts.slice(2).join(':')
+        directTxHashes.push(this.normalizeUnderlyingHash(txId))
+      } else if (f.paymentReference != null) {
+        referenceKeys.push({ fasset: FAssetType[f.fasset], reference: f.paymentReference })
+      }
+    }
+
+    const referenceMap = new Map<string, VT.UnderlyingPayment>()
+    if (referenceKeys.length > 0) {
+      const refs = await em.find(Entities.UnderlyingReference,
+        { $or: referenceKeys },
+        { populate: ['transaction.block'] })
+      for (const ref of refs) {
+        const key = `${ref.fasset}:${ref.reference}`
+        referenceMap.set(key, {
+          txId: ref.transaction.hash,
+          blockHeight: ref.transaction.block.height,
+          blockTimestamp: ref.transaction.block.timestamp,
+          amountUBA: ref.transaction.value
+        })
+      }
+    }
+
+    const directMap = new Map<string, VT.UnderlyingPayment>()
+    if (directTxHashes.length > 0) {
+      const txs = await em.find(Entities.UnderlyingTransaction,
+        { hash: { $in: directTxHashes } },
+        { populate: ['block'] })
+      for (const tx of txs) {
+        directMap.set(tx.hash, {
+          txId: tx.hash,
+          blockHeight: tx.block.height,
+          blockTimestamp: tx.block.timestamp,
+          amountUBA: tx.value
+        })
+      }
+    }
+
+    for (const f of flows) {
+      if (f.kind === 'directMint') {
+        const flowIdParts = f.flowId.split(':')
+        const txId = flowIdParts.slice(2).join(':')
+        f.underlyingPayment = directMap.get(this.normalizeUnderlyingHash(txId)) ?? null
+      } else if (f.paymentReference != null) {
+        const key = `${FAssetType[f.fasset]}:${f.paymentReference}`
+        f.underlyingPayment = referenceMap.get(key) ?? null
+      }
+    }
+  }
+
+  /** Strips the 0x prefix and uppercases — matches the format stored by the XRP indexer. */
+  private normalizeUnderlyingHash(hash: string): string {
+    const stripped = hash.startsWith('0x') ? hash.slice(2) : hash
+    return stripped.toUpperCase()
+  }
+
+  /**
+   * Synthesises UnderlyingPaymentObserved events from indexed underlying-tx references
+   * whose underlying-block timestamp is in the window. Decodes the payment reference to
+   * resolve flowId; redemption-typed references are disambiguated against
+   * TransferToCoreVaultStarted (which reuses the redemption id space).
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async fetchUnderlyingPaymentObserved(em: any, sinceTimestamp: number, cap: number): Promise<VT.VisualiserEvent[]> {
+    const refs = await em.find(Entities.UnderlyingReference,
+      { block: { timestamp: { $gte: sinceTimestamp } } },
+      { populate: ['block', 'transaction.block'], orderBy: { block: { timestamp: 'asc' } }, limit: cap }
+    ) as Entities.UnderlyingReference[]
+    if (refs.length === 0) return []
+
+    // Disambiguate redemption-prefix references — they are emitted both by ordinary redemptions
+    // and by transfer-to-core-vault, which reuses the redemption id space.
+    const redemptionIds: { fasset: FAssetType, id: number }[] = []
+    for (const r of refs) {
+      if (PaymentReference.isRedeem(r.reference)) {
+        redemptionIds.push({ fasset: r.fasset, id: Number(PaymentReference.decodeId(r.reference)) })
+      }
+    }
+    const transferIds = new Set<string>() // `${fasset}:${id}`
+    if (redemptionIds.length > 0) {
+      const transfers = await em.find(Entities.TransferToCoreVaultStarted,
+        { $or: redemptionIds.map(k => ({ fasset: k.fasset, transferRedemptionRequestId: k.id })) }
+      ) as Entities.TransferToCoreVaultStarted[]
+      for (const t of transfers) transferIds.add(`${t.fasset}:${t.transferRedemptionRequestId}`)
+    }
+
+    const events: VT.VisualiserEvent[] = []
+    for (const r of refs) {
+      const flowInfo = this.flowFromReference(r.fasset, r.reference, transferIds)
+      if (flowInfo == null) continue
+      events.push({
+        kind: 'UnderlyingPaymentObserved',
+        fasset: FAssetType[r.fasset] as FAsset,
+        valueUBA: r.transaction.value,
+        timestamp: r.block.timestamp,
+        blockIndex: r.transaction.block.height,
+        txHash: r.transaction.hash,
+        flowId: flowInfo.flowId,
+        flowKind: flowInfo.flowKind
+      })
+    }
+    return events
+  }
+
+  private flowFromReference(
+    fasset: FAssetType, reference: string, transferIds: Set<string>
+  ): { flowId: string, flowKind: VT.FlowKind } | null {
+    if (PaymentReference.isMint(reference)) {
+      const id = Number(PaymentReference.decodeId(reference))
+      return { flowId: this.mintFlowId(fasset, id), flowKind: 'mint' }
+    }
+    if (PaymentReference.isRedeem(reference)) {
+      const id = Number(PaymentReference.decodeId(reference))
+      if (transferIds.has(`${fasset}:${id}`)) {
+        return { flowId: this.transferFlowId(fasset, id), flowKind: 'transferToCoreVault' }
+      }
+      return { flowId: this.redemptionFlowId(fasset, id), flowKind: 'redemption' }
+    }
+    if (PaymentReference.isReturnFromCoreVault(reference)) {
+      const id = Number(PaymentReference.decodeId(reference))
+      return { flowId: this.returnFlowId(fasset, id), flowKind: 'returnFromCoreVault' }
+    }
+    return null
+  }
+
+  ////////////////////////////////////////////////////////////////////////
   // delta event feed
 
   /**
    * Returns events emitted at block timestamp >= sinceTimestamp, ordered ascending.
    * Bridge polls with the cursor returned by the previous call.
    */
-  async eventsSince(sinceTimestamp: number, limit = 200): Promise<VT.VisualiserEventFeed> {
+  async eventsSince(
+    sinceTimestamp: number,
+    limit = 200,
+    filter?: { kinds?: VT.VisualiserEventKind[], agentVault?: string, fasset?: FAsset }
+  ): Promise<VT.VisualiserEventFeed> {
     const em = this.orm.em.fork()
     const cap = Math.min(limit, 500)
     const populateBound = ['evmLog.block', 'evmLog.transaction', 'agentVault.address'] as const
@@ -323,9 +876,23 @@ export class VisualiserAnalytics extends DashboardAnalytics {
     const where = { evmLog: { block: { timestamp: { $gte: sinceTimestamp } } } }
     const order = { evmLog: { block: { timestamp: 'asc' as const, index: 'asc' as const } } }
 
+    const wantedKinds = filter?.kinds && filter.kinds.length > 0 ? new Set(filter.kinds) : null
+    const wants = (k: VT.VisualiserEventKind): boolean => wantedKinds == null || wantedKinds.has(k)
+    /** True if the listed flow-bound kinds are needed AND we should also emit synthetic UnderlyingPaymentConfirmed alongside. */
+    const wantsConfirmed = wants('UnderlyingPaymentConfirmed')
+
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const fetch = async <T extends object>(ent: new () => T, populate: readonly string[]): Promise<T[]> =>
-      em.find(ent, where as any, { populate: populate as any, orderBy: order as any, limit: cap })
+    const fetch = async <T extends object>(kind: VT.VisualiserEventKind, ent: new () => T, populate: readonly string[]): Promise<T[]> => {
+      if (!wants(kind)) return []
+      return em.find(ent, where as any, { populate: populate as any, orderBy: order as any, limit: cap })
+    }
+    /** Like fetch, but pulls the entity even when its own kind is filtered out — used when we only need it
+     *  to produce a synthetic UnderlyingPaymentConfirmed and the original kind isn't in the kind filter. */
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const fetchForConfirm = async <T extends object>(kind: VT.VisualiserEventKind, ent: new () => T, populate: readonly string[]): Promise<T[]> => {
+      if (!wants(kind) && !wantsConfirmed) return []
+      return em.find(ent, where as any, { populate: populate as any, orderBy: order as any, limit: cap })
+    }
 
     const [
       collateralReserved, mintingExecuted, mintingDefault, mintingDeleted, directMint, selfMint,
@@ -334,99 +901,237 @@ export class VisualiserAnalytics extends DashboardAnalytics {
       liquidationStarted, liquidationPerformed, liquidationEnded, fullLiquidationStarted,
       illegal, duplicate, balanceLow,
       vaultCreated, vaultDestroyed,
-      transferStarted, transferSuccess, transferDefault
+      transferStarted, transferSuccess, transferDefault,
+      returnRequested, returnConfirmed, returnCancelled
     ] = await Promise.all([
-      fetch(Entities.CollateralReserved, populateBound),
-      fetch(Entities.MintingExecuted, [...populateFasset, 'collateralReserved.agentVault.address']),
-      fetch(Entities.MintingPaymentDefault, [...populateFasset, 'collateralReserved.agentVault.address']),
-      fetch(Entities.CollateralReservationDeleted, [...populateFasset, 'collateralReserved.agentVault.address']),
-      fetch(Entities.DirectMintingExecuted, populateFasset),
-      fetch(Entities.SelfMint, populateBound),
-      fetch(Entities.RedemptionRequested, [...populateBound, 'redeemer']),
-      fetch(Entities.RedemptionPerformed, [...populateFasset, 'redemptionRequested.agentVault.address']),
-      fetch(Entities.RedemptionDefault, [...populateFasset, 'redemptionRequested.agentVault.address']),
-      fetch(Entities.RedemptionRejected, [...populateFasset, 'redemptionRequested.agentVault.address']),
-      fetch(Entities.RedemptionPaymentBlocked, [...populateFasset, 'redemptionRequested.agentVault.address']),
-      fetch(Entities.RedemptionPaymentFailed, [...populateFasset, 'redemptionRequested.agentVault.address']),
-      fetch(Entities.LiquidationStarted, populateBound),
-      fetch(Entities.LiquidationPerformed, [...populateBound, 'liquidator']),
-      fetch(Entities.LiquidationEnded, populateBound),
-      fetch(Entities.FullLiquidationStarted, populateBound),
-      fetch(Entities.IllegalPaymentConfirmed, populateBound),
-      fetch(Entities.DuplicatePaymentConfirmed, populateBound),
-      fetch(Entities.UnderlyingBalanceTooLow, populateBound),
-      fetch(Entities.AgentVaultCreated, populateBound),
-      fetch(Entities.AgentVaultDestroyed, populateBound),
-      fetch(Entities.TransferToCoreVaultStarted, populateBound),
-      fetch(Entities.TransferToCoreVaultSuccessful, [...populateFasset, 'transferToCoreVaultStarted.agentVault.address']),
-      fetch(Entities.TransferToCoreVaultDefaulted, [...populateFasset, 'transferToCoreVaultStarted.agentVault.address'])
+      fetch('CollateralReserved', Entities.CollateralReserved, populateBound),
+      fetchForConfirm('MintingExecuted', Entities.MintingExecuted, [...populateFasset, 'collateralReserved.agentVault.address', 'collateralReserved.paymentReference']),
+      fetch('MintingPaymentDefault', Entities.MintingPaymentDefault, [...populateFasset, 'collateralReserved.agentVault.address', 'collateralReserved.collateralReservationId']),
+      fetch('CollateralReservationDeleted', Entities.CollateralReservationDeleted, [...populateFasset, 'collateralReserved.agentVault.address', 'collateralReserved.collateralReservationId']),
+      fetch('DirectMintingExecuted', Entities.DirectMintingExecuted, populateFasset),
+      fetch('SelfMint', Entities.SelfMint, populateBound),
+      fetch('RedemptionRequested', Entities.RedemptionRequested, [...populateBound, 'redeemer', 'paymentReference']),
+      fetchForConfirm('RedemptionPerformed', Entities.RedemptionPerformed, [...populateFasset, 'redemptionRequested.agentVault.address', 'redemptionRequested.requestId']),
+      fetch('RedemptionDefault', Entities.RedemptionDefault, [...populateFasset, 'redemptionRequested.agentVault.address', 'redemptionRequested.requestId']),
+      fetch('RedemptionRejected', Entities.RedemptionRejected, [...populateFasset, 'redemptionRequested.agentVault.address', 'redemptionRequested.requestId']),
+      fetch('RedemptionPaymentBlocked', Entities.RedemptionPaymentBlocked, [...populateFasset, 'redemptionRequested.agentVault.address', 'redemptionRequested.requestId']),
+      fetch('RedemptionPaymentFailed', Entities.RedemptionPaymentFailed, [...populateFasset, 'redemptionRequested.agentVault.address', 'redemptionRequested.requestId']),
+      fetch('LiquidationStarted', Entities.LiquidationStarted, populateBound),
+      fetch('LiquidationPerformed', Entities.LiquidationPerformed, [...populateBound, 'liquidator']),
+      fetch('LiquidationEnded', Entities.LiquidationEnded, populateBound),
+      fetch('FullLiquidationStarted', Entities.FullLiquidationStarted, populateBound),
+      fetch('IllegalPaymentConfirmed', Entities.IllegalPaymentConfirmed, populateBound),
+      fetch('DuplicatePaymentConfirmed', Entities.DuplicatePaymentConfirmed, populateBound),
+      fetch('UnderlyingBalanceTooLow', Entities.UnderlyingBalanceTooLow, populateBound),
+      fetch('AgentVaultCreated', Entities.AgentVaultCreated, populateBound),
+      fetch('AgentVaultDestroyed', Entities.AgentVaultDestroyed, populateBound),
+      fetch('TransferToCoreVaultStarted', Entities.TransferToCoreVaultStarted, populateBound),
+      fetchForConfirm('TransferToCoreVaultSuccessful', Entities.TransferToCoreVaultSuccessful, [...populateFasset, 'transferToCoreVaultStarted.agentVault.address', 'transferToCoreVaultStarted.transferRedemptionRequestId']),
+      fetch('TransferToCoreVaultDefaulted', Entities.TransferToCoreVaultDefaulted, [...populateFasset, 'transferToCoreVaultStarted.agentVault.address', 'transferToCoreVaultStarted.transferRedemptionRequestId']),
+      fetch('ReturnFromCoreVaultRequested', Entities.ReturnFromCoreVaultRequested, populateBound),
+      fetchForConfirm('ReturnFromCoreVaultConfirmed', Entities.ReturnFromCoreVaultConfirmed, [...populateFasset, 'returnFromCoreVaultRequested.agentVault.address', 'returnFromCoreVaultRequested.requestId']),
+      fetch('ReturnFromCoreVaultCancelled', Entities.ReturnFromCoreVaultCancelled, [...populateFasset, 'returnFromCoreVaultRequested.agentVault.address', 'returnFromCoreVaultRequested.requestId'])
     ])
 
     const evs: VT.VisualiserEvent[] = []
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pushBound = (kind: VT.VisualiserEventKind, e: any, valueUBA?: bigint, user?: string) => {
+    const pushEvent = (kind: VT.VisualiserEventKind, e: any, opts: { agentVault?: string, valueUBA?: bigint, user?: string, fasset?: FAsset, flowId?: string, flowKind?: VT.FlowKind, txHash?: string }) => {
       evs.push({
         kind,
-        fasset: e.fasset != null ? (FAssetType[e.fasset] as FAsset) : undefined,
-        agentVault: e.agentVault?.address?.hex,
-        user,
-        valueUBA,
+        fasset: opts.fasset ?? (e.fasset != null ? (FAssetType[e.fasset] as FAsset) : undefined),
+        agentVault: opts.agentVault,
+        user: opts.user,
+        valueUBA: opts.valueUBA,
         timestamp: e.evmLog.block.timestamp,
         blockIndex: e.evmLog.block.index,
-        txHash: e.evmLog.transaction.hash
-      })
-    }
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const pushVia = (kind: VT.VisualiserEventKind, e: any, parent: any, valueUBA?: bigint) => {
-      evs.push({
-        kind,
-        fasset: e.fasset != null ? (FAssetType[e.fasset] as FAsset) : undefined,
-        agentVault: parent?.agentVault?.address?.hex,
-        valueUBA,
-        timestamp: e.evmLog.block.timestamp,
-        blockIndex: e.evmLog.block.index,
-        txHash: e.evmLog.transaction.hash
+        txHash: opts.txHash ?? e.evmLog.transaction.hash,
+        flowId: opts.flowId,
+        flowKind: opts.flowKind
       })
     }
 
-    for (const e of collateralReserved) pushBound('CollateralReserved', e, e.valueUBA, e.minter?.hex)
-    for (const e of mintingExecuted) pushVia('MintingExecuted', e, e.collateralReserved, e.collateralReserved.valueUBA)
-    for (const e of mintingDefault) pushVia('MintingPaymentDefault', e, e.collateralReserved, e.collateralReserved.valueUBA)
-    for (const e of mintingDeleted) pushVia('CollateralReservationDeleted', e, e.collateralReserved, e.collateralReserved.valueUBA)
+    for (const e of collateralReserved) {
+      if (wants('CollateralReserved')) pushEvent('CollateralReserved', e, {
+        agentVault: e.agentVault?.address?.hex, valueUBA: e.valueUBA, user: e.minter?.hex,
+        flowId: this.mintFlowId(e.fasset, e.collateralReservationId), flowKind: 'mint'
+      })
+    }
+    for (const e of mintingExecuted) {
+      const flowId = this.mintFlowId(e.fasset, e.collateralReserved.collateralReservationId)
+      if (wants('MintingExecuted')) pushEvent('MintingExecuted', e, {
+        agentVault: e.collateralReserved.agentVault?.address?.hex,
+        valueUBA: e.collateralReserved.valueUBA, flowId, flowKind: 'mint'
+      })
+      if (wantsConfirmed) pushEvent('UnderlyingPaymentConfirmed', e, {
+        agentVault: e.collateralReserved.agentVault?.address?.hex,
+        valueUBA: e.collateralReserved.valueUBA, flowId, flowKind: 'mint'
+      })
+    }
+    for (const e of mintingDefault) {
+      if (wants('MintingPaymentDefault')) pushEvent('MintingPaymentDefault', e, {
+        agentVault: e.collateralReserved.agentVault?.address?.hex,
+        valueUBA: e.collateralReserved.valueUBA,
+        flowId: this.mintFlowId(e.fasset, e.collateralReserved.collateralReservationId), flowKind: 'mint'
+      })
+    }
+    for (const e of mintingDeleted) {
+      if (wants('CollateralReservationDeleted')) pushEvent('CollateralReservationDeleted', e, {
+        agentVault: e.collateralReserved.agentVault?.address?.hex,
+        valueUBA: e.collateralReserved.valueUBA,
+        flowId: this.mintFlowId(e.fasset, e.collateralReserved.collateralReservationId), flowKind: 'mint'
+      })
+    }
     for (const e of directMint) {
-      evs.push({
-        kind: 'DirectMintingExecuted',
-        fasset: FAssetType[e.fasset] as FAsset,
+      if (wants('DirectMintingExecuted')) pushEvent('DirectMintingExecuted', e, {
         valueUBA: e.mintedAmountUBA,
-        timestamp: e.evmLog.block.timestamp,
-        blockIndex: e.evmLog.block.index,
-        txHash: e.evmLog.transaction.hash
+        flowId: this.directMintFlowId(e.fasset, e.transactionId), flowKind: 'directMint'
       })
     }
-    for (const e of selfMint) pushBound('SelfMint', e, e.mintedUBA)
-    for (const e of redemptionRequested) pushBound('RedemptionRequested', e, e.valueUBA, e.redeemer?.hex)
-    for (const e of redemptionPerformed) pushVia('RedemptionPerformed', e, e.redemptionRequested, e.redemptionRequested.valueUBA)
-    for (const e of redemptionDefault) pushVia('RedemptionDefault', e, e.redemptionRequested, e.redemptionRequested.valueUBA)
-    for (const e of redemptionRejected) pushVia('RedemptionRejected', e, e.redemptionRequested, e.redemptionRequested.valueUBA)
-    for (const e of redemptionPaymentBlocked) pushVia('RedemptionPaymentBlocked', e, e.redemptionRequested, e.redemptionRequested.valueUBA)
-    for (const e of redemptionPaymentFailed) pushVia('RedemptionPaymentFailed', e, e.redemptionRequested, e.redemptionRequested.valueUBA)
-    for (const e of liquidationStarted) pushBound('LiquidationStarted', e)
-    for (const e of liquidationPerformed) pushBound('LiquidationPerformed', e, e.valueUBA, e.liquidator?.hex)
-    for (const e of liquidationEnded) pushBound('LiquidationEnded', e)
-    for (const e of fullLiquidationStarted) pushBound('FullLiquidationStarted', e)
-    for (const e of illegal) pushBound('IllegalPaymentConfirmed', e)
-    for (const e of duplicate) pushBound('DuplicatePaymentConfirmed', e)
-    for (const e of balanceLow) pushBound('UnderlyingBalanceTooLow', e)
-    for (const e of vaultCreated) pushBound('AgentVaultCreated', e)
-    for (const e of vaultDestroyed) pushBound('AgentVaultDestroyed', e)
-    for (const e of transferStarted) pushBound('TransferToCoreVaultStarted', e, e.valueUBA)
-    for (const e of transferSuccess) pushVia('TransferToCoreVaultSuccessful', e, e.transferToCoreVaultStarted, e.transferToCoreVaultStarted.valueUBA)
-    for (const e of transferDefault) pushVia('TransferToCoreVaultDefaulted', e, e.transferToCoreVaultStarted, e.transferToCoreVaultStarted.valueUBA)
+    for (const e of selfMint) {
+      if (wants('SelfMint')) pushEvent('SelfMint', e, {
+        agentVault: e.agentVault?.address?.hex, valueUBA: e.mintedUBA
+      })
+    }
+    for (const e of redemptionRequested) {
+      if (wants('RedemptionRequested')) pushEvent('RedemptionRequested', e, {
+        agentVault: e.agentVault?.address?.hex, valueUBA: e.valueUBA, user: e.redeemer?.hex,
+        flowId: this.redemptionFlowId(e.fasset, e.requestId), flowKind: 'redemption'
+      })
+    }
+    for (const e of redemptionPerformed) {
+      const flowId = this.redemptionFlowId(e.fasset, e.redemptionRequested.requestId)
+      if (wants('RedemptionPerformed')) pushEvent('RedemptionPerformed', e, {
+        agentVault: e.redemptionRequested.agentVault?.address?.hex,
+        valueUBA: e.redemptionRequested.valueUBA, flowId, flowKind: 'redemption'
+      })
+      if (wantsConfirmed) pushEvent('UnderlyingPaymentConfirmed', e, {
+        agentVault: e.redemptionRequested.agentVault?.address?.hex,
+        valueUBA: e.redemptionRequested.valueUBA, flowId, flowKind: 'redemption'
+      })
+    }
+    for (const e of redemptionDefault) {
+      if (wants('RedemptionDefault')) pushEvent('RedemptionDefault', e, {
+        agentVault: e.redemptionRequested.agentVault?.address?.hex,
+        valueUBA: e.redemptionRequested.valueUBA,
+        flowId: this.redemptionFlowId(e.fasset, e.redemptionRequested.requestId), flowKind: 'redemption'
+      })
+    }
+    for (const e of redemptionRejected) {
+      if (wants('RedemptionRejected')) pushEvent('RedemptionRejected', e, {
+        agentVault: e.redemptionRequested.agentVault?.address?.hex,
+        valueUBA: e.redemptionRequested.valueUBA,
+        flowId: this.redemptionFlowId(e.fasset, e.redemptionRequested.requestId), flowKind: 'redemption'
+      })
+    }
+    for (const e of redemptionPaymentBlocked) {
+      if (wants('RedemptionPaymentBlocked')) pushEvent('RedemptionPaymentBlocked', e, {
+        agentVault: e.redemptionRequested.agentVault?.address?.hex,
+        valueUBA: e.redemptionRequested.valueUBA,
+        flowId: this.redemptionFlowId(e.fasset, e.redemptionRequested.requestId), flowKind: 'redemption'
+      })
+    }
+    for (const e of redemptionPaymentFailed) {
+      if (wants('RedemptionPaymentFailed')) pushEvent('RedemptionPaymentFailed', e, {
+        agentVault: e.redemptionRequested.agentVault?.address?.hex,
+        valueUBA: e.redemptionRequested.valueUBA,
+        flowId: this.redemptionFlowId(e.fasset, e.redemptionRequested.requestId), flowKind: 'redemption'
+      })
+    }
+    for (const e of liquidationStarted) {
+      if (wants('LiquidationStarted')) pushEvent('LiquidationStarted', e, { agentVault: e.agentVault?.address?.hex })
+    }
+    for (const e of liquidationPerformed) {
+      if (wants('LiquidationPerformed')) pushEvent('LiquidationPerformed', e, {
+        agentVault: e.agentVault?.address?.hex, valueUBA: e.valueUBA, user: e.liquidator?.hex
+      })
+    }
+    for (const e of liquidationEnded) {
+      if (wants('LiquidationEnded')) pushEvent('LiquidationEnded', e, { agentVault: e.agentVault?.address?.hex })
+    }
+    for (const e of fullLiquidationStarted) {
+      if (wants('FullLiquidationStarted')) pushEvent('FullLiquidationStarted', e, { agentVault: e.agentVault?.address?.hex })
+    }
+    for (const e of illegal) {
+      if (wants('IllegalPaymentConfirmed')) pushEvent('IllegalPaymentConfirmed', e, { agentVault: e.agentVault?.address?.hex })
+    }
+    for (const e of duplicate) {
+      if (wants('DuplicatePaymentConfirmed')) pushEvent('DuplicatePaymentConfirmed', e, { agentVault: e.agentVault?.address?.hex })
+    }
+    for (const e of balanceLow) {
+      if (wants('UnderlyingBalanceTooLow')) pushEvent('UnderlyingBalanceTooLow', e, { agentVault: e.agentVault?.address?.hex })
+    }
+    for (const e of vaultCreated) {
+      if (wants('AgentVaultCreated')) pushEvent('AgentVaultCreated', e, { agentVault: e.agentVault?.address?.hex })
+    }
+    for (const e of vaultDestroyed) {
+      if (wants('AgentVaultDestroyed')) pushEvent('AgentVaultDestroyed', e, { agentVault: e.agentVault?.address?.hex })
+    }
+    for (const e of transferStarted) {
+      if (wants('TransferToCoreVaultStarted')) pushEvent('TransferToCoreVaultStarted', e, {
+        agentVault: e.agentVault?.address?.hex, valueUBA: e.valueUBA,
+        flowId: this.transferFlowId(e.fasset, e.transferRedemptionRequestId), flowKind: 'transferToCoreVault'
+      })
+    }
+    for (const e of transferSuccess) {
+      const flowId = this.transferFlowId(e.fasset, e.transferToCoreVaultStarted.transferRedemptionRequestId)
+      if (wants('TransferToCoreVaultSuccessful')) pushEvent('TransferToCoreVaultSuccessful', e, {
+        agentVault: e.transferToCoreVaultStarted.agentVault?.address?.hex,
+        valueUBA: e.transferToCoreVaultStarted.valueUBA, flowId, flowKind: 'transferToCoreVault'
+      })
+      if (wantsConfirmed) pushEvent('UnderlyingPaymentConfirmed', e, {
+        agentVault: e.transferToCoreVaultStarted.agentVault?.address?.hex,
+        valueUBA: e.transferToCoreVaultStarted.valueUBA, flowId, flowKind: 'transferToCoreVault'
+      })
+    }
+    for (const e of transferDefault) {
+      if (wants('TransferToCoreVaultDefaulted')) pushEvent('TransferToCoreVaultDefaulted', e, {
+        agentVault: e.transferToCoreVaultStarted.agentVault?.address?.hex,
+        valueUBA: e.transferToCoreVaultStarted.valueUBA,
+        flowId: this.transferFlowId(e.fasset, e.transferToCoreVaultStarted.transferRedemptionRequestId), flowKind: 'transferToCoreVault'
+      })
+    }
+    for (const e of returnRequested) {
+      if (wants('ReturnFromCoreVaultRequested')) pushEvent('ReturnFromCoreVaultRequested', e, {
+        agentVault: e.agentVault?.address?.hex, valueUBA: e.valueUBA,
+        flowId: this.returnFlowId(e.fasset, e.requestId), flowKind: 'returnFromCoreVault'
+      })
+    }
+    for (const e of returnConfirmed) {
+      const flowId = this.returnFlowId(e.fasset, e.returnFromCoreVaultRequested.requestId)
+      if (wants('ReturnFromCoreVaultConfirmed')) pushEvent('ReturnFromCoreVaultConfirmed', e, {
+        agentVault: e.returnFromCoreVaultRequested.agentVault?.address?.hex,
+        valueUBA: e.receivedUnderlyingUBA, flowId, flowKind: 'returnFromCoreVault'
+      })
+      if (wantsConfirmed) pushEvent('UnderlyingPaymentConfirmed', e, {
+        agentVault: e.returnFromCoreVaultRequested.agentVault?.address?.hex,
+        valueUBA: e.receivedUnderlyingUBA, flowId, flowKind: 'returnFromCoreVault'
+      })
+    }
+    for (const e of returnCancelled) {
+      if (wants('ReturnFromCoreVaultCancelled')) pushEvent('ReturnFromCoreVaultCancelled', e, {
+        agentVault: e.returnFromCoreVaultRequested.agentVault?.address?.hex,
+        valueUBA: e.returnFromCoreVaultRequested.valueUBA,
+        flowId: this.returnFlowId(e.fasset, e.returnFromCoreVaultRequested.requestId), flowKind: 'returnFromCoreVault'
+      })
+    }
 
-    evs.sort((a, b) => a.timestamp - b.timestamp || a.blockIndex - b.blockIndex)
-    const truncated = evs.slice(0, cap)
+    if (wants('UnderlyingPaymentObserved')) {
+      const observed = await this.fetchUnderlyingPaymentObserved(em, sinceTimestamp, cap)
+      evs.push(...observed)
+    }
+
+    let filtered = evs
+    if (filter?.agentVault != null) {
+      const target = filter.agentVault.toLowerCase()
+      filtered = filtered.filter(e => e.agentVault != null && e.agentVault.toLowerCase() === target)
+    }
+    if (filter?.fasset != null) {
+      filtered = filtered.filter(e => e.fasset === filter.fasset)
+    }
+    filtered.sort((a, b) => a.timestamp - b.timestamp || a.blockIndex - b.blockIndex)
+    const truncated = filtered.slice(0, cap)
     const last = truncated[truncated.length - 1]
     const cursor = last != null ? { timestamp: last.timestamp, blockIndex: last.blockIndex } : null
-    return { events: truncated, cursor, hasMore: evs.length > cap }
+    return { events: truncated, cursor, hasMore: filtered.length > cap }
   }
 }
