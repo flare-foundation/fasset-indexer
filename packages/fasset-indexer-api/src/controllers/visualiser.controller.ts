@@ -1,5 +1,5 @@
 import { Controller, Get, Param, ParseBoolPipe, ParseIntPipe, Query, UseInterceptors } from '@nestjs/common'
-import { CacheInterceptor } from '@nestjs/cache-manager'
+import { CacheInterceptor, CacheTTL } from '@nestjs/cache-manager'
 import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { type FAsset } from 'fasset-indexer-core'
 import { VisualiserService } from '../services/visualiser.service'
@@ -8,8 +8,11 @@ import { unixnow } from '../shared/utils'
 import * as VT from '../analytics/visualiser-types'
 
 
+// TTL (ms) for live-state endpoints the bridge polls tight.
+// Capped at one bridge tick worth of staleness rather than the global 30s.
+const LIVE_STATE_CACHE_MS = 5_000
+
 @ApiTags('Visualiser')
-@UseInterceptors(CacheInterceptor)
 @Controller('api/visualiser')
 export class VisualiserController {
   constructor(private readonly service: VisualiserService) { }
@@ -18,6 +21,7 @@ export class VisualiserController {
   // overview
 
   @Get('overview')
+  @UseInterceptors(CacheInterceptor)
   @ApiOperation({
     summary: 'Bundled scene snapshot for the visualiser frontend on first load',
     description: 'Returns chain, supported FAssets, latest block, lot sizes, FAsset supplies, tracked agent backing, prices, and agent counts in a single call.'
@@ -27,6 +31,7 @@ export class VisualiserController {
   }
 
   @Get('scene')
+  @UseInterceptors(CacheInterceptor)
   @ApiOperation({
     summary: 'Full scene snapshot in one round-trip',
     description: 'Bundles overview, agents, active mintings and active redemptions so the bridge can rehydrate the visualiser scene with one call instead of fanning out to several.'
@@ -39,6 +44,7 @@ export class VisualiserController {
   // agents
 
   @Get('agents')
+  @UseInterceptors(CacheInterceptor)
   @ApiOperation({ summary: 'All agent vaults with their full live state (status, CRs, collateral, in-flight UBA)' })
   @ApiQuery({ name: 'fasset', type: String, required: false, description: 'Filter by FAsset (FXRP, FBTC, ...)' })
   @ApiQuery({ name: 'status', type: Number, required: false, description: '0=Normal, 1=CCB, 2=Liquidation, 3=FullLiquidation, 4=Destroying' })
@@ -57,6 +63,7 @@ export class VisualiserController {
   }
 
   @Get('agents/by-vault')
+  @UseInterceptors(CacheInterceptor)
   @ApiOperation({ summary: 'Single agent vault detail by vault address' })
   @ApiQuery({ name: 'vault', type: String, required: true })
   getAgent(@Query('vault') vault: string): Promise<ApiResponse<VT.AgentOverview | null>> {
@@ -64,6 +71,8 @@ export class VisualiserController {
   }
 
   @Get('agents/:vault/state')
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(LIVE_STATE_CACHE_MS)
   @ApiOperation({
     summary: 'Per-agent rollup: current state plus all in-flight flows for one vault',
     description: 'Returns the agent overview together with their active mintings, active redemptions, active redemption tickets, and current liquidation status — so the agent-detail panel can render from a single call instead of filtering global active lists client-side.'
@@ -77,12 +86,15 @@ export class VisualiserController {
   // live state
 
   @Get('prices')
+  @UseInterceptors(CacheInterceptor)
   @ApiOperation({ summary: 'Latest FTSO price feeds with timestamps' })
   getPrices(): Promise<ApiResponse<VT.PriceTick[]>> {
     return apiResponse(this.service.prices(), 200)
   }
 
   @Get('redemption-tickets/active')
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(LIVE_STATE_CACHE_MS)
   @ApiOperation({ summary: 'Active (undestroyed) redemption tickets — the agent queue depth' })
   @ApiQuery({ name: 'fasset', type: String, required: false })
   @ApiQuery({ name: 'agent', type: String, required: false, description: 'Agent vault address' })
@@ -96,6 +108,8 @@ export class VisualiserController {
   }
 
   @Get('mintings/active')
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(LIVE_STATE_CACHE_MS)
   @ApiOperation({ summary: 'Collateral reservations awaiting underlying payment (in-flight mints)' })
   @ApiQuery({ name: 'fasset', type: String, required: false })
   @ApiQuery({ name: 'agent', type: String, required: false })
@@ -109,6 +123,8 @@ export class VisualiserController {
   }
 
   @Get('redemptions/active')
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(LIVE_STATE_CACHE_MS)
   @ApiOperation({ summary: 'Redemption requests awaiting agent payment or default (in-flight redemptions)' })
   @ApiQuery({ name: 'fasset', type: String, required: false })
   @ApiQuery({ name: 'agent', type: String, required: false })
@@ -122,12 +138,15 @@ export class VisualiserController {
   }
 
   @Get('liquidations/active')
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(LIVE_STATE_CACHE_MS)
   @ApiOperation({ summary: 'Agents currently in CCB / Liquidation / FullLiquidation' })
   getActiveLiquidations(): Promise<ApiResponse<VT.ActiveLiquidation[]>> {
     return apiResponse(this.service.activeLiquidations(), 200)
   }
 
   @Get('challenges')
+  @UseInterceptors(CacheInterceptor)
   @ApiOperation({ summary: 'Recent challenge events (illegal payment, duplicate payment, underlying balance too low)' })
   @ApiQuery({ name: 'limit', type: Number, required: false })
   @ApiQuery({ name: 'offset', type: Number, required: false })
@@ -142,6 +161,8 @@ export class VisualiserController {
   // flows
 
   @Get('flows/active')
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(LIVE_STATE_CACHE_MS)
   @ApiOperation({
     summary: 'Active in-flight flows (mint, redemption, transfer-to-core-vault, return-from-core-vault)',
     description: 'Returns one Flow per unresolved lifecycle object with a stable flowId and an embedded underlyingPayment field. Replaces the bridge\'s separate active-mintings + active-redemptions polls and removes the per-reservation underlying-payment polling.'
@@ -181,6 +202,8 @@ export class VisualiserController {
   }
 
   @Get('flows/:flowId')
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(LIVE_STATE_CACHE_MS)
   @ApiOperation({
     summary: 'Single flow lookup by flowId (e.g. mint:FXRP:12345)',
     description: 'Returns the current snapshot for one flow, with embedded underlyingPayment if observed.'
