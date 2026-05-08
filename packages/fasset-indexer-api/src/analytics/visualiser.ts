@@ -977,36 +977,22 @@ export class VisualiserAnalytics extends DashboardAnalytics {
 
     const wantedKinds = filter?.kinds && filter.kinds.length > 0 ? new Set(filter.kinds) : null
     const wants = (k: VT.VisualiserEventKind): boolean => wantedKinds == null || wantedKinds.has(k)
-    /** True if the listed flow-bound kinds are needed AND we should also emit synthetic UnderlyingPaymentConfirmed alongside. */
-    const wantsConfirmed = wants('UnderlyingPaymentConfirmed')
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const fetch = async <T extends object>(kind: VT.VisualiserEventKind, ent: new () => T, populate: readonly string[]): Promise<T[]> => {
       if (!wants(kind)) return []
       return em.find(ent, where as any, { populate: populate as any, orderBy: order as any, limit: cap })
     }
-    /** Like fetch, but pulls the entity even when its own kind is filtered out — used when we only need it
-     *  to produce a synthetic UnderlyingPaymentConfirmed and the original kind isn't in the kind filter. */
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const fetchForConfirm = async <T extends object>(kind: VT.VisualiserEventKind, ent: new () => T, populate: readonly string[]): Promise<T[]> => {
-      if (!wants(kind) && !wantsConfirmed) return []
-      return em.find(ent, where as any, { populate: populate as any, orderBy: order as any, limit: cap })
-    }
 
     const [
-      collateralReserved, mintingExecuted, mintingDefault, mintingDeleted, directMint, directMintToSmartAccount, selfMint,
-      redemptionRequested, redemptionPerformed, redemptionDefault, redemptionRejected,
-      redemptionPaymentBlocked, redemptionPaymentFailed,
+      collateralReserved, directMint, directMintToSmartAccount, selfMint,
+      redemptionRequested,
       liquidationStarted, liquidationPerformed, liquidationEnded, fullLiquidationStarted,
       illegal, duplicate, balanceLow,
       vaultCreated, vaultDestroyed,
-      transferStarted, transferSuccess, transferDefault,
-      returnRequested, returnConfirmed, returnCancelled
+      transferStarted, returnRequested
     ] = await Promise.all([
       fetch('CollateralReserved', Entities.CollateralReserved, populateBound),
-      fetchForConfirm('MintingExecuted', Entities.MintingExecuted, [...populateFasset, 'collateralReserved.agentVault.address', 'collateralReserved.paymentReference']),
-      fetch('MintingPaymentDefault', Entities.MintingPaymentDefault, [...populateFasset, 'collateralReserved.agentVault.address', 'collateralReserved.collateralReservationId']),
-      fetch('CollateralReservationDeleted', Entities.CollateralReservationDeleted, [...populateFasset, 'collateralReserved.agentVault.address', 'collateralReserved.collateralReservationId']),
       fetch('DirectMintingExecuted', Entities.DirectMintingExecuted, populateFasset),
       // DirectMintingExecutedToSmartAccount surfaces under the same DirectMintingExecuted event kind:
       // both represent a completed directMint flow; they only differ in target shape (EVM target
@@ -1014,11 +1000,6 @@ export class VisualiserAnalytics extends DashboardAnalytics {
       fetch('DirectMintingExecuted', Entities.DirectMintingExecutedToSmartAccount, populateFasset),
       fetch('SelfMint', Entities.SelfMint, populateBound),
       fetch('RedemptionRequested', Entities.RedemptionRequested, [...populateBound, 'redeemer', 'paymentReference']),
-      fetchForConfirm('RedemptionPerformed', Entities.RedemptionPerformed, [...populateFasset, 'redemptionRequested.agentVault.address', 'redemptionRequested.requestId']),
-      fetch('RedemptionDefault', Entities.RedemptionDefault, [...populateFasset, 'redemptionRequested.agentVault.address', 'redemptionRequested.requestId']),
-      fetch('RedemptionRejected', Entities.RedemptionRejected, [...populateFasset, 'redemptionRequested.agentVault.address', 'redemptionRequested.requestId']),
-      fetch('RedemptionPaymentBlocked', Entities.RedemptionPaymentBlocked, [...populateFasset, 'redemptionRequested.agentVault.address', 'redemptionRequested.requestId']),
-      fetch('RedemptionPaymentFailed', Entities.RedemptionPaymentFailed, [...populateFasset, 'redemptionRequested.agentVault.address', 'redemptionRequested.requestId']),
       fetch('LiquidationStarted', Entities.LiquidationStarted, populateBound),
       fetch('LiquidationPerformed', Entities.LiquidationPerformed, [...populateBound, 'liquidator']),
       fetch('LiquidationEnded', Entities.LiquidationEnded, populateBound),
@@ -1029,11 +1010,7 @@ export class VisualiserAnalytics extends DashboardAnalytics {
       fetch('AgentVaultCreated', Entities.AgentVaultCreated, populateBound),
       fetch('AgentVaultDestroyed', Entities.AgentVaultDestroyed, populateBound),
       fetch('TransferToCoreVaultStarted', Entities.TransferToCoreVaultStarted, populateBound),
-      fetchForConfirm('TransferToCoreVaultSuccessful', Entities.TransferToCoreVaultSuccessful, [...populateFasset, 'transferToCoreVaultStarted.agentVault.address', 'transferToCoreVaultStarted.transferRedemptionRequestId']),
-      fetch('TransferToCoreVaultDefaulted', Entities.TransferToCoreVaultDefaulted, [...populateFasset, 'transferToCoreVaultStarted.agentVault.address', 'transferToCoreVaultStarted.transferRedemptionRequestId']),
-      fetch('ReturnFromCoreVaultRequested', Entities.ReturnFromCoreVaultRequested, populateBound),
-      fetchForConfirm('ReturnFromCoreVaultConfirmed', Entities.ReturnFromCoreVaultConfirmed, [...populateFasset, 'returnFromCoreVaultRequested.agentVault.address', 'returnFromCoreVaultRequested.requestId']),
-      fetch('ReturnFromCoreVaultCancelled', Entities.ReturnFromCoreVaultCancelled, [...populateFasset, 'returnFromCoreVaultRequested.agentVault.address', 'returnFromCoreVaultRequested.requestId'])
+      fetch('ReturnFromCoreVaultRequested', Entities.ReturnFromCoreVaultRequested, populateBound)
     ])
 
     const evs: VT.VisualiserEvent[] = []
@@ -1059,31 +1036,6 @@ export class VisualiserAnalytics extends DashboardAnalytics {
         flowId: this.mintFlowId(e.fasset, e.collateralReservationId), flowKind: 'mint'
       })
     }
-    for (const e of mintingExecuted) {
-      const flowId = this.mintFlowId(e.fasset, e.collateralReserved.collateralReservationId)
-      if (wants('MintingExecuted')) pushEvent('MintingExecuted', e, {
-        agentVault: e.collateralReserved.agentVault?.address?.hex,
-        valueUBA: e.collateralReserved.valueUBA, flowId, flowKind: 'mint'
-      })
-      if (wantsConfirmed) pushEvent('UnderlyingPaymentConfirmed', e, {
-        agentVault: e.collateralReserved.agentVault?.address?.hex,
-        valueUBA: e.collateralReserved.valueUBA, flowId, flowKind: 'mint'
-      })
-    }
-    for (const e of mintingDefault) {
-      if (wants('MintingPaymentDefault')) pushEvent('MintingPaymentDefault', e, {
-        agentVault: e.collateralReserved.agentVault?.address?.hex,
-        valueUBA: e.collateralReserved.valueUBA,
-        flowId: this.mintFlowId(e.fasset, e.collateralReserved.collateralReservationId), flowKind: 'mint'
-      })
-    }
-    for (const e of mintingDeleted) {
-      if (wants('CollateralReservationDeleted')) pushEvent('CollateralReservationDeleted', e, {
-        agentVault: e.collateralReserved.agentVault?.address?.hex,
-        valueUBA: e.collateralReserved.valueUBA,
-        flowId: this.mintFlowId(e.fasset, e.collateralReserved.collateralReservationId), flowKind: 'mint'
-      })
-    }
     for (const e of directMint) {
       if (wants('DirectMintingExecuted')) pushEvent('DirectMintingExecuted', e, {
         valueUBA: e.mintedAmountUBA,
@@ -1105,45 +1057,6 @@ export class VisualiserAnalytics extends DashboardAnalytics {
       if (wants('RedemptionRequested')) pushEvent('RedemptionRequested', e, {
         agentVault: e.agentVault?.address?.hex, valueUBA: e.valueUBA, user: e.redeemer?.hex,
         flowId: this.redemptionFlowId(e.fasset, e.requestId), flowKind: 'redemption'
-      })
-    }
-    for (const e of redemptionPerformed) {
-      const flowId = this.redemptionFlowId(e.fasset, e.redemptionRequested.requestId)
-      if (wants('RedemptionPerformed')) pushEvent('RedemptionPerformed', e, {
-        agentVault: e.redemptionRequested.agentVault?.address?.hex,
-        valueUBA: e.redemptionRequested.valueUBA, flowId, flowKind: 'redemption'
-      })
-      if (wantsConfirmed) pushEvent('UnderlyingPaymentConfirmed', e, {
-        agentVault: e.redemptionRequested.agentVault?.address?.hex,
-        valueUBA: e.redemptionRequested.valueUBA, flowId, flowKind: 'redemption'
-      })
-    }
-    for (const e of redemptionDefault) {
-      if (wants('RedemptionDefault')) pushEvent('RedemptionDefault', e, {
-        agentVault: e.redemptionRequested.agentVault?.address?.hex,
-        valueUBA: e.redemptionRequested.valueUBA,
-        flowId: this.redemptionFlowId(e.fasset, e.redemptionRequested.requestId), flowKind: 'redemption'
-      })
-    }
-    for (const e of redemptionRejected) {
-      if (wants('RedemptionRejected')) pushEvent('RedemptionRejected', e, {
-        agentVault: e.redemptionRequested.agentVault?.address?.hex,
-        valueUBA: e.redemptionRequested.valueUBA,
-        flowId: this.redemptionFlowId(e.fasset, e.redemptionRequested.requestId), flowKind: 'redemption'
-      })
-    }
-    for (const e of redemptionPaymentBlocked) {
-      if (wants('RedemptionPaymentBlocked')) pushEvent('RedemptionPaymentBlocked', e, {
-        agentVault: e.redemptionRequested.agentVault?.address?.hex,
-        valueUBA: e.redemptionRequested.valueUBA,
-        flowId: this.redemptionFlowId(e.fasset, e.redemptionRequested.requestId), flowKind: 'redemption'
-      })
-    }
-    for (const e of redemptionPaymentFailed) {
-      if (wants('RedemptionPaymentFailed')) pushEvent('RedemptionPaymentFailed', e, {
-        agentVault: e.redemptionRequested.agentVault?.address?.hex,
-        valueUBA: e.redemptionRequested.valueUBA,
-        flowId: this.redemptionFlowId(e.fasset, e.redemptionRequested.requestId), flowKind: 'redemption'
       })
     }
     for (const e of liquidationStarted) {
@@ -1181,46 +1094,10 @@ export class VisualiserAnalytics extends DashboardAnalytics {
         flowId: this.transferFlowId(e.fasset, e.transferRedemptionRequestId), flowKind: 'transferToCoreVault'
       })
     }
-    for (const e of transferSuccess) {
-      const flowId = this.transferFlowId(e.fasset, e.transferToCoreVaultStarted.transferRedemptionRequestId)
-      if (wants('TransferToCoreVaultSuccessful')) pushEvent('TransferToCoreVaultSuccessful', e, {
-        agentVault: e.transferToCoreVaultStarted.agentVault?.address?.hex,
-        valueUBA: e.transferToCoreVaultStarted.valueUBA, flowId, flowKind: 'transferToCoreVault'
-      })
-      if (wantsConfirmed) pushEvent('UnderlyingPaymentConfirmed', e, {
-        agentVault: e.transferToCoreVaultStarted.agentVault?.address?.hex,
-        valueUBA: e.transferToCoreVaultStarted.valueUBA, flowId, flowKind: 'transferToCoreVault'
-      })
-    }
-    for (const e of transferDefault) {
-      if (wants('TransferToCoreVaultDefaulted')) pushEvent('TransferToCoreVaultDefaulted', e, {
-        agentVault: e.transferToCoreVaultStarted.agentVault?.address?.hex,
-        valueUBA: e.transferToCoreVaultStarted.valueUBA,
-        flowId: this.transferFlowId(e.fasset, e.transferToCoreVaultStarted.transferRedemptionRequestId), flowKind: 'transferToCoreVault'
-      })
-    }
     for (const e of returnRequested) {
       if (wants('ReturnFromCoreVaultRequested')) pushEvent('ReturnFromCoreVaultRequested', e, {
         agentVault: e.agentVault?.address?.hex, valueUBA: e.valueUBA,
         flowId: this.returnFlowId(e.fasset, e.requestId), flowKind: 'returnFromCoreVault'
-      })
-    }
-    for (const e of returnConfirmed) {
-      const flowId = this.returnFlowId(e.fasset, e.returnFromCoreVaultRequested.requestId)
-      if (wants('ReturnFromCoreVaultConfirmed')) pushEvent('ReturnFromCoreVaultConfirmed', e, {
-        agentVault: e.returnFromCoreVaultRequested.agentVault?.address?.hex,
-        valueUBA: e.receivedUnderlyingUBA, flowId, flowKind: 'returnFromCoreVault'
-      })
-      if (wantsConfirmed) pushEvent('UnderlyingPaymentConfirmed', e, {
-        agentVault: e.returnFromCoreVaultRequested.agentVault?.address?.hex,
-        valueUBA: e.receivedUnderlyingUBA, flowId, flowKind: 'returnFromCoreVault'
-      })
-    }
-    for (const e of returnCancelled) {
-      if (wants('ReturnFromCoreVaultCancelled')) pushEvent('ReturnFromCoreVaultCancelled', e, {
-        agentVault: e.returnFromCoreVaultRequested.agentVault?.address?.hex,
-        valueUBA: e.returnFromCoreVaultRequested.valueUBA,
-        flowId: this.returnFlowId(e.fasset, e.returnFromCoreVaultRequested.requestId), flowKind: 'returnFromCoreVault'
       })
     }
 

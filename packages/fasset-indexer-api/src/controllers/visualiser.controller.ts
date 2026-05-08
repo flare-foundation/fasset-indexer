@@ -180,6 +180,8 @@ export class VisualiserController {
   }
 
   @Get('flows')
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(LIVE_STATE_CACHE_MS)
   @ApiOperation({
     summary: 'Cursor-based delta feed of flow snapshots',
     description: 'Returns flows whose latest state-changing event is at or after the cursor (since, since_block), with the current snapshot of each flow. Pass back both cursor.timestamp and cursor.blockIndex from the previous response as since and since_block to advance strictly past the boundary.'
@@ -220,6 +222,8 @@ export class VisualiserController {
   // delta event feed
 
   @Get('events')
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(LIVE_STATE_CACHE_MS)
   @ApiOperation({
     summary: 'Cursor-based event delta feed for the visualiser bridge',
     description: 'Returns protocol events at or after the cursor (since, since_block), ordered ascending. Pass back both cursor.timestamp and cursor.blockIndex from the previous response as since and since_block to advance strictly past the boundary; without since_block the boundary timestamp\'s events are re-emitted (inclusive). Optional kind/agent/fasset filters narrow the feed.'

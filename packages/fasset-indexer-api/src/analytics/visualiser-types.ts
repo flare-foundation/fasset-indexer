@@ -171,19 +171,19 @@ export interface FlowsFeed {
 
 // delta event feed
 
+/**
+ * Flow-level resolution events (MintingExecuted, RedemptionPerformed, …Defaulted, …Cancelled, etc.)
+ * are intentionally absent — their state is reflected in `Flow.status` on the corresponding
+ * Flow record, fetched via /flows/:flowId, /flows/active, or the /flows delta feed. The events
+ * feed only carries flow-start signals plus agent-state and challenge events.
+ */
 export type VisualiserEventKind =
   | 'CollateralReserved'
-  | 'MintingExecuted'
-  | 'MintingPaymentDefault'
-  | 'CollateralReservationDeleted'
   | 'DirectMintingExecuted'
   | 'SelfMint'
   | 'RedemptionRequested'
-  | 'RedemptionPerformed'
-  | 'RedemptionDefault'
-  | 'RedemptionRejected'
-  | 'RedemptionPaymentBlocked'
-  | 'RedemptionPaymentFailed'
+  | 'TransferToCoreVaultStarted'
+  | 'ReturnFromCoreVaultRequested'
   | 'LiquidationStarted'
   | 'LiquidationPerformed'
   | 'LiquidationEnded'
@@ -193,14 +193,7 @@ export type VisualiserEventKind =
   | 'UnderlyingBalanceTooLow'
   | 'AgentVaultCreated'
   | 'AgentVaultDestroyed'
-  | 'TransferToCoreVaultStarted'
-  | 'TransferToCoreVaultSuccessful'
-  | 'TransferToCoreVaultDefaulted'
-  | 'ReturnFromCoreVaultRequested'
-  | 'ReturnFromCoreVaultConfirmed'
-  | 'ReturnFromCoreVaultCancelled'
   | 'UnderlyingPaymentObserved'
-  | 'UnderlyingPaymentConfirmed'
 
 export interface VisualiserEvent {
   kind: VisualiserEventKind
