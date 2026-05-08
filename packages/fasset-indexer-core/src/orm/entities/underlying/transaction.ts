@@ -31,6 +31,6 @@ export class UnderlyingTransaction {
   @Property({ type: new uint256(), nullable: true })
   fee?: bigint
 
-  @Property({ type: 'integer', index: true, nullable: true })
-  destinationTag?: number
+  @Property({ type: 'bigint', index: true, nullable: true })
+  destinationTag?: bigint
 }

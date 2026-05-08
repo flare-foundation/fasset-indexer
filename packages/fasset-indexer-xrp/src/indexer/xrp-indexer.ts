@@ -152,7 +152,7 @@ export class XrpIndexer {
         value: BigInt(Amount ?? 0),
         result: transaction?.metaData?.TransactionResult,
         fee: BigInt(transaction.Fee ?? 0),
-        destinationTag: DestinationTag
+        destinationTag: DestinationTag != null ? BigInt(DestinationTag) : undefined
        }
     )
   }
