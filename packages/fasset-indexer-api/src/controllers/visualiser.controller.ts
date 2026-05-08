@@ -219,14 +219,41 @@ export class VisualiserController {
   }
 
   //////////////////////////////////////////////////////////////////////
+  // underlying-chain delta
+
+  @Get('underlying-payments')
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(LIVE_STATE_CACHE_MS)
+  @ApiOperation({
+    summary: 'Cursor-based delta feed of underlying-chain payment observations',
+    description: 'Returns indexed UnderlyingReference rows at or after the cursor, ordered by underlying-chain (timestamp, height). Standalone feed with its own coordinate space — pass back cursor.timestamp as since and cursor.blockHeight as since_height. Each row carries the raw paymentReference; the bridge decodes it and joins against local flow state if it needs flowId / agentVault.'
+  })
+  @ApiQuery({ name: 'since', type: Number, required: false, description: 'Underlying-block timestamp; defaults to now-300' })
+  @ApiQuery({ name: 'since_height', type: Number, required: false, description: 'Tiebreaker for observations sharing the boundary timestamp; pass back cursor.blockHeight' })
+  @ApiQuery({ name: 'limit', type: Number, required: false, description: 'Max rows to return (cap 500)' })
+  @ApiQuery({ name: 'fasset', type: String, required: false })
+  getUnderlyingPayments(
+    @Query('since', new ParseIntPipe({ optional: true })) since?: number,
+    @Query('since_height', new ParseIntPipe({ optional: true })) sinceHeight?: number,
+    @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
+    @Query('fasset') fasset?: string
+  ): Promise<ApiResponse<VT.UnderlyingPaymentsFeed>> {
+    const sinceTs = since ?? unixnow() - 300
+    return apiResponse(this.service.underlyingPaymentsSince(sinceTs, limit ?? 200, {
+      fasset: fasset as FAsset | undefined,
+      sinceHeight
+    }), 200)
+  }
+
+  //////////////////////////////////////////////////////////////////////
   // delta event feed
 
   @Get('events')
   @UseInterceptors(CacheInterceptor)
   @CacheTTL(LIVE_STATE_CACHE_MS)
   @ApiOperation({
-    summary: 'Cursor-based event delta feed for the visualiser bridge',
-    description: 'Returns protocol events at or after the cursor (since, since_block), ordered ascending. Pass back both cursor.timestamp and cursor.blockIndex from the previous response as since and since_block to advance strictly past the boundary; without since_block the boundary timestamp\'s events are re-emitted (inclusive). Optional kind/agent/fasset filters narrow the feed.'
+    summary: 'Cursor-based event delta feed for the visualiser bridge (EVM events only)',
+    description: 'Returns on-chain protocol events at or after the cursor (since, since_block), ordered ascending. Cursor coordinates are EVM (block timestamp + Flare block index). Underlying-chain payment observations live on /underlying-payments with its own cursor. Pass back both cursor.timestamp and cursor.blockIndex from the previous response as since and since_block to advance strictly past the boundary; without since_block the boundary timestamp\'s events are re-emitted (inclusive). Optional kind/agent/fasset filters narrow the feed.'
   })
   @ApiQuery({ name: 'since', type: Number, required: false, description: 'Unix timestamp seconds; defaults to now-300' })
   @ApiQuery({ name: 'since_block', type: Number, required: false, description: 'Tiebreaker for events sharing the boundary timestamp; pass back cursor.blockIndex' })

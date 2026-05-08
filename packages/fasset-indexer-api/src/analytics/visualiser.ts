@@ -849,111 +849,47 @@ export class VisualiserAnalytics extends DashboardAnalytics {
     }
   }
 
+  ////////////////////////////////////////////////////////////////////////
+  // underlying-chain delta
+
   /**
-   * Synthesises UnderlyingPaymentObserved events from indexed underlying-tx references
-   * at or after the cursor. Decodes the payment reference to resolve flowId, then
-   * batch-loads the parent flow entity per kind to attach `agentVault`. Redemption-typed
-   * references are disambiguated against TransferToCoreVaultStarted (which reuses the
-   * redemption id space).
+   * Underlying-chain payment observations at or after the cursor. Standalone feed
+   * with its own coordinate space (block timestamp + block height) so the cursor
+   * never has to be reconciled with EVM block indices on /events.
+   *
+   * Returned rows carry the raw payment reference; the bridge can decode it and
+   * join against its own flow state if it needs flowId/agentVault.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async fetchUnderlyingPaymentObserved(em: any, sinceTimestamp: number, cap: number, sinceBlock?: number): Promise<VT.VisualiserEvent[]> {
-    const refs = await em.find(Entities.UnderlyingReference,
-      this.underlyingSinceWhere(sinceTimestamp, sinceBlock),
-      { populate: ['block', 'transaction.block'], orderBy: { block: { timestamp: 'asc' } }, limit: cap }
-    ) as Entities.UnderlyingReference[]
-    if (refs.length === 0) return []
+  async underlyingPaymentsSince(
+    sinceTimestamp: number,
+    limit = 200,
+    filter?: { fasset?: FAsset, sinceHeight?: number }
+  ): Promise<VT.UnderlyingPaymentsFeed> {
+    const em = this.orm.em.fork()
+    const cap = Math.min(limit, 500)
+    const baseWhere: Record<string, unknown> = {}
+    if (filter?.fasset != null) baseWhere.fasset = FAssetType[filter.fasset]
+    const where = { ...baseWhere, ...this.underlyingSinceWhere(sinceTimestamp, filter?.sinceHeight) }
+    const refs = await em.find(Entities.UnderlyingReference, where, {
+      populate: ['block', 'transaction'],
+      orderBy: { block: { timestamp: 'asc' as const, height: 'asc' as const } },
+      limit: cap
+    })
 
-    // Decode references to flow info; collect per-kind id lists for agentVault batch lookup.
-    type Decoded = { ref: Entities.UnderlyingReference, flowInfo: { flowId: string, flowKind: VT.FlowKind }, id: number }
-    const redemptionIds: { fasset: FAssetType, id: number }[] = []
-    for (const r of refs) {
-      if (PaymentReference.isRedeem(r.reference)) {
-        redemptionIds.push({ fasset: r.fasset, id: Number(PaymentReference.decodeId(r.reference)) })
-      }
-    }
-    const transferIds = new Set<string>() // `${fasset}:${id}`
-    if (redemptionIds.length > 0) {
-      const transfers = await em.find(Entities.TransferToCoreVaultStarted,
-        { $or: redemptionIds.map(k => ({ fasset: k.fasset, transferRedemptionRequestId: k.id })) }
-      ) as Entities.TransferToCoreVaultStarted[]
-      for (const t of transfers) transferIds.add(`${t.fasset}:${t.transferRedemptionRequestId}`)
-    }
+    const payments: VT.UnderlyingPaymentEntry[] = refs.map(r => ({
+      txId: r.transaction.hash,
+      blockHeight: r.block.height,
+      blockTimestamp: r.block.timestamp,
+      amountUBA: r.transaction.value,
+      fasset: FAssetType[r.fasset] as FAsset,
+      paymentReference: r.reference
+    }))
 
-    const decoded: Decoded[] = []
-    const mintLookups: { fasset: FAssetType, collateralReservationId: number }[] = []
-    const redemptionLookups: { fasset: FAssetType, requestId: number }[] = []
-    const transferLookups: { fasset: FAssetType, transferRedemptionRequestId: number }[] = []
-    const returnLookups: { fasset: FAssetType, requestId: number }[] = []
-    for (const r of refs) {
-      const flowInfo = this.flowFromReference(r.fasset, r.reference, transferIds)
-      if (flowInfo == null) continue
-      const id = Number(PaymentReference.decodeId(r.reference))
-      decoded.push({ ref: r, flowInfo, id })
-      if (flowInfo.flowKind === 'mint') mintLookups.push({ fasset: r.fasset, collateralReservationId: id })
-      else if (flowInfo.flowKind === 'redemption') redemptionLookups.push({ fasset: r.fasset, requestId: id })
-      else if (flowInfo.flowKind === 'transferToCoreVault') transferLookups.push({ fasset: r.fasset, transferRedemptionRequestId: id })
-      else if (flowInfo.flowKind === 'returnFromCoreVault') returnLookups.push({ fasset: r.fasset, requestId: id })
-    }
-
-    // Batch-load parent flow entities to recover agentVault per flowId.
-    const agentByFlow = new Map<string, string>()
-    const populate = ['agentVault.address']
-    const fetches: Promise<void>[] = []
-    if (mintLookups.length > 0) fetches.push((async () => {
-      const ents = await em.find(Entities.CollateralReserved, { $or: mintLookups }, { populate }) as Entities.CollateralReserved[]
-      for (const e of ents) agentByFlow.set(this.mintFlowId(e.fasset, e.collateralReservationId), e.agentVault.address.hex)
-    })())
-    if (redemptionLookups.length > 0) fetches.push((async () => {
-      const ents = await em.find(Entities.RedemptionRequested, { $or: redemptionLookups }, { populate }) as Entities.RedemptionRequested[]
-      for (const e of ents) agentByFlow.set(this.redemptionFlowId(e.fasset, e.requestId), e.agentVault.address.hex)
-    })())
-    if (transferLookups.length > 0) fetches.push((async () => {
-      const ents = await em.find(Entities.TransferToCoreVaultStarted, { $or: transferLookups }, { populate }) as Entities.TransferToCoreVaultStarted[]
-      for (const e of ents) agentByFlow.set(this.transferFlowId(e.fasset, e.transferRedemptionRequestId), e.agentVault.address.hex)
-    })())
-    if (returnLookups.length > 0) fetches.push((async () => {
-      const ents = await em.find(Entities.ReturnFromCoreVaultRequested, { $or: returnLookups }, { populate }) as Entities.ReturnFromCoreVaultRequested[]
-      for (const e of ents) agentByFlow.set(this.returnFlowId(e.fasset, e.requestId), e.agentVault.address.hex)
-    })())
-    await Promise.all(fetches)
-
-    const events: VT.VisualiserEvent[] = []
-    for (const { ref: r, flowInfo } of decoded) {
-      events.push({
-        kind: 'UnderlyingPaymentObserved',
-        fasset: FAssetType[r.fasset] as FAsset,
-        agentVault: agentByFlow.get(flowInfo.flowId),
-        valueUBA: r.transaction.value,
-        timestamp: r.block.timestamp,
-        blockIndex: r.transaction.block.height,
-        txHash: r.transaction.hash,
-        flowId: flowInfo.flowId,
-        flowKind: flowInfo.flowKind
-      })
-    }
-    return events
-  }
-
-  private flowFromReference(
-    fasset: FAssetType, reference: string, transferIds: Set<string>
-  ): { flowId: string, flowKind: VT.FlowKind } | null {
-    if (PaymentReference.isMint(reference)) {
-      const id = Number(PaymentReference.decodeId(reference))
-      return { flowId: this.mintFlowId(fasset, id), flowKind: 'mint' }
-    }
-    if (PaymentReference.isRedeem(reference)) {
-      const id = Number(PaymentReference.decodeId(reference))
-      if (transferIds.has(`${fasset}:${id}`)) {
-        return { flowId: this.transferFlowId(fasset, id), flowKind: 'transferToCoreVault' }
-      }
-      return { flowId: this.redemptionFlowId(fasset, id), flowKind: 'redemption' }
-    }
-    if (PaymentReference.isReturnFromCoreVault(reference)) {
-      const id = Number(PaymentReference.decodeId(reference))
-      return { flowId: this.returnFlowId(fasset, id), flowKind: 'returnFromCoreVault' }
-    }
-    return null
+    const last = payments[payments.length - 1]
+    const cursor = last != null
+      ? { timestamp: last.blockTimestamp, blockHeight: last.blockHeight }
+      : null
+    return { payments, cursor, hasMore: refs.length === cap }
   }
 
   ////////////////////////////////////////////////////////////////////////
@@ -1099,11 +1035,6 @@ export class VisualiserAnalytics extends DashboardAnalytics {
         agentVault: e.agentVault?.address?.hex, valueUBA: e.valueUBA,
         flowId: this.returnFlowId(e.fasset, e.requestId), flowKind: 'returnFromCoreVault'
       })
-    }
-
-    if (wants('UnderlyingPaymentObserved')) {
-      const observed = await this.fetchUnderlyingPaymentObserved(em, sinceTimestamp, cap, filter?.sinceBlock)
-      evs.push(...observed)
     }
 
     let filtered = evs

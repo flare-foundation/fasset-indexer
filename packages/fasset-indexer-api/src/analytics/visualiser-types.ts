@@ -169,6 +169,23 @@ export interface FlowsFeed {
   hasMore: boolean
 }
 
+// underlying-chain delta — own coordinate space (block timestamp + block height)
+
+export interface UnderlyingPaymentEntry {
+  txId: string
+  blockHeight: number
+  blockTimestamp: number
+  amountUBA: bigint
+  fasset: FAsset
+  paymentReference: string
+}
+
+export interface UnderlyingPaymentsFeed {
+  payments: UnderlyingPaymentEntry[]
+  cursor: { timestamp: number, blockHeight: number } | null
+  hasMore: boolean
+}
+
 // delta event feed
 
 /**
@@ -193,7 +210,6 @@ export type VisualiserEventKind =
   | 'UnderlyingBalanceTooLow'
   | 'AgentVaultCreated'
   | 'AgentVaultDestroyed'
-  | 'UnderlyingPaymentObserved'
 
 export interface VisualiserEvent {
   kind: VisualiserEventKind
