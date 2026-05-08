@@ -317,13 +317,11 @@ export class VisualiserAnalytics extends DashboardAnalytics {
   // bundled snapshots
 
   async scene(): Promise<VT.SceneSnapshot> {
-    const [overview, agents, mintings, redemptions] = await Promise.all([
+    const [overview, agents] = await Promise.all([
       this.systemOverview(),
-      this.agents(),
-      this.activeMintings(),
-      this.activeRedemptions()
+      this.agents()
     ])
-    return { overview, agents, mintings, redemptions }
+    return { ...overview, agents }
   }
 
   async agentState(vault: string): Promise<VT.AgentState | null> {
@@ -438,18 +436,21 @@ export class VisualiserAnalytics extends DashboardAnalytics {
   }
 
   /**
-   * Delta feed: returns flows whose latest state-changing event is at timestamp >= since.
+   * Delta feed: returns flows whose latest state-changing event is at the cursor or later.
    * "Latest state-changing event" = parent creation event for active flows, or the
    * resolution event for resolved flows. Each flow appears at most once with the
    * current status.
    */
-  async flowsSince(sinceTimestamp: number, limit = 200, filter?: { fasset?: FAsset, agentVault?: string }): Promise<VT.FlowsFeed> {
+  async flowsSince(
+    sinceTimestamp: number, limit = 200,
+    filter?: { fasset?: FAsset, agentVault?: string, sinceBlock?: number }
+  ): Promise<VT.FlowsFeed> {
     const em = this.orm.em.fork()
     const cap = Math.min(limit, 500)
     const fassetEnum = filter?.fasset != null ? FAssetType[filter.fasset] : undefined
     const baseWhere: Record<string, unknown> = {}
     if (fassetEnum != null) baseWhere.fasset = fassetEnum
-    const tsWhere = { evmLog: { block: { timestamp: { $gte: sinceTimestamp } } } }
+    const tsWhere = this.evmSinceWhere(sinceTimestamp, filter?.sinceBlock)
     const order = { evmLog: { block: { timestamp: 'asc' as const, index: 'asc' as const } } }
     const limitOpt = { orderBy: order, limit: cap }
 
@@ -818,21 +819,53 @@ export class VisualiserAnalytics extends DashboardAnalytics {
   }
 
   /**
-   * Synthesises UnderlyingPaymentObserved events from indexed underlying-tx references
-   * whose underlying-block timestamp is in the window. Decodes the payment reference to
-   * resolve flowId; redemption-typed references are disambiguated against
-   * TransferToCoreVaultStarted (which reuses the redemption id space).
+   * Strictly-after cursor filter on (evmLog.block.timestamp, evmLog.block.index).
+   * Without sinceBlock, falls back to inclusive timestamp filter for backwards-compat.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private async fetchUnderlyingPaymentObserved(em: any, sinceTimestamp: number, cap: number): Promise<VT.VisualiserEvent[]> {
+  private evmSinceWhere(sinceTimestamp: number, sinceBlock?: number): any {
+    if (sinceBlock == null) {
+      return { evmLog: { block: { timestamp: { $gte: sinceTimestamp } } } }
+    }
+    return {
+      $or: [
+        { evmLog: { block: { timestamp: { $gt: sinceTimestamp } } } },
+        { evmLog: { block: { timestamp: sinceTimestamp, index: { $gt: sinceBlock } } } }
+      ]
+    }
+  }
+
+  /** Same as evmSinceWhere but for entities whose block field is direct (e.g. UnderlyingReference). */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private underlyingSinceWhere(sinceTimestamp: number, sinceBlock?: number): any {
+    if (sinceBlock == null) {
+      return { block: { timestamp: { $gte: sinceTimestamp } } }
+    }
+    return {
+      $or: [
+        { block: { timestamp: { $gt: sinceTimestamp } } },
+        { block: { timestamp: sinceTimestamp, height: { $gt: sinceBlock } } }
+      ]
+    }
+  }
+
+  /**
+   * Synthesises UnderlyingPaymentObserved events from indexed underlying-tx references
+   * at or after the cursor. Decodes the payment reference to resolve flowId, then
+   * batch-loads the parent flow entity per kind to attach `agentVault`. Redemption-typed
+   * references are disambiguated against TransferToCoreVaultStarted (which reuses the
+   * redemption id space).
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private async fetchUnderlyingPaymentObserved(em: any, sinceTimestamp: number, cap: number, sinceBlock?: number): Promise<VT.VisualiserEvent[]> {
     const refs = await em.find(Entities.UnderlyingReference,
-      { block: { timestamp: { $gte: sinceTimestamp } } },
+      this.underlyingSinceWhere(sinceTimestamp, sinceBlock),
       { populate: ['block', 'transaction.block'], orderBy: { block: { timestamp: 'asc' } }, limit: cap }
     ) as Entities.UnderlyingReference[]
     if (refs.length === 0) return []
 
-    // Disambiguate redemption-prefix references — they are emitted both by ordinary redemptions
-    // and by transfer-to-core-vault, which reuses the redemption id space.
+    // Decode references to flow info; collect per-kind id lists for agentVault batch lookup.
+    type Decoded = { ref: Entities.UnderlyingReference, flowInfo: { flowId: string, flowKind: VT.FlowKind }, id: number }
     const redemptionIds: { fasset: FAssetType, id: number }[] = []
     for (const r of refs) {
       if (PaymentReference.isRedeem(r.reference)) {
@@ -847,13 +880,50 @@ export class VisualiserAnalytics extends DashboardAnalytics {
       for (const t of transfers) transferIds.add(`${t.fasset}:${t.transferRedemptionRequestId}`)
     }
 
-    const events: VT.VisualiserEvent[] = []
+    const decoded: Decoded[] = []
+    const mintLookups: { fasset: FAssetType, collateralReservationId: number }[] = []
+    const redemptionLookups: { fasset: FAssetType, requestId: number }[] = []
+    const transferLookups: { fasset: FAssetType, transferRedemptionRequestId: number }[] = []
+    const returnLookups: { fasset: FAssetType, requestId: number }[] = []
     for (const r of refs) {
       const flowInfo = this.flowFromReference(r.fasset, r.reference, transferIds)
       if (flowInfo == null) continue
+      const id = Number(PaymentReference.decodeId(r.reference))
+      decoded.push({ ref: r, flowInfo, id })
+      if (flowInfo.flowKind === 'mint') mintLookups.push({ fasset: r.fasset, collateralReservationId: id })
+      else if (flowInfo.flowKind === 'redemption') redemptionLookups.push({ fasset: r.fasset, requestId: id })
+      else if (flowInfo.flowKind === 'transferToCoreVault') transferLookups.push({ fasset: r.fasset, transferRedemptionRequestId: id })
+      else if (flowInfo.flowKind === 'returnFromCoreVault') returnLookups.push({ fasset: r.fasset, requestId: id })
+    }
+
+    // Batch-load parent flow entities to recover agentVault per flowId.
+    const agentByFlow = new Map<string, string>()
+    const populate = ['agentVault.address']
+    const fetches: Promise<void>[] = []
+    if (mintLookups.length > 0) fetches.push((async () => {
+      const ents = await em.find(Entities.CollateralReserved, { $or: mintLookups }, { populate }) as Entities.CollateralReserved[]
+      for (const e of ents) agentByFlow.set(this.mintFlowId(e.fasset, e.collateralReservationId), e.agentVault.address.hex)
+    })())
+    if (redemptionLookups.length > 0) fetches.push((async () => {
+      const ents = await em.find(Entities.RedemptionRequested, { $or: redemptionLookups }, { populate }) as Entities.RedemptionRequested[]
+      for (const e of ents) agentByFlow.set(this.redemptionFlowId(e.fasset, e.requestId), e.agentVault.address.hex)
+    })())
+    if (transferLookups.length > 0) fetches.push((async () => {
+      const ents = await em.find(Entities.TransferToCoreVaultStarted, { $or: transferLookups }, { populate }) as Entities.TransferToCoreVaultStarted[]
+      for (const e of ents) agentByFlow.set(this.transferFlowId(e.fasset, e.transferRedemptionRequestId), e.agentVault.address.hex)
+    })())
+    if (returnLookups.length > 0) fetches.push((async () => {
+      const ents = await em.find(Entities.ReturnFromCoreVaultRequested, { $or: returnLookups }, { populate }) as Entities.ReturnFromCoreVaultRequested[]
+      for (const e of ents) agentByFlow.set(this.returnFlowId(e.fasset, e.requestId), e.agentVault.address.hex)
+    })())
+    await Promise.all(fetches)
+
+    const events: VT.VisualiserEvent[] = []
+    for (const { ref: r, flowInfo } of decoded) {
       events.push({
         kind: 'UnderlyingPaymentObserved',
         fasset: FAssetType[r.fasset] as FAsset,
+        agentVault: agentByFlow.get(flowInfo.flowId),
         valueUBA: r.transaction.value,
         timestamp: r.block.timestamp,
         blockIndex: r.transaction.block.height,
@@ -890,19 +960,19 @@ export class VisualiserAnalytics extends DashboardAnalytics {
   // delta event feed
 
   /**
-   * Returns events emitted at block timestamp >= sinceTimestamp, ordered ascending.
+   * Returns events at or after the cursor (sinceTimestamp, sinceBlock), ordered ascending.
    * Bridge polls with the cursor returned by the previous call.
    */
   async eventsSince(
     sinceTimestamp: number,
     limit = 200,
-    filter?: { kinds?: VT.VisualiserEventKind[], agentVault?: string, fasset?: FAsset }
+    filter?: { kinds?: VT.VisualiserEventKind[], agentVault?: string, fasset?: FAsset, sinceBlock?: number }
   ): Promise<VT.VisualiserEventFeed> {
     const em = this.orm.em.fork()
     const cap = Math.min(limit, 500)
     const populateBound = ['evmLog.block', 'evmLog.transaction', 'agentVault.address'] as const
     const populateFasset = ['evmLog.block', 'evmLog.transaction'] as const
-    const where = { evmLog: { block: { timestamp: { $gte: sinceTimestamp } } } }
+    const where = this.evmSinceWhere(sinceTimestamp, filter?.sinceBlock)
     const order = { evmLog: { block: { timestamp: 'asc' as const, index: 'asc' as const } } }
 
     const wantedKinds = filter?.kinds && filter.kinds.length > 0 ? new Set(filter.kinds) : null
@@ -1155,7 +1225,7 @@ export class VisualiserAnalytics extends DashboardAnalytics {
     }
 
     if (wants('UnderlyingPaymentObserved')) {
-      const observed = await this.fetchUnderlyingPaymentObserved(em, sinceTimestamp, cap)
+      const observed = await this.fetchUnderlyingPaymentObserved(em, sinceTimestamp, cap, filter?.sinceBlock)
       evs.push(...observed)
     }
 

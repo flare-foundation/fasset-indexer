@@ -182,14 +182,16 @@ export class VisualiserController {
   @Get('flows')
   @ApiOperation({
     summary: 'Cursor-based delta feed of flow snapshots',
-    description: 'Returns flows whose latest state-changing event occurred at timestamp >= since, with the current snapshot of each flow. The bridge polls this with the cursor returned by the previous call.'
+    description: 'Returns flows whose latest state-changing event is at or after the cursor (since, since_block), with the current snapshot of each flow. Pass back both cursor.timestamp and cursor.blockIndex from the previous response as since and since_block to advance strictly past the boundary.'
   })
   @ApiQuery({ name: 'since', type: Number, required: false, description: 'Unix timestamp seconds; defaults to now-300' })
+  @ApiQuery({ name: 'since_block', type: Number, required: false, description: 'Tiebreaker for events sharing the boundary timestamp; pass back cursor.blockIndex' })
   @ApiQuery({ name: 'limit', type: Number, required: false, description: 'Max flows to return (cap 500)' })
   @ApiQuery({ name: 'fasset', type: String, required: false })
   @ApiQuery({ name: 'agent', type: String, required: false })
   getFlowsSince(
     @Query('since', new ParseIntPipe({ optional: true })) since?: number,
+    @Query('since_block', new ParseIntPipe({ optional: true })) sinceBlock?: number,
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
     @Query('fasset') fasset?: string,
     @Query('agent') agent?: string
@@ -197,7 +199,8 @@ export class VisualiserController {
     const sinceTs = since ?? unixnow() - 300
     return apiResponse(this.service.flowsSince(sinceTs, limit ?? 200, {
       fasset: fasset as FAsset | undefined,
-      agentVault: agent
+      agentVault: agent,
+      sinceBlock
     }), 200)
   }
 
@@ -219,15 +222,17 @@ export class VisualiserController {
   @Get('events')
   @ApiOperation({
     summary: 'Cursor-based event delta feed for the visualiser bridge',
-    description: 'Returns protocol events at block.timestamp >= since, ordered ascending. The bridge polls this with the cursor returned by the previous call. Optional kind/agent/fasset filters narrow the feed for clients that only need a slice (e.g. an agent-detail page).'
+    description: 'Returns protocol events at or after the cursor (since, since_block), ordered ascending. Pass back both cursor.timestamp and cursor.blockIndex from the previous response as since and since_block to advance strictly past the boundary; without since_block the boundary timestamp\'s events are re-emitted (inclusive). Optional kind/agent/fasset filters narrow the feed.'
   })
   @ApiQuery({ name: 'since', type: Number, required: false, description: 'Unix timestamp seconds; defaults to now-300' })
+  @ApiQuery({ name: 'since_block', type: Number, required: false, description: 'Tiebreaker for events sharing the boundary timestamp; pass back cursor.blockIndex' })
   @ApiQuery({ name: 'limit', type: Number, required: false, description: 'Max events to return (cap 500)' })
   @ApiQuery({ name: 'kind', type: String, required: false, description: 'Comma-separated VisualiserEventKind values; only matching kinds are fetched' })
   @ApiQuery({ name: 'agent', type: String, required: false, description: 'Agent vault address; events not bound to this vault are filtered out' })
   @ApiQuery({ name: 'fasset', type: String, required: false, description: 'FAsset symbol (FXRP, FBTC, ...)' })
   getEvents(
     @Query('since', new ParseIntPipe({ optional: true })) since?: number,
+    @Query('since_block', new ParseIntPipe({ optional: true })) sinceBlock?: number,
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
     @Query('kind') kind?: string,
     @Query('agent') agent?: string,
@@ -240,7 +245,8 @@ export class VisualiserController {
     return apiResponse(this.service.eventsSince(sinceTs, limit ?? 200, {
       kinds,
       agentVault: agent,
-      fasset: fasset as FAsset | undefined
+      fasset: fasset as FAsset | undefined,
+      sinceBlock
     }), 200)
   }
 }

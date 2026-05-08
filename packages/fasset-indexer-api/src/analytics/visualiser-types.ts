@@ -223,11 +223,8 @@ export interface VisualiserEventFeed {
 
 // bundled snapshots
 
-export interface SceneSnapshot {
-  overview: SystemOverview
+export interface SceneSnapshot extends SystemOverview {
   agents: AgentOverview[]
-  mintings: ActiveMinting[]
-  redemptions: ActiveRedemption[]
 }
 
 export interface AgentState {
