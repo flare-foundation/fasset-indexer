@@ -51,3 +51,4 @@ secrets.json
 
 user-data
 .env-docker
+.claude/settings.local.json

@@ -1,11 +1,11 @@
 {
     "events": {
         "logFetchBlockBatchSize": 29,
-        "logFetchCycleSleepMs": 20000,
+        "logFetchCycleSleepMs": 2000,
         "logFetchBlockHeightOffset": 10
     },
     "watchdog": {
-        "cycleSleepMs": 60000
+        "cycleSleepMs": 5000
     },
     "indexEvents": [
         "ASSET_MANAGER:AgentVaultCreated",
