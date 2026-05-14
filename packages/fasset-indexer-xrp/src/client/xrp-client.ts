@@ -86,7 +86,7 @@ export class XrpClient {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
     const apiKey = this.config.xrpRpcApiKey
     if (apiKey) {
-      headers['X_API_KEY'] = apiKey
+      headers['X-API-KEY'] = apiKey
       headers['x-apikey'] = apiKey
     }
     const resp = await fetch(this.config.xrpRpcUrl, {
