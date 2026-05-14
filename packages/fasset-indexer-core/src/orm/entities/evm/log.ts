@@ -20,7 +20,7 @@ export class EvmLog {
   @ManyToOne({ entity: () => EvmAddress })
   address!: EvmAddress
 
-  @ManyToOne({ entity: () => EvmTransaction })
+  @ManyToOne({ entity: () => EvmTransaction, index: true })
   transaction!: EvmTransaction
 
   @ManyToOne({ entity: () => EvmBlock })
