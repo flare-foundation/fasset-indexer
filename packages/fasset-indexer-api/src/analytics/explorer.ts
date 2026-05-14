@@ -239,137 +239,164 @@ export class ExplorerAnalytics extends SharedAnalytics {
   protected async mintingEventDetails(
     em: EntityManager, collateralReserved: Entities.CollateralReserved
   ): Promise<ExplorerType.MintEventDetails> {
-    const underlyingTransaction = await this.getUnderlyingTransaction(
-      em, collateralReserved.fasset,
-      collateralReserved.paymentReference,
-      { transaction: { target: collateralReserved.paymentAddress }}
-    )
+    let resolutionPromise: Promise<Entities.MintingExecuted | Entities.MintingPaymentDefault | Entities.CollateralReservationDeleted | undefined>
+      = Promise.resolve(undefined)
+    if (collateralReserved.resolution == core.CollateralReservationResolution.EXECUTED) {
+      resolutionPromise = em.findOneOrFail(Entities.MintingExecuted,
+        { collateralReserved }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
+    } else if (collateralReserved.resolution == core.CollateralReservationResolution.DEFAULTED) {
+      resolutionPromise = em.findOneOrFail(Entities.MintingPaymentDefault,
+        { collateralReserved }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
+    } else if (collateralReserved.resolution == core.CollateralReservationResolution.DELETED) {
+      resolutionPromise = em.findOneOrFail(Entities.CollateralReservationDeleted,
+        { collateralReserved }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
+    }
+    const [underlyingTransaction, resolution] = await Promise.all([
+      this.getUnderlyingTransaction(
+        em, collateralReserved.fasset,
+        collateralReserved.paymentReference,
+        { transaction: { target: collateralReserved.paymentAddress }}
+      ),
+      resolutionPromise
+    ])
     const resp: ExplorerType.MintEventDetails = {
       events: { original: collateralReserved }, underlyingTransaction
     }
-    if (collateralReserved.resolution == core.CollateralReservationResolution.EXECUTED) {
-      resp.events.resolution = await em.findOneOrFail(Entities.MintingExecuted,
-        { collateralReserved }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] } )
-    } else if (collateralReserved.resolution == core.CollateralReservationResolution.DEFAULTED) {
-      resp.events.resolution = await em.findOneOrFail(Entities.MintingPaymentDefault,
-        { collateralReserved }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] } )
-    } else if (collateralReserved.resolution == core.CollateralReservationResolution.DELETED) {
-      resp.events.resolution = await em.findOneOrFail(Entities.CollateralReservationDeleted,
-      { collateralReserved }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    }
+    if (resolution != null) resp.events.resolution = resolution
     return resp
   }
 
   protected async redemptionEventDetails(
     em: EntityManager, redemptionRequested: Entities.RedemptionRequested
   ): Promise<ExplorerType.RedeemEventDetails> {
-    const underlyingTransaction = await this.getUnderlyingTransaction(
-      em, redemptionRequested.fasset,
-      redemptionRequested.paymentReference,
-      { transaction: {
-        source: redemptionRequested.agentVault.underlyingAddress,
-        target: redemptionRequested.paymentAddress
-      }}
-    )
+    let resolutionPromise: Promise<Entities.RedemptionPerformed | Entities.RedemptionDefault | Entities.RedemptionRejected | Entities.RedemptionPaymentBlocked | Entities.RedemptionPaymentFailed | undefined>
+      = Promise.resolve(undefined)
+    if (redemptionRequested.resolution == core.RedemptionResolution.PERFORMED) {
+      resolutionPromise = em.findOneOrFail(Entities.RedemptionPerformed,
+        { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
+    } else if (redemptionRequested.resolution == core.RedemptionResolution.DEFAULTED) {
+      resolutionPromise = em.findOneOrFail(Entities.RedemptionDefault,
+        { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
+    } else if (redemptionRequested.resolution == core.RedemptionResolution.REJECTED) {
+      resolutionPromise = em.findOneOrFail(Entities.RedemptionRejected,
+        { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
+    } else if (redemptionRequested.resolution == core.RedemptionResolution.BLOCKED) {
+      resolutionPromise = em.findOneOrFail(Entities.RedemptionPaymentBlocked,
+        { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
+    } else if (redemptionRequested.resolution == core.RedemptionResolution.FAILED) {
+      resolutionPromise = em.findOneOrFail(Entities.RedemptionPaymentFailed,
+        { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
+    }
+    const [underlyingTransaction, resolution] = await Promise.all([
+      this.getUnderlyingTransaction(
+        em, redemptionRequested.fasset,
+        redemptionRequested.paymentReference,
+        { transaction: {
+          source: redemptionRequested.agentVault.underlyingAddress,
+          target: redemptionRequested.paymentAddress
+        }}
+      ),
+      resolutionPromise
+    ])
     const resp: ExplorerType.RedeemEventDetails = {
       events: { original: redemptionRequested }, underlyingTransaction
     }
-    // find resolution event
-    if (redemptionRequested.resolution == core.RedemptionResolution.PERFORMED) {
-      resp.events.resolution = await em.findOneOrFail(Entities.RedemptionPerformed,
-        { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    } else if (redemptionRequested.resolution == core.RedemptionResolution.DEFAULTED) {
-      resp.events.resolution = await em.findOneOrFail(Entities.RedemptionDefault,
-        { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    } else if (redemptionRequested.resolution == core.RedemptionResolution.REJECTED) {
-      resp.events.resolution = await em.findOneOrFail(Entities.RedemptionRejected,
-        { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    } else if (redemptionRequested.resolution == core.RedemptionResolution.BLOCKED) {
-      resp.events.resolution = await em.findOneOrFail(Entities.RedemptionPaymentBlocked,
-        { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    } else if (redemptionRequested.resolution == core.RedemptionResolution.FAILED) {
-      resp.events.resolution = await em.findOneOrFail(Entities.RedemptionPaymentFailed,
-      { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    }
+    if (resolution != null) resp.events.resolution = resolution
     return resp
   }
 
   protected async transferToCoreVaultEventDetails(
     em: EntityManager, transferToCoreVaultStarted: Entities.TransferToCoreVaultStarted
   ): Promise<ExplorerType.TransferToCoreVaultEventDetails> {
-    const redemptionRequested = await em.findOneOrFail(Entities.RedemptionRequested, {
+    let resolutionPromise: Promise<Entities.TransferToCoreVaultSuccessful | Entities.TransferToCoreVaultDefaulted | undefined>
+      = Promise.resolve(undefined)
+    if (transferToCoreVaultStarted.resolution == core.TransferToCoreVaultResolution.SUCCESSFUL) {
+      resolutionPromise = em.findOneOrFail(Entities.TransferToCoreVaultSuccessful,
+        { transferToCoreVaultStarted }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
+    } else if (transferToCoreVaultStarted.resolution == core.TransferToCoreVaultResolution.DEFAULTED) {
+      resolutionPromise = em.findOneOrFail(Entities.TransferToCoreVaultDefaulted,
+        { transferToCoreVaultStarted }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
+    }
+    const underlyingTransactionPromise = em.findOneOrFail(Entities.RedemptionRequested, {
       fasset: transferToCoreVaultStarted.fasset,
       requestId: transferToCoreVaultStarted.transferRedemptionRequestId
-    }, { populate: [ 'paymentAddress' ] })
-    const underlyingTransaction = await this.getUnderlyingTransaction(
-      em, transferToCoreVaultStarted.fasset,
-      redemptionRequested.paymentReference,
-      { transaction: {
-        source: transferToCoreVaultStarted.agentVault.underlyingAddress,
-        target: redemptionRequested.paymentAddress
-      }}
+    }, { populate: [ 'paymentAddress' ] }).then(redemptionRequested =>
+      this.getUnderlyingTransaction(
+        em, transferToCoreVaultStarted.fasset,
+        redemptionRequested.paymentReference,
+        { transaction: {
+          source: transferToCoreVaultStarted.agentVault.underlyingAddress,
+          target: redemptionRequested.paymentAddress
+        }}
+      )
     )
+    const [underlyingTransaction, resolution] = await Promise.all([
+      underlyingTransactionPromise, resolutionPromise
+    ])
     const resp: ExplorerType.TransferToCoreVaultEventDetails = {
       events: { original: transferToCoreVaultStarted }, underlyingTransaction
     }
-    // find resolution event
-    if (transferToCoreVaultStarted.resolution == core.TransferToCoreVaultResolution.SUCCESSFUL) {
-      resp.events.resolution = await em.findOneOrFail(Entities.TransferToCoreVaultSuccessful,
-        { transferToCoreVaultStarted }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    } else if (transferToCoreVaultStarted.resolution == core.TransferToCoreVaultResolution.DEFAULTED) {
-      resp.events.resolution = await em.findOneOrFail(Entities.TransferToCoreVaultDefaulted,
-        { transferToCoreVaultStarted }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    }
+    if (resolution != null) resp.events.resolution = resolution
     return resp
   }
 
   protected async returnFromCoreVaultEventDetails(
     em: EntityManager, returnFromCoreVaultRequested: Entities.ReturnFromCoreVaultRequested
   ): Promise<ExplorerType.ReturnFromCoreVaultEventDetails> {
-    const coreVault = await this.getCoreVaultAddress(em, returnFromCoreVaultRequested.fasset)
-    const underlyingTransaction = await this.getUnderlyingTransaction(
-      em, returnFromCoreVaultRequested.fasset,
-      returnFromCoreVaultRequested.paymentReference,
-      { transaction: {
-        source: { text: coreVault },
-        target: returnFromCoreVaultRequested.agentVault.underlyingAddress
-      }}
-    )
+    let resolutionPromise: Promise<Entities.ReturnFromCoreVaultConfirmed | Entities.ReturnFromCoreVaultCancelled | undefined>
+      = Promise.resolve(undefined)
+    if (returnFromCoreVaultRequested.resolution == core.ReturnFromCoreVaultResolution.CONFIRMED) {
+      resolutionPromise = em.findOneOrFail(Entities.ReturnFromCoreVaultConfirmed,
+        { returnFromCoreVaultRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
+    } else if (returnFromCoreVaultRequested.resolution == core.ReturnFromCoreVaultResolution.CANCELLED) {
+      resolutionPromise = em.findOneOrFail(Entities.ReturnFromCoreVaultCancelled,
+        { returnFromCoreVaultRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
+    }
+    const underlyingTransactionPromise = this.getCoreVaultAddress(em, returnFromCoreVaultRequested.fasset)
+      .then(coreVault => this.getUnderlyingTransaction(
+        em, returnFromCoreVaultRequested.fasset,
+        returnFromCoreVaultRequested.paymentReference,
+        { transaction: {
+          source: { text: coreVault },
+          target: returnFromCoreVaultRequested.agentVault.underlyingAddress
+        }}
+      ))
+    const [underlyingTransaction, resolution] = await Promise.all([
+      underlyingTransactionPromise, resolutionPromise
+    ])
     const resp: ExplorerType.ReturnFromCoreVaultEventDetails = {
       events: { original: returnFromCoreVaultRequested }, underlyingTransaction
     }
-    // find resolution event
-    if (returnFromCoreVaultRequested.resolution == core.ReturnFromCoreVaultResolution.CONFIRMED) {
-      resp.events.resolution = await em.findOneOrFail(Entities.ReturnFromCoreVaultConfirmed,
-        { returnFromCoreVaultRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    } else if (returnFromCoreVaultRequested.resolution == core.ReturnFromCoreVaultResolution.CANCELLED) {
-      resp.events.resolution = await em.findOneOrFail(Entities.ReturnFromCoreVaultCancelled,
-        { returnFromCoreVaultRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    }
+    if (resolution != null) resp.events.resolution = resolution
     return resp
   }
 
   protected async underlyingWithdrawalEventDetails(
     em: EntityManager, underlyingWithdrawalAnnounced: Entities.UnderlyingWithdrawalAnnounced
   ): Promise<ExplorerType.WithdrawalEventDetails> {
-    const underlyingTransaction = await this.getUnderlyingTransaction(
-      em, underlyingWithdrawalAnnounced.fasset,
-      underlyingWithdrawalAnnounced.paymentReference,
-      { transaction: {
-        source: underlyingWithdrawalAnnounced.agentVault.underlyingAddress
-      }}
-    )
+    let resolutionPromise: Promise<Entities.UnderlyingWithdrawalConfirmed | Entities.UnderlyingWithdrawalCancelled | null | undefined>
+      = Promise.resolve(undefined)
+    if (underlyingWithdrawalAnnounced.resolution == core.UnderlyingWithdrawalResolution.CONFIRMED) {
+      resolutionPromise = em.findOne(Entities.UnderlyingWithdrawalConfirmed,
+        { underlyingWithdrawalAnnounced }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
+    } else if (underlyingWithdrawalAnnounced.resolution == core.UnderlyingWithdrawalResolution.CANCELLED) {
+      resolutionPromise = em.findOne(Entities.UnderlyingWithdrawalCancelled,
+        { underlyingWithdrawalAnnounced }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
+    }
+    const [underlyingTransaction, resolution] = await Promise.all([
+      this.getUnderlyingTransaction(
+        em, underlyingWithdrawalAnnounced.fasset,
+        underlyingWithdrawalAnnounced.paymentReference,
+        { transaction: {
+          source: underlyingWithdrawalAnnounced.agentVault.underlyingAddress
+        }}
+      ),
+      resolutionPromise
+    ])
     const resp: ExplorerType.WithdrawalEventDetails = {
       events: { original: underlyingWithdrawalAnnounced }, underlyingTransaction
     }
-    // find resolution event
-    if (underlyingWithdrawalAnnounced.resolution == core.UnderlyingWithdrawalResolution.CONFIRMED) {
-      resp.events.resolution = await em.findOne(Entities.UnderlyingWithdrawalConfirmed,
-      { underlyingWithdrawalAnnounced }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    } else if (underlyingWithdrawalAnnounced.resolution == core.UnderlyingWithdrawalResolution.CANCELLED) {
-      resp.events.resolution = await em.findOne(Entities.UnderlyingWithdrawalCancelled,
-        { underlyingWithdrawalAnnounced }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    }
+    if (resolution != null) resp.events.resolution = resolution
     return resp
   }
 
