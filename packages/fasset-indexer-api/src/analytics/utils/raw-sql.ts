@@ -149,12 +149,16 @@ const explorerTransactionsUnion = (methods: TransactionType[]) =>
     .map(([, v]) => v)
     .join(' UNION ALL ')
 
+// Sort by evm_log_id rather than evm_block.timestamp / evm_log.block_index: it
+// keeps the inner Sort to a tiny top-N heap instead of an external-merge of all
+// ~90k union rows. evm_log_id is auto-increment in insertion order, which the
+// indexer commits block-by-block, so for new traffic it matches block order.
+// Reindex / backfill can produce a small fraction of out-of-order pairs.
 const explorerTransactionsFilter = (
   user: boolean, agent: boolean,
   window: boolean, status: boolean
 ) => `
-JOIN evm_log eli ON eli.id = ti.evm_log_id
-JOIN evm_block ebi ON ebi.index = eli.block_index
+${window ? 'JOIN evm_log eli ON eli.id = ti.evm_log_id JOIN evm_block ebi ON ebi.index = eli.block_index' : ''}
 ${user ? 'JOIN evm_address eaui ON eaui.id = ti.user_id' : ''}
 ${agent ? 'JOIN evm_address eaai ON eaai.id = ti.agent_vault_address_id' : ''}
 WHERE 1=1
@@ -176,10 +180,10 @@ SELECT
   am.name as agent_name, eau.hex as user, eao.hex as source,
   t.value_uba, t.resolution, ur.id as underlying_payment
 FROM (
-  SELECT ti.evm_log_id, ti.agent_vault_address_id, ti.value_uba, ti.user_id, ti.resolution, ti.payment_reference, eli.block_index
+  SELECT ti.evm_log_id, ti.agent_vault_address_id, ti.value_uba, ti.user_id, ti.resolution, ti.payment_reference
   FROM (${explorerTransactionsUnion(methods)}) ti
   ${explorerTransactionsFilter(user, agent, window, status)}
-  ORDER BY eli.block_index ${asc ? 'ASC' : 'DESC'}
+  ORDER BY ti.evm_log_id ${asc ? 'ASC' : 'DESC'}
   LIMIT ? OFFSET ?
 ) t
 JOIN evm_log el ON el.id = t.evm_log_id
@@ -198,7 +202,7 @@ LEFT JOIN LATERAL (
   ORDER BY ur.id ASC
   LIMIT 1
 ) ur ON true
-ORDER BY t.block_index ${asc ? 'ASC' : 'DESC'}
+ORDER BY t.evm_log_id ${asc ? 'ASC' : 'DESC'}
 `
 
 export const EXPLORER_TRANSACTIONS_COUNT = (
