@@ -147,7 +147,8 @@ export class ExplorerAnalytics extends SharedAnalytics {
           'redeemer', 'paymentAddress', 'executor'
         ] }),
       em.find(Entities.RedemptionRequestIncomplete,
-        { evmLog: { transaction: { hash } }}, { populate: [ 'evmLog.block', 'redeemer' ] })
+        { evmLog: { transaction: { hash } }},
+        { populate: [ 'evmLog.block', 'redeemer' ] })
     ])
     const flows = await Promise.all(
       redemptionRequests.map(rr => this.redemptionEventDetails(em, rr))
@@ -196,7 +197,7 @@ export class ExplorerAnalytics extends SharedAnalytics {
       { evmLog: { transaction: { hash }} }, { populate: [
         'evmLog.block', 'evmLog.transaction.source',
         'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
-      ]}
+      ] }
     )
     const flows = await Promise.all(
       selfMints.map(s => this.selfMintEventDetails(em, s))
@@ -212,7 +213,7 @@ export class ExplorerAnalytics extends SharedAnalytics {
       { evmLog: { transaction: { hash }}}, { populate: [
         'evmLog.block', 'evmLog.transaction.source',
         'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
-      ]}
+      ] }
     )
     const flows = await Promise.all(
       topups.map(t => this.underlyingBalanceToppedUpEventDetails(em, t))
@@ -228,7 +229,7 @@ export class ExplorerAnalytics extends SharedAnalytics {
       { evmLog: { transaction: { hash }} }, { populate: [
         'evmLog.block', 'evmLog.transaction.source',
         'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
-      ]})
+      ] })
     const flows = await Promise.all(
       withdrawals.map(w => this.underlyingWithdrawalEventDetails(em, w))
     )
@@ -248,10 +249,10 @@ export class ExplorerAnalytics extends SharedAnalytics {
     }
     if (collateralReserved.resolution == core.CollateralReservationResolution.EXECUTED) {
       resp.events.resolution = await em.findOneOrFail(Entities.MintingExecuted,
-        { collateralReserved }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ]} )
+        { collateralReserved }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] } )
     } else if (collateralReserved.resolution == core.CollateralReservationResolution.DEFAULTED) {
       resp.events.resolution = await em.findOneOrFail(Entities.MintingPaymentDefault,
-        { collateralReserved }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ]} )
+        { collateralReserved }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] } )
     } else if (collateralReserved.resolution == core.CollateralReservationResolution.DELETED) {
       resp.events.resolution = await em.findOneOrFail(Entities.CollateralReservationDeleted,
       { collateralReserved }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
@@ -282,7 +283,7 @@ export class ExplorerAnalytics extends SharedAnalytics {
         { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
     } else if (redemptionRequested.resolution == core.RedemptionResolution.REJECTED) {
       resp.events.resolution = await em.findOneOrFail(Entities.RedemptionRejected,
-        { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ]})
+        { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
     } else if (redemptionRequested.resolution == core.RedemptionResolution.BLOCKED) {
       resp.events.resolution = await em.findOneOrFail(Entities.RedemptionPaymentBlocked,
         { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
@@ -299,7 +300,7 @@ export class ExplorerAnalytics extends SharedAnalytics {
     const redemptionRequested = await em.findOneOrFail(Entities.RedemptionRequested, {
       fasset: transferToCoreVaultStarted.fasset,
       requestId: transferToCoreVaultStarted.transferRedemptionRequestId
-    }, { populate: [ 'paymentAddress' ]})
+    }, { populate: [ 'paymentAddress' ] })
     const underlyingTransaction = await this.getUnderlyingTransaction(
       em, transferToCoreVaultStarted.fasset,
       redemptionRequested.paymentReference,
@@ -317,7 +318,7 @@ export class ExplorerAnalytics extends SharedAnalytics {
         { transferToCoreVaultStarted }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
     } else if (transferToCoreVaultStarted.resolution == core.TransferToCoreVaultResolution.DEFAULTED) {
       resp.events.resolution = await em.findOneOrFail(Entities.TransferToCoreVaultDefaulted,
-        { transferToCoreVaultStarted }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] } )
+        { transferToCoreVaultStarted }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
     }
     return resp
   }
@@ -391,7 +392,8 @@ export class ExplorerAnalytics extends SharedAnalytics {
   ): Promise<ExplorerType.BalanceTopupEventDetails> {
     const hash = underlyingTopup.transactionHash.slice(2).toUpperCase()
     const underlyingTransaction = await em.findOneOrFail(Entities.UnderlyingReference,
-      { transaction: { hash }}, { populate: [ 'transaction.block', 'transaction.source', 'transaction.target' ] })
+      { transaction: { hash }},
+      { populate: [ 'transaction.block', 'transaction.source', 'transaction.target' ] })
     return { events: { original: underlyingTopup }, underlyingTransaction }
   }
 
@@ -405,7 +407,7 @@ export class ExplorerAnalytics extends SharedAnalytics {
   }
 
   protected async nativeTransactionClassification(em: EntityManager, hash: string): Promise<ExplorerType.GenericTransactionClassification> {
-    const logs = await em.find(Entities.EvmLog, { transaction: { hash } }, { populate: [ 'transaction' ]})
+    const logs = await em.find(Entities.EvmLog, { transaction: { hash } }, { populate: [ 'transaction' ] })
     const classified = await Promise.all(logs.map(async log => {
       const oglog = await this.nativeEventClassification(em, log)
       if (oglog == null) return null
@@ -435,11 +437,11 @@ export class ExplorerAnalytics extends SharedAnalytics {
         return log
       case EVENTS.ASSET_MANAGER.TRANSFER_TO_CORE_VAULT_SUCCESSFUL:
         return em.findOneOrFail(Entities.TransferToCoreVaultSuccessful,
-          { evmLog: log }, { populate: [ 'transferToCoreVaultStarted.evmLog.transaction' ]}
+          { evmLog: log }, { populate: [ 'transferToCoreVaultStarted.evmLog.transaction' ] }
         ).then(x => x.transferToCoreVaultStarted.evmLog)
       case EVENTS.ASSET_MANAGER.TRANSFER_TO_CORE_VAULT_DEFAULTED:
         return em.findOneOrFail(Entities.TransferToCoreVaultDefaulted,
-          { evmLog: log }, { populate: [ 'transferToCoreVaultStarted.evmLog.transaction' ]}
+          { evmLog: log }, { populate: [ 'transferToCoreVaultStarted.evmLog.transaction' ] }
         ).then(x => x.transferToCoreVaultStarted.evmLog)
       case EVENTS.ASSET_MANAGER.RETURN_FROM_CORE_VAULT_CONFIRMED:
         return em.findOneOrFail(Entities.ReturnFromCoreVaultConfirmed,
@@ -516,14 +518,14 @@ export class ExplorerAnalytics extends SharedAnalytics {
           { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ] })
       } else if (PaymentReference.isRedeemFromCoreVault(reference.reference)) {
         oglog = await em.findOneOrFail(Entities.CoreVaultRedemptionRequested,
-          { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ]})
+          { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ] })
       } else if (PaymentReference.isWithdrawal(reference.reference)) {
         oglog = await em.findOneOrFail(Entities.UnderlyingWithdrawalAnnounced,
-          { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ]})
+          { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ] })
       } else if (PaymentReference.isTopup(reference.reference)) {
         const transactionHash = '0x' + hash.toLowerCase()
         oglog = await em.findOneOrFail(Entities.UnderlyingBalanceToppedUp,
-          { transactionHash, fasset }, { populate: [ 'evmLog.transaction' ]})
+          { transactionHash, fasset }, { populate: [ 'evmLog.transaction' ] })
       } else if (PaymentReference.isSelfMint(reference.reference)) {
         const hex = PaymentReference.decodeAddress(reference.reference)
         const resp = await em.createQueryBuilder(Entities.SelfMint, 'sm')

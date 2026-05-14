@@ -1,3 +1,4 @@
+import { LoadStrategy } from "@mikro-orm/core"
 import { createOrm, getVar, type ORM } from "fasset-indexer-core/orm"
 import type { ApiConfigLoader } from "./config"
 
@@ -10,7 +11,7 @@ export class ApiContext {
     ) {}
 
     static async create(loader: ApiConfigLoader): Promise<ApiContext> {
-      const orm = await createOrm(loader.dbConfig, 'safe')
+      const orm = await createOrm({ ...loader.dbConfig, loadStrategy: LoadStrategy.JOINED }, 'safe')
       const chain = await this.getChain(orm)
       return new ApiContext(loader, orm, chain)
     }
