@@ -41,6 +41,7 @@ services:
     environment:
       <<: *postgres-env
       CHAIN: ${CHAIN}
+      DEPLOYMENT: ${DEPLOYMENT:-}
       RPC_URL: ${RPC_URL}
       RPC_API_KEY: ${RPC_API_KEY:-}
   dogecoin:
