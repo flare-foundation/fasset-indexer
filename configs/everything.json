@@ -128,6 +128,10 @@
         "MASTER_ACCOUNT_CONTROLLER:XrplProviderWalletAdded",
         "MASTER_ACCOUNT_CONTROLLER:XrplProviderWalletRemoved",
         "OFT_ADAPTER:OFTReceived",
-        "OFT_ADAPTER:OFTSent"
+        "OFT_ADAPTER:OFTSent",
+        "MINTING_TAG_MANAGER:MintingTagReserved",
+        "MINTING_TAG_MANAGER:RecipientChanged",
+        "MINTING_TAG_MANAGER:AllowedExecutorChangePending",
+        "MINTING_TAG_MANAGER:ReservationFeeChanged"
     ]
 }
