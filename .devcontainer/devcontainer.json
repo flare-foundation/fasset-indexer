@@ -22,7 +22,8 @@
                 "ms-azuretools.vscode-docker",
                 "christian-kohler.path-intellisense",
                 "wayou.vscode-todo-highlight",
-                "pkief.material-icon-theme"
+                "pkief.material-icon-theme",
+                "anthropic.claude-code"
             ],
             "settings": {
                 "[typescript]": {
