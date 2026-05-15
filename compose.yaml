@@ -29,6 +29,7 @@ services:
       REINDEX_TYPE: ${REINDEX_TYPE:-}
       REINDEX_DIFF: ${REINDEX_DIFF:-}
       REINDEX_NAME: ${REINDEX_NAME:-}
+      REINDEX_START_BLOCK: ${REINDEX_START_BLOCK:-}
     volumes:
       - ${CONFIG_PATH}:/usr/src/app/config.json
   watchdog:

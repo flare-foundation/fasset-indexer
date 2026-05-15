@@ -14,10 +14,11 @@ export class EventIndexerParallelBackPopulation {
     context: Context,
     backInsertionEvents: string[],
     updateName: string,
-    frontInsertionEvents: string[]
+    frontInsertionEvents: string[],
+    startBlock?: number
   ) {
     this.indexer = new EventIndexer(context, frontInsertionEvents)
-    this.backIndexer = new EventIndexerBackPopulation(context, backInsertionEvents, updateName)
+    this.backIndexer = new EventIndexerBackPopulation(context, backInsertionEvents, updateName, startBlock)
   }
 
   async run(): Promise<EventIndexer | void> {

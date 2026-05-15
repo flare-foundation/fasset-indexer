@@ -28,7 +28,8 @@ If new events want to be added to tracking without stopping the indexer, you sho
     -  Back indexer spawns two indexers, one indexing missing events from the beginning to the block last indexed by the previous indexer instance. The second indexer indexes all (including new) events from the previous.
     - Race indexer spawns three indexers. First indexes missing events from the beginning, racing with the second indexer that indexes non-new events. When the first indexer catches the second one, the third indexes takes over indexing all events. This is required due to cross-event dependencies (e.g. redemption performed has a redemption requested foreign key).
 - **REINDEX_DIFF**: list of new event names;
-- **REINDEX_NAME**: a unique name of the specific reindexing process.
+- **REINDEX_NAME**: a unique name of the specific reindexing process;
+- **REINDEX_START_BLOCK** (optional): block number from which the back/race indexer starts back-population when there is no prior progress recorded for this `REINDEX_NAME`. Defaults to the chain's `minEvmBlockNumber` DB var.
 
 Additional optional dev settings:
 - **CONFIG_PATH**: should be set to a json file containing a list of indexed event names, see `./configs/everything.json`;

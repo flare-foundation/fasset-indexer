@@ -127,7 +127,12 @@ export class ConfigLoader {
     }
     const diff = this.required('REINDEX_DIFF')
     const name = this.required('REINDEX_NAME')
-    return { type, diff: diff.split(','), name }
+    const rawStartBlock = process.env.REINDEX_START_BLOCK
+    const startBlock = this.isNull(rawStartBlock) ? undefined : parseInt(rawStartBlock!)
+    if (startBlock !== undefined && Number.isNaN(startBlock)) {
+      throw new Error(`REINDEX_START_BLOCK must be an integer, got "${rawStartBlock}"`)
+    }
+    return { type, diff: diff.split(','), name, startBlock }
   }
 
   protected get json(): ConfigJson | undefined {

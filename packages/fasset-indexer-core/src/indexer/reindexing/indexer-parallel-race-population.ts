@@ -17,7 +17,8 @@ export class EventIndexerParallelRacePopulation {
     context: Context,
     backInsertionEvents: string[],
     updateName: string,
-    frontInsertionEvents: string[]
+    frontInsertionEvents: string[],
+    public readonly startBlock?: number
   ) {
     this.frontIndexer = new EventIndexer(context, frontInsertionEvents)
     const firstUnhandledEventBlockName = raceUpdateFirstUnhandledBlockName(updateName)
@@ -33,13 +34,13 @@ export class EventIndexerParallelRacePopulation {
       return this.indexer
     }
     // try to catch front-indexer with back-indexer's limited steps
-    let firstUnhandledBlockBack = await this.backIndexer.firstUnhandledBlock()
+    let firstUnhandledBlockBack = await this.backIndexer.firstUnhandledBlock(this.startBlock)
     const firstUnhandledBlockFront = await this.frontIndexer.firstUnhandledBlock()
     if (firstUnhandledBlockBack < firstUnhandledBlockFront) {
       const endblock = Math.min(firstUnhandledBlockBack + BLOCK_INDEX_BATCH_NUMBER, firstUnhandledBlockFront)
       await this.backIndexer.runHistoric(firstUnhandledBlockBack, endblock - 1)
     }
-    firstUnhandledBlockBack = await this.backIndexer.firstUnhandledBlock()
+    firstUnhandledBlockBack = await this.backIndexer.firstUnhandledBlock(this.startBlock)
     if (firstUnhandledBlockBack >= firstUnhandledBlockFront) {
       await setVar(this.frontIndexer.context.orm.em.fork(), this.updateSynced, 'true')
       return this.indexer

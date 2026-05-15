@@ -8,7 +8,12 @@ export class EventIndexerBackPopulation extends EventIndexer {
   protected lastEventBlockForCurrentUpdateKey: string
   protected firstUnhandledEventBlockForCurrentUpdateKey: string
 
-  constructor(context: Context, public insertionEvents: string[], public updateName: string) {
+  constructor(
+    context: Context,
+    public insertionEvents: string[],
+    public updateName: string,
+    public readonly startBlock?: number
+  ) {
     super(context, insertionEvents)
     this.lastEventBlockForCurrentUpdateKey = backUpdateLastBlockName(updateName)
     this.firstUnhandledEventBlockForCurrentUpdateKey = backUpdateFirstUnhandledBlockName(updateName)
@@ -26,8 +31,9 @@ export class EventIndexerBackPopulation extends EventIndexer {
 
   override async firstUnhandledBlock(): Promise<number> {
     const firstUnhandled = await getVar(this.context.orm.em.fork(), this.firstUnhandledEventBlockForCurrentUpdateKey)
-    const aux = firstUnhandled !== null ? parseInt(firstUnhandled.value!) : await this.minBlockNumber()
-    return firstUnhandled !== null ? aux : await this.minBlockNumber()
+    if (firstUnhandled !== null) return parseInt(firstUnhandled.value!)
+    if (this.startBlock !== undefined) return this.startBlock
+    return this.minBlockNumber()
   }
 
   override async setFirstUnhandledBlock(blockNumber: number): Promise<void> {

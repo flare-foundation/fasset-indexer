@@ -20,4 +20,5 @@ export interface ReindexConfig {
   type: "back" | "race"
   diff: string[]
   name: string
+  startBlock?: number
 }
