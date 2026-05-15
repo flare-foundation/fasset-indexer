@@ -5,6 +5,11 @@
     "address": "0x0000000000000000000000000000000000000000"
   },
   {
+    "name": "MintingTagManager",
+    "contractName": "MintingTagManagerProxy.sol",
+    "address": "0x0000000000000000000000000000000000000000"
+  },
+  {
     "name": "FAssetOFTAdapter",
     "contractName": "FAssetOFTAdapter.sol",
     "address": "0x0000000000000000000000000000000000000000"

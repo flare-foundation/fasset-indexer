@@ -5,6 +5,11 @@
     "address": "0x434936d47503353f06750Db1A444DBDC5F0AD37c"
   },
   {
+    "name": "MintingTagManager",
+    "contractName": "MintingTagManagerProxy.sol",
+    "address": "0x094511737909b626391106bBc21B25feb2D67B96"
+  },
+  {
     "name": "FAssetOFTAdapter",
     "contractName": "FAssetOFTAdapter.sol",
     "address": "0xCd3d2127935Ae82Af54Fc31cCD9D3440dbF46639"
