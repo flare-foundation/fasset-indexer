@@ -19,12 +19,12 @@ export class ContractLookup extends EventInterface {
   public fassetTokens: string[] = []
   public contractInfos!: ContractInfo[]
 
-  constructor(public readonly chain: string, file?: string) {
+  constructor(public readonly chain: string, file?: string, deployment?: string) {
     if (ContractLookup.singleton !== null) {
       return ContractLookup.singleton
     }
     super()
-    this.contractInfos = getContractInfo(chain, file)
+    this.contractInfos = getContractInfo(chain, file, deployment)
     // populate caches for faster lookups
     this.populateContractMap()
     this.populateFAssetTypeToAssetManagerCache()

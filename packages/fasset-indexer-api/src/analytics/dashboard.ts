@@ -31,8 +31,8 @@ export class DashboardAnalytics extends SharedAnalytics {
   private statistics: AgentStatistics
   private zeroAddressId: number | null = null
 
-  constructor(public readonly orm: ORM, public readonly chain: string, addressesJson?: string) {
-    const lookup = new ContractLookup(chain, addressesJson)
+  constructor(public readonly orm: ORM, public readonly chain: string, addressesJson?: string, deployment?: string) {
+    const lookup = new ContractLookup(chain, addressesJson, deployment)
     const fassets = FASSETS.filter(x => lookup.supportsFAsset(FAssetType[x]))
     super(orm, fassets)
     this.price = new FAssetPriceLoader()

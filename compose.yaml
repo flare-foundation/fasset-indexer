@@ -23,6 +23,7 @@ services:
     environment:
       <<: *postgres-env
       CHAIN: ${CHAIN}
+      DEPLOYMENT: ${DEPLOYMENT:-}
       RPC_URL: ${RPC_URL}
       RPC_API_KEY: ${RPC_API_KEY:-}
       CONFIG_PATH: /usr/src/app/config.json
@@ -73,6 +74,7 @@ services:
     command: ["node", "/app/packages/fasset-indexer-api/dist/src/main"]
     environment:
       <<: *postgres-env
+      DEPLOYMENT: ${DEPLOYMENT:-}
       API_ROOT_PATH: ${API_ROOT_PATH:-}
     ports:
       - "${API_PORT}:3000"

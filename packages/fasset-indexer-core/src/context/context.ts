@@ -23,7 +23,7 @@ export class Context extends ContractLookup {
   }
 
   constructor(public config: ConfigLoader, public orm: ORM) {
-    super(config.chain, config.addressesJson)
+    super(config.chain, config.addressesJson, config.deployment)
     this.provider = this.getEthersApiProvider(config.rpcUrl, config.rpcApiKey)
     this.contracts = {
       agentOwnerRegistry: this.getAgentOwnerRegistryContract(),

@@ -52,6 +52,11 @@ export class ConfigLoader {
     return this.required('CHAIN')
   }
 
+  get deployment(): string | undefined {
+    const value = process.env.DEPLOYMENT
+    return this.isNull(value) ? undefined : value
+  }
+
   get rpcUrl(): string {
     return this.required('RPC_URL')
   }
@@ -61,7 +66,7 @@ export class ConfigLoader {
   }
 
   get contractInfo(): ContractInfo[] {
-    return getContractInfo(this.chain, this.addressesJson)
+    return getContractInfo(this.chain, this.addressesJson, this.deployment)
   }
 
   get sqliteConfig(): Options<SqliteDriver> {

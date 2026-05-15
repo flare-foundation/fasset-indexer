@@ -13,6 +13,7 @@ If running outside docker, initialize the project by running `yarn install`.
 Needs the following environment variables:
 
 - **CHAIN**: needs to be set to either `coston`, `coston2`, `songbird`, or `flare`;
+- **DEPLOYMENT** (optional): named deployment variant under `chain/`. When set, the indexer loads `chain/${CHAIN}-${DEPLOYMENT}.json` (e.g. `coston2-qa`, `coston2-staging`). Defaults to `chain/${CHAIN}.json`. Ignored when `ADDRESSES_JSON` is set;
 - **RPC_URL**: needs be set to the rpc of the matching chain;
 - **RPC_API_KEY**: should be set to the `x-apikey` or `x-api-key` header value accepted by the rpc;
 - **DB_TYPE**: needs to be set to either `sqlite` or `postgres`;
@@ -58,7 +59,7 @@ Needs the environment variables to establish database connection from the [core 
 - **API_PORT**: needs to be set to the served port;
 - **API_ROOT_PATH**: should be set to a chosen prefix path of the served api.
 
-For dev purposses you can also set **ADDRESSES_JSON** if using non-official FAsset deployment.
+For dev purposes you can also set **ADDRESSES_JSON** if using non-official FAsset deployment, or **DEPLOYMENT** to load a named variant under `chain/` (matching the value used by the indexer).
 
 To run the API, run `yarn run-api`.
 

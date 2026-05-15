@@ -23,9 +23,10 @@ export class ExplorerAnalytics extends SharedAnalytics {
   constructor(
     public readonly orm: ORM,
     public readonly chain: string,
-    addressesJson?: string
+    addressesJson?: string,
+    deployment?: string
   ) {
-    const lookup = new core.ContractLookup(chain, addressesJson)
+    const lookup = new core.ContractLookup(chain, addressesJson, deployment)
     const fassets = core.FASSETS.filter(x => lookup.supportsFAsset(core.FAssetType[x]))
     super(orm, fassets)
     this.lookup = lookup

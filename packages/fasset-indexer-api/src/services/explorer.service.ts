@@ -7,6 +7,6 @@ import type { ApiContext } from '../config/context'
 export class ExplorerService extends ExplorerAnalytics {
 
   constructor(@Inject('apiContext') config: ApiContext) {
-    super(config.orm, config.chain, config.loader.addressesJson)
+    super(config.orm, config.chain, config.loader.addressesJson, config.loader.deployment)
   }
 }
