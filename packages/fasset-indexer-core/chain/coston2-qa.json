@@ -1,0 +1,192 @@
+[
+  {
+    "name": "MintingTagManager",
+    "contractName": "MintingTagManagerProxy.sol",
+    "address": "0x0EdF614097888b936337631584042D545e6848f7"
+  },
+  {
+    "name": "MasterAccountController",
+    "contractName": "MasterAccountControllerProxy.sol",
+    "address": "0x0000000000000000000000000000000000000000"
+  },
+  {
+    "name": "FAssetOFTAdapter",
+    "contractName": "FAssetOFTAdapter.sol",
+    "address": "0x0000000000000000000000000000000000000000"
+  },
+  {
+    "name": "FlareDaemon",
+    "contractName": "FlareDaemon.sol",
+    "address": "0x1000000000000000000000000000000000000002"
+  },
+  {
+    "name": "PriceSubmitter",
+    "contractName": "PriceSubmitter.sol",
+    "address": "0x9179aAB4C8b6Ac1402617eFa0fD130AbFa42c6e4"
+  },
+  {
+    "name": "GovernanceSettings",
+    "contractName": "GovernanceSettings.sol",
+    "address": "0x1000000000000000000000000000000000000007"
+  },
+  {
+    "name": "AddressUpdater",
+    "contractName": "AddressUpdater.sol",
+    "address": "0x707C840D053f28DF75223C151fA7aFa6d7eB3354"
+  },
+  {
+    "name": "Supply",
+    "contractName": "Supply.sol",
+    "address": "0xdd1e652D6318c4Bceb7028851C5435a89C2A17fb"
+  },
+  {
+    "name": "FtsoRewardManager",
+    "contractName": "FtsoRewardManager.sol",
+    "address": "0x7A0bFB85387314d7F8C0FcCD9D9B74A76115c322"
+  },
+  {
+    "name": "CleanupBlockNumberManager",
+    "contractName": "CleanupBlockNumberManager.sol",
+    "address": "0xC80D57cBDBaEd9a2540B9C1D51Ff03a916358e65"
+  },
+  {
+    "name": "FtsoRegistry",
+    "contractName": "FtsoRegistry.sol",
+    "address": "0x48Da21ce34966A64E267CeFb78012C0282D0Ac87"
+  },
+  {
+    "name": "DistributionToDelegatorsMock",
+    "contractName": "DistributionToDelegatorsMock.sol",
+    "address": "0xbd33bDFf04C357F7FC019E72D0504C24CF4Aa010"
+  },
+  {
+    "name": "IncentivePoolAllocation",
+    "contractName": "IncentivePoolAllocation.sol",
+    "address": "0xfaf3bDB0c455ef633A0B61E9424bcbC75FfaE29a"
+  },
+  {
+    "name": "IncentivePool",
+    "contractName": "IncentivePool.sol",
+    "address": "0x6892bDbBb14e1c9bD46Bf31E7BaC94d038fc82a6"
+  },
+  {
+    "name": "FtsoManager",
+    "contractName": "FtsoManager.sol",
+    "address": "0x2675cB89AE83f19cEF8600Eb0E9F2071EDBDf11A"
+  },
+  {
+    "name": "WNat",
+    "contractName": "WNat.sol",
+    "address": "0xC67DCE33D7A8efA5FfEB961899C73fe01bCe9273"
+  },
+  {
+    "name": "WC2FLR",
+    "contractName": "WNat.sol",
+    "address": "0xC67DCE33D7A8efA5FfEB961899C73fe01bCe9273"
+  },
+  {
+    "name": "FlareAssetRegistry",
+    "contractName": "FlareAssetRegistry.sol",
+    "address": "0xC79E6Dc1817DddcB4206a0aDbb56832F476F4b67"
+  },
+  {
+    "name": "WNatRegistryProvider",
+    "contractName": "WNatRegistryProvider.sol",
+    "address": "0x8F438C5Fe273ac88085f5A7813b03cAfb3cAB129"
+  },
+  {
+    "name": "FlareContractRegistry",
+    "contractName": "FlareContractRegistry.sol",
+    "address": "0xaD67FE66660Fb8dFE9d6b1b4240d8650e30F6019"
+  },
+  {
+    "name": "Relay",
+    "contractName": "Relay.sol",
+    "address": "0xa10B672D1c62e5457b17af63d4302add6A99d7dE"
+  },
+  {
+    "name": "FdcHub",
+    "contractName": "FdcHub.sol",
+    "address": "0x48aC463d7975828989331F4De43341627b9c5f1D"
+  },
+  {
+    "name": "FdcVerification",
+    "contractName": "FdcVerification.sol",
+    "address": "0x906507E0B64bcD494Db73bd0459d1C667e14B933"
+  },
+  {
+    "name": "testUSDC",
+    "contractName": "FakeERC20.sol",
+    "address": "0x30e2F4EcC079D4BD7fABc0fA99de93Bc1FEa2244"
+  },
+  {
+    "name": "testUSDT",
+    "contractName": "FakeERC20.sol",
+    "address": "0xf3803ECA2C08E5Be901118BD1A6bCB0Cb01B6d6A"
+  },
+  {
+    "name": "testETH",
+    "contractName": "FakeERC20.sol",
+    "address": "0x07dABfe7fC6f4e88CF1355BD09a2766bF93050cf"
+  },
+  {
+    "name": "testUSDT0",
+    "contractName": "FakeERC20.sol",
+    "address": "0x6F6238Dc0e9Dfa7641589aAe00e1Fbe875Ca5F1B",
+    "mustSwitchToProduction": true
+  },
+  {
+    "name": "PriceReader",
+    "contractName": "FtsoV2PriceStoreProxy.sol",
+    "address": "0x94E33f519E256149752711245EAB2E1abb8c34A4"
+  },
+  {
+    "name": "FtsoV2PriceStore",
+    "contractName": "FtsoV2PriceStoreProxy.sol",
+    "address": "0x94E33f519E256149752711245EAB2E1abb8c34A4"
+  },
+  {
+    "name": "AgentOwnerRegistry",
+    "contractName": "AgentOwnerRegistryProxy.sol",
+    "address": "0x7A021361627c38D49D14999768B81121017c6e77",
+    "mustSwitchToProduction": true
+  },
+  {
+    "name": "AssetManagerController",
+    "contractName": "AssetManagerControllerProxy.sol",
+    "address": "0x4741f1DfC58dF2169F88fe8c6bEb94FdAb6fF5ba",
+    "mustSwitchToProduction": true
+  },
+  {
+    "name": "AssetManager_FTestXRP",
+    "contractName": "AssetManager.sol",
+    "address": "0xFcd44194Dad1c4927706D6f74780393528a40Ed6",
+    "mustSwitchToProduction": true
+  },
+  {
+    "name": "FTestXRP",
+    "contractName": "FAssetProxy.sol",
+    "address": "0x47e2edB147e79D6eab9c85A42cb13055f2938ed5"
+  },
+  {
+    "name": "CoreVaultManager_FTestXRP",
+    "contractName": "CoreVaultManagerProxy.sol",
+    "address": "0x3F38Daa70175430cdA64a83943e12e155eD75706",
+    "mustSwitchToProduction": true
+  },
+  {
+    "name": "MintingTagManager",
+    "contractName": "MintingTagManagerProxy.sol",
+    "address": "0x0EdF614097888b936337631584042D545e6848f7"
+  },
+  {
+    "name": "SmartAccountManager",
+    "contractName": "SmartAccountManagerMock.sol",
+    "address": "0x4d562ad607ea53c240D64Dde27004703b8DbfDbb"
+  },
+  {
+    "name": "DirectMintingAndRedeemExtendedInit",
+    "contractName": "DirectMintingAndRedeemExtendedInit.sol",
+    "address": "0x7eB9F45165172649Fe25007C323D989a6CB4Bf1b"
+  }
+]
