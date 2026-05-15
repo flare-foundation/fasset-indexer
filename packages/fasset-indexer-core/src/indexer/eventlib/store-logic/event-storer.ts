@@ -7,6 +7,7 @@ import { CollateralPoolEventMigration } from "../migrations/collateral-pool-migr
 import { AssetManagerEventMigration } from "../migrations/asset-manager-migration"
 import { SmartAccountsEventStorer } from './smart-accounts'
 import { OftAdapterEventStorer } from './oft-adapter'
+import { MintingTagManagerEventStorer } from './minting-tag-manager'
 import { EVENTS } from '../../../config/constants'
 import type { EntityManager, RequiredEntityData } from "@mikro-orm/knex"
 import type { ORM } from "../../../orm/interface"
@@ -25,10 +26,12 @@ export class EventStorer {
   oldEmergencySystemPauseTopic: string
   private smartAccounts: SmartAccountsEventStorer
   private oftAdapter: OftAdapterEventStorer
+  private mintingTagManager: MintingTagManagerEventStorer
 
   constructor(readonly orm: ORM, public readonly lookup: ContractLookup) {
     this.smartAccounts = new SmartAccountsEventStorer()
     this.oftAdapter = new OftAdapterEventStorer()
+    this.mintingTagManager = new MintingTagManagerEventStorer()
     const oldIface = this.lookup.interfaces.assetManagerInterface[0]
     this.oldCollateralTypeAddedTopic = this.lookup.getEventTopics(EVENTS.ASSET_MANAGER.COLLATERAL_TYPE_ADDED, [oldIface])[0]
     this.oldAgentVaultCreatedTopic = this.lookup.getEventTopics(EVENTS.ASSET_MANAGER.AGENT_VAULT_CREATED, [oldIface])[0]
@@ -56,6 +59,8 @@ export class EventStorer {
       return this.smartAccounts.processEvent(em, log, evmLog)
     } else if (log.sourcename == 'OFT_ADAPTER') {
       return this.oftAdapter.processEvent(em, log, evmLog)
+    } else if (log.sourcename == 'MINTING_TAG_MANAGER') {
+      return this.mintingTagManager.processEvent(em, log, evmLog)
     }
     switch (log.name) {
       case EVENTS.ASSET_MANAGER.CONTRACT_CHANGED: {

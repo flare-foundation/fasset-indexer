@@ -8,5 +8,6 @@ export { FAssetOFTAdapter__factory } from "./FAssetOFTAdapter__factory";
 export { IAgentOwnerRegistry__factory } from "./IAgentOwnerRegistry__factory";
 export { ICoreVaultManager__factory } from "./ICoreVaultManager__factory";
 export { IERC20__factory } from "./IERC20__factory";
+export { IMintingTagManager__factory } from "./IMintingTagManager__factory";
 export { IPriceChangeEmitter__factory } from "./IPriceChangeEmitter__factory";
 export { IPriceReader__factory } from "./IPriceReader__factory";

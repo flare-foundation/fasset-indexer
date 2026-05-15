@@ -111,6 +111,10 @@ export class ContractLookup extends EventInterface {
     return this.requireContractAddress('FAssetOFTAdapter')
   }
 
+  mintingTagManagerAddress(): string {
+    return this.requireContractAddress('MintingTagManager')
+  }
+
   requireContractAddress(name: string): string {
     const address = this.contractNameToAddress.get(name)
     if (address == null) {

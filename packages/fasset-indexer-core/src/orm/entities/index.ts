@@ -41,3 +41,6 @@ export * from './events/smart-accounts'
 
 // oft adapter
 export * from './events/oft-adapter'
+
+// minting tag manager
+export * from './events/minting-tag-manager'

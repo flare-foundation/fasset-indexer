@@ -6,7 +6,7 @@ import {
   IAssetManager__initial__factory, ICollateralPool__initial__factory,
   IPriceChangeEmitter__factory, ICoreVaultManager__factory,
   IMasterAccountController__factory, IPersonalAccount__factory,
-  FAssetOFTAdapter__factory
+  FAssetOFTAdapter__factory, IMintingTagManager__factory
 } from "../../chain/typechain"
 import { EVENTS } from "../config/constants"
 import type { IAssetManager__latestInterface } from "../../chain/typechain/assetManager/IAssetManager__latest"
@@ -22,6 +22,7 @@ import type { ICollateralPool__initialInterface } from "../../chain/typechain/co
 import type { IPersonalAccountInterface } from "../../chain/typechain/smartAccount/IPersonalAccount"
 import type { IMasterAccountControllerInterface } from "../../chain/typechain/smartAccount/IMasterAccountController"
 import type { FAssetOFTAdapterInterface } from "../../chain/typechain/FAssetOFTAdapter"
+import type { IMintingTagManagerInterface } from "../../chain/typechain/IMintingTagManager"
 
 
 export class EventInterface {
@@ -33,7 +34,8 @@ export class EventInterface {
     coreVaultManager: [ICoreVaultManagerInterface],
     masterAccountController: [IMasterAccountControllerInterface],
     personalAccount: [IPersonalAccountInterface],
-    oftAdapter: [FAssetOFTAdapterInterface]
+    oftAdapter: [FAssetOFTAdapterInterface],
+    mintingTagManager: [IMintingTagManagerInterface]
   }
 
   constructor() {
@@ -63,6 +65,9 @@ export class EventInterface {
       ],
       oftAdapter: [
         FAssetOFTAdapter__factory.createInterface()
+      ],
+      mintingTagManager: [
+        IMintingTagManager__factory.createInterface()
       ]
     }
   }
@@ -177,6 +182,8 @@ export class EventInterface {
         return this.interfaces.personalAccount
       case "OFT_ADAPTER":
         return this.interfaces.oftAdapter
+      case "MINTING_TAG_MANAGER":
+        return this.interfaces.mintingTagManager
       default:
         throw new Error(`Unknown interface ${name}`)
     }

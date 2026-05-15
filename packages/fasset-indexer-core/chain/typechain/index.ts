@@ -11,6 +11,7 @@ export type { FAssetOFTAdapter } from "./FAssetOFTAdapter";
 export type { IAgentOwnerRegistry } from "./IAgentOwnerRegistry";
 export type { ICoreVaultManager } from "./ICoreVaultManager";
 export type { IERC20 } from "./IERC20";
+export type { IMintingTagManager } from "./IMintingTagManager";
 export type { IPriceChangeEmitter } from "./IPriceChangeEmitter";
 export type { IPriceReader } from "./IPriceReader";
 export * as factories from "./factories";
@@ -18,6 +19,7 @@ export { FAssetOFTAdapter__factory } from "./factories/FAssetOFTAdapter__factory
 export { IAgentOwnerRegistry__factory } from "./factories/IAgentOwnerRegistry__factory";
 export { ICoreVaultManager__factory } from "./factories/ICoreVaultManager__factory";
 export { IERC20__factory } from "./factories/IERC20__factory";
+export { IMintingTagManager__factory } from "./factories/IMintingTagManager__factory";
 export { IPriceChangeEmitter__factory } from "./factories/IPriceChangeEmitter__factory";
 export { IPriceReader__factory } from "./factories/IPriceReader__factory";
 export type { IAssetManager__initial } from "./assetManager/IAssetManager__initial";

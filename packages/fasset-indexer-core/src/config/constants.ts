@@ -170,6 +170,12 @@ export const EVENTS = {
   OFT_ADAPTER: {
     OFT_RECEIVED: 'OFTReceived',
     OFT_SEND: 'OFTSent'
+  },
+  MINTING_TAG_MANAGER: {
+    MINTING_TAG_RESERVED: 'MintingTagReserved',
+    RECIPIENT_CHANGED: 'RecipientChanged',
+    ALLOWED_EXECUTOR_CHANGE_PENDING: 'AllowedExecutorChangePending',
+    RESERVATION_FEE_CHANGED: 'ReservationFeeChanged'
   }
 } as const
 

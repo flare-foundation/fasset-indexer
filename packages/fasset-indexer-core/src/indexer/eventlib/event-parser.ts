@@ -78,6 +78,11 @@ export class EventParser {
         return 'OFT_ADAPTER'
       }
     }
+    if (ifaces.includes('MINTING_TAG_MANAGER')) {
+      if (this.context.mintingTagManagerAddress() == source) {
+        return 'MINTING_TAG_MANAGER'
+      }
+    }
     return null
   }
 
