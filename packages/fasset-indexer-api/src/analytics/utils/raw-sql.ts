@@ -96,7 +96,7 @@ deltas AS (
     CASE WHEN t.from_id = ${zeroAddressId} THEN t.value
          WHEN t.to_id = ${zeroAddressId} THEN -t.value
          ELSE 0 END AS delta
-  FROM erc20_transfer t
+  FROM erc20transfer t
   JOIN evm_log el ON el.id = t.evm_log_id
   JOIN evm_block eb ON eb.index = el.block_index
   WHERE (t.from_id = ${zeroAddressId} OR t.to_id = ${zeroAddressId})
