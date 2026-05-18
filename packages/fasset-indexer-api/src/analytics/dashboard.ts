@@ -7,7 +7,7 @@ import { FAssetPriceLoader } from "./utils/prices"
 import { SharedAnalytics } from "./shared"
 import { AgentStatistics } from "./statistics"
 import { MAX_BIPS, PRICE_FACTOR } from "../config/constants"
-import { COLLATERAL_POOL_PORTFOLIO_SQL, UNDERLYING_AGENT_BALANCE } from "./utils/raw-sql"
+import { COLLATERAL_POOL_PORTFOLIO_SQL, FASSET_SUPPLY_AT_TIMESTAMPS, UNDERLYING_AGENT_BALANCE } from "./utils/raw-sql"
 import type {
   AmountResult,
   TimeSeries, Timespan, FAssetTimeSeries, FAssetTimespan,
@@ -238,18 +238,29 @@ export class DashboardAnalytics extends SharedAnalytics {
 
   async fAssetSupplyTimespan(timestamps: number[]): Promise<FAssetTimespan<bigint>> {
     const ret = {} as FAssetTimespan<bigint>
+    if (timestamps.length === 0) return ret
     await this.ensureZeroAddressId()
     if (this.zeroAddressId === null) return ret
     const em = this.orm.em.fork()
+    const fassetByAddressId = new Map<number, FAsset>()
     for (const fasset of this.supportedFAssets) {
-      const fAssetAddress = this.lookup.fAssetTypeToFAssetAddress(FAssetType[fasset])
-      const fAssetEvmAddress = await em.findOne(Entities.EvmAddress, { hex: fAssetAddress })
-      if (fAssetEvmAddress === null) continue
-      ret[fasset] = []
-      for (const timestamp of timestamps) {
-        const value = await this.tokenSupplyAt(em, fAssetEvmAddress.id, timestamp, this.zeroAddressId)
-        ret[fasset].push({ timestamp, value })
-      }
+      const hex = this.lookup.fAssetTypeToFAssetAddress(FAssetType[fasset])
+      const addr = await em.findOne(Entities.EvmAddress, { hex })
+      if (addr === null) continue
+      fassetByAddressId.set(addr.id, fasset)
+      ret[fasset] = timestamps.map(timestamp => ({ timestamp, value: BigInt(0) }))
+    }
+    if (fassetByAddressId.size === 0) return ret
+    const tsIndex = new Map(timestamps.map((t, i) => [t, i]))
+    const rows = await em.getConnection('read').execute(
+      FASSET_SUPPLY_AT_TIMESTAMPS(this.zeroAddressId, [...fassetByAddressId.keys()], timestamps)
+    ) as { token_id: number, timestamp: number, supply: string | number }[]
+    for (const { token_id, timestamp, supply } of rows) {
+      const fasset = fassetByAddressId.get(Number(token_id))
+      if (fasset === undefined) continue
+      const i = tsIndex.get(Number(timestamp))
+      if (i === undefined) continue
+      ret[fasset][i].value = BigInt(supply)
     }
     return ret
   }
@@ -440,28 +451,6 @@ export class DashboardAnalytics extends SharedAnalytics {
       ),
       add
     )
-  }
-
-  protected async tokenSupplyAt(
-    em: EntityManager, tokenId: number, timestamp: number, zeroAddressId: number
-  ): Promise<bigint> {
-    if (zeroAddressId === null) return BigInt(0)
-    const minted = await em.createQueryBuilder(Entities.ERC20Transfer, 't')
-      .select([raw('sum(t.value) as minted')])
-      .join('evmLog', 'el')
-      .join('el.block', 'block')
-      .where({ 't.from_id': zeroAddressId, 'el.address': tokenId, 'block.timestamp': { $lte: timestamp } })
-      .execute() as { minted: bigint }[]
-    const mintedValue = BigInt(minted[0]?.minted || 0)
-    if (mintedValue == BigInt(0)) return BigInt(0)
-    const burned = await em.createQueryBuilder(Entities.ERC20Transfer, 't')
-      .select([raw('sum(t.value) as burned')])
-      .where({ 't.to_id': zeroAddressId, 'el.address': tokenId, 'block.timestamp': { $lte: timestamp } })
-      .join('evmLog', 'el')
-      .join('el.block', 'block')
-      .execute() as { burned: bigint }[]
-    const burnedValue = BigInt(burned[0]?.burned || 0)
-    return mintedValue - burnedValue
   }
 
   protected async mintedDuring(em: EntityManager, from: number, to: number, user?: string): Promise<FAssetValueResult> {

@@ -84,6 +84,32 @@ left join redemption_default rd on rd.redemption_requested_evm_log_id = rr.evm_l
 where rr.fasset=${FAssetType.FDOGE} and eb.timestamp > ? and dvr.id is null and rd.evm_log_id is null
 limit ?`
 
+// Returns one row per (token_id, timestamp). All inputs are internal
+// numeric ids / parsed unix timestamps, safe to inline.
+export const FASSET_SUPPLY_AT_TIMESTAMPS = (
+  zeroAddressId: number, tokenIds: number[], timestamps: number[]
+) => `
+WITH ts(timestamp) AS (VALUES ${timestamps.map(t => `(${t})`).join(', ')}),
+tokens(id) AS (VALUES ${tokenIds.map(id => `(${id})`).join(', ')}),
+deltas AS (
+  SELECT el.address_id AS token_id, eb.timestamp AS block_timestamp,
+    CASE WHEN t.from_id = ${zeroAddressId} THEN t.value
+         WHEN t.to_id = ${zeroAddressId} THEN -t.value
+         ELSE 0 END AS delta
+  FROM erc20_transfer t
+  JOIN evm_log el ON el.id = t.evm_log_id
+  JOIN evm_block eb ON eb.index = el.block_index
+  WHERE (t.from_id = ${zeroAddressId} OR t.to_id = ${zeroAddressId})
+    AND el.address_id IN (${tokenIds.join(', ')})
+)
+SELECT tk.id AS token_id, ts.timestamp AS timestamp,
+  COALESCE(SUM(CASE WHEN d.block_timestamp <= ts.timestamp THEN d.delta ELSE 0 END), 0) AS supply
+FROM tokens tk
+CROSS JOIN ts
+LEFT JOIN deltas d ON d.token_id = tk.id
+GROUP BY tk.id, ts.timestamp
+`
+
 // postgres-specific query
 export const UNDERLYING_AGENT_BALANCE = `
 SELECT t.fasset, SUM(t.balance_uba) AS total_balance FROM (
