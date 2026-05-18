@@ -289,6 +289,11 @@ export class DashboardAnalytics extends SharedAnalytics {
     return this.aggregateFAssetTimespans(timespans)
   }
 
+  async fAssetSupplyAggregateTimespan(timestamps: number[]): Promise<Timespan<bigint>> {
+    const timespans = await this.fAssetSupplyTimespan(timestamps)
+    return this.aggregateFAssetTimespans(timespans)
+  }
+
   async coreVaultOutflowAggregateTimespan(timestamps: number[]): Promise<Timespan<bigint>> {
     const timespans = await this.coreVaultOutflowTimespan(timestamps)
     return this.aggregateFAssetTimespans(timespans)

@@ -154,6 +154,18 @@ export class DashboardController {
     return apiResponse(this.service.fAssetSupplyTimespan(ts), 200)
   }
 
+  @Get('/timespan/fasset-tvl?')
+  @ApiOperation({ summary: 'Timespan of fasset supply aggregated in $ at current prices' })
+  @ApiQuery({ name: 'timestamps', type: Number, isArray: true })
+  getFassetTvlTimespan(
+    @Query('timestamps') timestamps: string | string[]
+  ): Promise<ApiResponse<Timespan<bigint>>> {
+    const ts = this.parseTimestamps(timestamps)
+    const er = this.restrictTimespan(ts)
+    if (er !== null) return apiResponse(Promise.reject(er), 400)
+    return apiResponse(this.service.fAssetSupplyAggregateTimespan(ts), 200)
+  }
+
   @Get('/timespan/pool-collateral?')
   @ApiOperation({ summary: 'Timespan of pool collateral along timestamps' })
   @ApiQuery({ name: 'timestamps', type: Number, isArray: true })
