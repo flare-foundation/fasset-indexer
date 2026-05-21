@@ -195,17 +195,23 @@ SELECT
      ORDER BY block_index DESC, index DESC LIMIT 1) AS hi
 `
 
-// Sort by evm_log_id rather than evm_block.timestamp / evm_log.block_index: it
-// keeps the inner Sort to a tiny top-N heap instead of an external-merge of all
-// ~90k union rows. evm_log_id is auto-increment in insertion order, which the
-// indexer commits block-by-block, so for new traffic it matches block order.
-// Reindex / backfill can produce a small fraction of out-of-order pairs.
+// When `window` is set we already join evm_log + evm_block to filter by
+// timestamp; we use that to sort by (block_index, index) — the on-chain position
+// of the event, which is stable under reindex (the row's evm_log_id changes
+// when re-inserted, but its block_index and per-block log index don't). Sorting
+// by evm_log_id would let reindexed-but-old events bubble to the top with a
+// fresh high id.
 //
-// When `window` is set, an additional `evm_log_id BETWEEN ? AND ?` filter is
-// emitted (bounds derived from the timestamp range, see EXPLORER_TRANSACTIONS_ID_BOUNDS).
-// It's redundant with the timestamp predicate, but it pushes down per-arm so
-// each event table's PK index prunes the union early instead of materializing
-// and externally sorting the whole UNION ALL.
+// An `evm_log_id BETWEEN ? AND ?` filter is also emitted (bounds derived from
+// the timestamp range, see EXPLORER_TRANSACTIONS_ID_BOUNDS): it's redundant
+// with the timestamp predicate but pushes down per-arm so each event table's
+// PK index prunes the union early instead of materializing the whole UNION ALL.
+//
+// Without a window we fall back to ORDER BY evm_log_id, which keeps the inner
+// sort a small top-N heap on the union (no evm_log/evm_block join). evm_log_id
+// is auto-increment in insertion order, matching block order for new traffic;
+// reindex / backfill can produce some out-of-order pairs, so callers that care
+// about correctness during reindex should pass a window.
 const explorerTransactionsFilter = (
   user: boolean, agent: boolean,
   window: boolean, status: boolean
@@ -226,16 +232,25 @@ export const EXPLORER_TRANSACTIONS = (
   asc: boolean, window: boolean,
   status: boolean,
   methods: TransactionType[]
-) => `
+) => {
+  const dir = asc ? 'ASC' : 'DESC'
+  const innerSortKey = window
+    ? `eli.block_index ${dir}, eli.index ${dir}`
+    : `ti.evm_log_id ${dir}`
+  const outerSortKey = window
+    ? `t.block_index ${dir}, t.log_idx ${dir}`
+    : `t.evm_log_id ${dir}`
+  return `
 SELECT
   et.hash, el.name, eb.timestamp, eaa.hex as agent_vault,
   am.name as agent_name, eau.hex as user, eao.hex as source,
   t.value_uba, t.resolution, ur.id as underlying_payment
 FROM (
   SELECT ti.evm_log_id, ti.agent_vault_address_id, ti.value_uba, ti.user_id, ti.resolution, ti.payment_reference
+    ${window ? ', eli.block_index, eli.index AS log_idx' : ''}
   FROM (${explorerTransactionsUnion(methods)}) ti
   ${explorerTransactionsFilter(user, agent, window, status)}
-  ORDER BY ti.evm_log_id ${asc ? 'ASC' : 'DESC'}
+  ORDER BY ${innerSortKey}
   LIMIT ? OFFSET ?
 ) t
 JOIN evm_log el ON el.id = t.evm_log_id
@@ -254,8 +269,9 @@ LEFT JOIN LATERAL (
   ORDER BY ur.id ASC
   LIMIT 1
 ) ur ON true
-ORDER BY t.evm_log_id ${asc ? 'ASC' : 'DESC'}
+ORDER BY ${outerSortKey}
 `
+}
 
 export const EXPLORER_TRANSACTIONS_COUNT = (
   user: boolean, agent: boolean,
