@@ -12,3 +12,8 @@ export const PRICE_FACTOR = BigInt(10 ** PRICE_DECIMALS)
 export const MAX_BIPS = BigInt(1e4)
 
 export const DEAD_ADDRESS = '0x000000000000000000000000000000000000dEaD'
+
+// Default lookback applied to /explorer/transactions when the caller doesn't
+// pass start/end. Prevents reindexed-but-old events (high evm_log_id, old
+// timestamp) from bubbling to the top during reindex.
+export const EXPLORER_DEFAULT_LOOKBACK_SECONDS = 90 * 24 * 60 * 60

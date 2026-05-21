@@ -8,7 +8,7 @@ import { unixnow } from "../shared/utils"
 import { SharedAnalytics } from "./shared"
 import * as ExplorerType from "./types"
 import * as SQL from "./utils/raw-sql"
-import { DEAD_ADDRESS } from "../config/constants"
+import { DEAD_ADDRESS, EXPLORER_DEFAULT_LOOKBACK_SECONDS } from "../config/constants"
 import type { EntityManager, ORM } from "fasset-indexer-core/orm"
 import type { FilterQuery } from "@mikro-orm/core"
 
@@ -57,6 +57,12 @@ export class ExplorerAnalytics extends SharedAnalytics {
   ): Promise<ExplorerType.TransactionsInfo> {
     const em = this.orm.em.fork()
     ;[start, end] = this.standardizeInterval(start, end)
+    if (start == null && end == null) {
+      // Default to a recent window so reindexed-but-old events (high evm_log_id,
+      // old timestamp) don't bubble to the top of the list during reindex.
+      end = unixnow()
+      start = end - EXPLORER_DEFAULT_LOOKBACK_SECONDS
+    }
     const hasUser = user != null
     const hasAgent = agent != null
     const hasWindow = start != null || end != null
