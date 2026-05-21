@@ -61,8 +61,23 @@ export class ExplorerAnalytics extends SharedAnalytics {
     const hasAgent = agent != null
     const hasWindow = start != null || end != null
     const hasStatus = status != null
-    const filterParams = [user ?? agent, start, end, status].filter(x => x != null)
     const conn = em.getConnection('read')
+    let windowParams: (number | string)[] = []
+    if (hasWindow) {
+      // Translate the timestamp window into an evm_log_id range so the union's
+      // per-arm PK indexes can prune at the source (see EXPLORER_TRANSACTIONS_ID_BOUNDS).
+      const [bounds] = await conn.execute(
+        SQL.EXPLORER_TRANSACTIONS_ID_BOUNDS, [start, end]
+      ) as [{ lo: string | number | null, hi: string | number | null }]
+      if (bounds.lo == null || bounds.hi == null) {
+        // Requested window falls outside the indexed block range — no rows can match.
+        return { transactions: [], count: 0 }
+      }
+      const idLo = Number(bounds.lo) - SQL.EXPLORER_ID_RANGE_MARGIN
+      const idHi = Number(bounds.hi) + SQL.EXPLORER_ID_RANGE_MARGIN
+      windowParams = [idLo, idHi, start!, end!]
+    }
+    const filterParams = [user ?? agent, ...windowParams, status].filter(x => x != null)
     const [transactions, countResult] = await Promise.all([
       conn.execute(
         SQL.EXPLORER_TRANSACTIONS(hasUser, hasAgent, asc, hasWindow, hasStatus, types),

@@ -175,11 +175,37 @@ const explorerTransactionsUnion = (methods: TransactionType[]) =>
     .map(([, v]) => v)
     .join(' UNION ALL ')
 
+// Slack applied to the [id_lo, id_hi] window converted from a timestamp range,
+// to absorb reindexed rows whose evm_log_id falls outside the natural id range
+// for that window.
+export const EXPLORER_ID_RANGE_MARGIN = 100_000
+
+// Translate a [start, end] timestamp window into an evm_log_id range. Each
+// side does two index seeks: the timestamp index pinpoints the boundary block,
+// then a forward (or backward) walk on (block_index, index) returns the first
+// evm_log row at-or-past the boundary — so blocks with no indexed logs are
+// skipped automatically instead of yielding NULL.
+export const EXPLORER_TRANSACTIONS_ID_BOUNDS = `
+SELECT
+  (SELECT id FROM evm_log
+     WHERE block_index >= (SELECT index FROM evm_block WHERE timestamp >= ? ORDER BY timestamp ASC LIMIT 1)
+     ORDER BY block_index ASC, index ASC LIMIT 1) AS lo,
+  (SELECT id FROM evm_log
+     WHERE block_index <= (SELECT index FROM evm_block WHERE timestamp <= ? ORDER BY timestamp DESC LIMIT 1)
+     ORDER BY block_index DESC, index DESC LIMIT 1) AS hi
+`
+
 // Sort by evm_log_id rather than evm_block.timestamp / evm_log.block_index: it
 // keeps the inner Sort to a tiny top-N heap instead of an external-merge of all
 // ~90k union rows. evm_log_id is auto-increment in insertion order, which the
 // indexer commits block-by-block, so for new traffic it matches block order.
 // Reindex / backfill can produce a small fraction of out-of-order pairs.
+//
+// When `window` is set, an additional `evm_log_id BETWEEN ? AND ?` filter is
+// emitted (bounds derived from the timestamp range, see EXPLORER_TRANSACTIONS_ID_BOUNDS).
+// It's redundant with the timestamp predicate, but it pushes down per-arm so
+// each event table's PK index prunes the union early instead of materializing
+// and externally sorting the whole UNION ALL.
 const explorerTransactionsFilter = (
   user: boolean, agent: boolean,
   window: boolean, status: boolean
@@ -190,7 +216,7 @@ ${agent ? 'JOIN evm_address eaai ON eaai.id = ti.agent_vault_address_id' : ''}
 WHERE 1=1
 ${user ? 'AND eaui.hex = ?' : ''}
 ${agent ? 'AND eaai.hex = ?' : ''}
-${window ? 'AND ebi.timestamp BETWEEN ? AND ?' : ''}
+${window ? 'AND ti.evm_log_id BETWEEN ? AND ? AND ebi.timestamp BETWEEN ? AND ?' : ''}
 ${status ? 'AND ti.resolution = ?' : ''}
 `
 
