@@ -3,7 +3,7 @@ export const CACHE_MAX_ENTRIES = 300
 
 export const MAX_TIMESERIES_PTS = 100
 export const MAX_RETURNED_OBJECTS = 100
-export const MAX_TIMESPAN_PTS = 20
+export const MAX_TIMESPAN_PTS = 30
 
 export const CP_SCORE_MIN_POOL_COLLATERAL_WEI = BigInt("1000000000000000000000000")
 
