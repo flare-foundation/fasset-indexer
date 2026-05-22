@@ -157,14 +157,14 @@ const explorerQueryTransactions = new Map([
     ON w.evm_log_id = wc.underlying_withdrawal_announced_evm_log_id`
   ],
   [TransactionType.Topup, `
-    SELECT tp.evm_log_id, tp.agent_vault_address_id, tp.deposited_uba as value_uba, NULL::integer as user_id, NULL::integer as resolution, NULL::text as payment_reference
+    SELECT tp.evm_log_id, tp.agent_vault_address_id, tp.deposited_uba as value_uba, NULL::integer as user_id, 1 as resolution, NULL::text as payment_reference
     FROM underlying_balance_topped_up tp`
   ],
   [TransactionType.DirectMint, `
-    SELECT dm.evm_log_id, NULL::integer as agent_vault_address_id, dm.minted_amount_uba as value_uba, dm.target_address_id as user_id, NULL::integer as resolution, NULL::text as payment_reference
+    SELECT dm.evm_log_id, NULL::integer as agent_vault_address_id, dm.minted_amount_uba as value_uba, dm.target_address_id as user_id, 1 as resolution, NULL::text as payment_reference
     FROM direct_minting_executed dm
     UNION ALL
-    SELECT dms.evm_log_id, NULL::integer as agent_vault_address_id, dms.minted_amount_uba as value_uba, NULL::integer as user_id, NULL::integer as resolution, NULL::text as payment_reference
+    SELECT dms.evm_log_id, NULL::integer as agent_vault_address_id, dms.minted_amount_uba as value_uba, NULL::integer as user_id, 1 as resolution, NULL::text as payment_reference
     FROM direct_minting_executed_to_smart_account dms`
   ]
 ])
