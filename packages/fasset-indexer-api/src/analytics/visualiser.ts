@@ -159,48 +159,34 @@ export class VisualiserAnalytics extends DashboardAnalytics {
   async emergencyPauseStatus(): Promise<VT.EmergencyPauseStatus[]> {
     const em = this.orm.em.fork()
     const now = unixnow()
-    const [latestTriggered, latestCancelled] = await Promise.all([
-      em.find(Entities.EmergencyPauseTriggered, {}, {
+    return Promise.all(this.supportedFAssets.map(async fasset => {
+      const fassetEnum = FAssetType[fasset]
+      const t = await em.findOne(Entities.EmergencyPauseTriggered, { fasset: fassetEnum }, {
         populate: ['evmLog.block', 'evmLog.transaction'],
-        orderBy: { evmLog: { block: { timestamp: 'desc', index: 'desc' } } }
-      }),
-      em.find(Entities.EmergencyPauseCancelled, {}, {
-        populate: ['evmLog.block'],
-        orderBy: { evmLog: { block: { timestamp: 'desc', index: 'desc' } } }
+        orderBy: { evmLog: { block: { index: 'desc' }, index: 'desc' } }
       })
-    ])
-    const latestTriggeredByFasset = new Map<FAssetType, Entities.EmergencyPauseTriggered>()
-    for (const e of latestTriggered) {
-      if (!latestTriggeredByFasset.has(e.fasset)) latestTriggeredByFasset.set(e.fasset, e)
-    }
-    const latestCancelledTsByFasset = new Map<FAssetType, number>()
-    for (const e of latestCancelled) {
-      if (!latestCancelledTsByFasset.has(e.fasset)) latestCancelledTsByFasset.set(e.fasset, e.evmLog.block.timestamp)
-    }
-    const ret: VT.EmergencyPauseStatus[] = []
-    for (const fasset of this.supportedFAssets) {
-      const t = latestTriggeredByFasset.get(FAssetType[fasset])
-      if (t == null) {
-        ret.push({ fasset, paused: false })
-        continue
-      }
-      const triggeredTs = t.evmLog.block.timestamp
-      const cancelledTs = latestCancelledTsByFasset.get(FAssetType[fasset]) ?? -1
-      const cancelledAfterTrigger = cancelledTs > triggeredTs
-      const externalActive = !cancelledAfterTrigger && Number(t.externalPausedUntil ?? 0) > now
-      const governanceActive = !cancelledAfterTrigger && Number(t.governancePausedUntil ?? 0) > now
-      ret.push({
+      if (t == null) return { fasset, paused: false }
+      const cancelledAfter = await em.findOne(Entities.EmergencyPauseCancelled, {
+        fasset: fassetEnum,
+        $or: [
+          { evmLog: { block: { index: { $gt: t.evmLog.block.index } } } },
+          { evmLog: { block: { index: t.evmLog.block.index }, index: { $gt: t.evmLog.index } } }
+        ]
+      })
+      const isCancelled = cancelledAfter != null
+      const externalActive = !isCancelled && Number(t.externalPausedUntil ?? 0) > now
+      const governanceActive = !isCancelled && Number(t.governancePausedUntil ?? 0) > now
+      return {
         fasset,
         paused: externalActive || governanceActive,
         externalLevel: t.externalLevel ?? undefined,
         externalPausedUntil: Number(t.externalPausedUntil ?? 0) || undefined,
         governanceLevel: t.governanceLevel ?? undefined,
         governancePausedUntil: Number(t.governancePausedUntil ?? 0) || undefined,
-        triggeredAtTimestamp: triggeredTs,
+        triggeredAtTimestamp: t.evmLog.block.timestamp,
         triggeredTxHash: t.evmLog.transaction.hash
-      })
-    }
-    return ret
+      }
+    }))
   }
 
   ////////////////////////////////////////////////////////////////////////
