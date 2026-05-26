@@ -22,6 +22,7 @@ export interface AgentOverview {
   collateralPool: string
   collateralPoolToken?: string
   fasset: FAsset
+  ownerAddress: string
   ownerManager: string
   ownerName?: string
   ownerIconUrl?: string

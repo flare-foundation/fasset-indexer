@@ -112,6 +112,7 @@ export class VisualiserAnalytics extends DashboardAnalytics {
         collateralPool: info.agentVault.collateralPool.hex,
         collateralPoolToken: info.agentVault.collateralPoolToken?.hex,
         fasset,
+        ownerAddress: info.agentVault.owner.address.hex,
         ownerManager: ownerManagerHex,
         ownerName: meta.name,
         ownerIconUrl: meta.iconUrl,
