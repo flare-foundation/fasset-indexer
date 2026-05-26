@@ -154,6 +154,85 @@ export class VisualiserAnalytics extends DashboardAnalytics {
   }
 
   ////////////////////////////////////////////////////////////////////////
+  // system settings
+
+  async systemSettings(filter?: { fasset?: FAsset }): Promise<VT.SystemSettingsEntry[]> {
+    const em = this.orm.em.fork()
+    const where: Record<string, unknown> = {}
+    if (filter?.fasset !== undefined) where.fasset = FAssetType[filter.fasset]
+    const rows = await em.find(Entities.SystemSettings, where)
+    return rows.map(r => this.systemSettingsEntryFromRow(r))
+  }
+
+  private systemSettingsEntryFromRow(r: Entities.SystemSettings): VT.SystemSettingsEntry {
+    const parseBipsList = (s: string): bigint[] =>
+      s.length === 0 ? [] : s.split(',').map(x => BigInt(x))
+    return {
+      fasset: FAssetType[r.fasset] as FAsset,
+      updatedAt: r.updatedAt,
+      lotSizeAMG: r.lotSizeAMG,
+      mintingCapAMG: r.mintingCapAMG,
+      mintingPoolHoldingsRequiredBIPS: r.mintingPoolHoldingsRequiredBIPS,
+      collateralReservationFeeBIPS: r.collateralReservationFeeBIPS,
+      underlyingBlocksForPayment: r.underlyingBlocksForPayment,
+      underlyingSecondsForPayment: r.underlyingSecondsForPayment,
+      redemptionFeeBIPS: r.redemptionFeeBIPS,
+      redemptionDefaultFactorVaultCollateralBIPS: r.redemptionDefaultFactorVaultCollateralBIPS,
+      confirmationByOthersAfterSeconds: r.confirmationByOthersAfterSeconds,
+      confirmationByOthersRewardUSD5: r.confirmationByOthersRewardUSD5,
+      maxRedeemedTickets: r.maxRedeemedTickets,
+      paymentChallengeRewardBIPS: r.paymentChallengeRewardBIPS,
+      paymentChallengeRewardUSD5: r.paymentChallengeRewardUSD5,
+      withdrawalWaitMinSeconds: r.withdrawalWaitMinSeconds,
+      maxTrustedPriceAgeSeconds: r.maxTrustedPriceAgeSeconds,
+      vaultCollateralBuyForFlareFactorBIPS: r.vaultCollateralBuyForFlareFactorBIPS,
+      attestationWindowSeconds: r.attestationWindowSeconds,
+      minUpdateRepeatTimeSeconds: r.minUpdateRepeatTimeSeconds,
+      agentExitAvailableTimelockSeconds: r.agentExitAvailableTimelockSeconds,
+      agentFeeChangeTimelockSeconds: r.agentFeeChangeTimelockSeconds,
+      agentMintingCRChangeTimelockSeconds: r.agentMintingCRChangeTimelockSeconds,
+      poolExitCRChangeTimelockSeconds: r.poolExitCRChangeTimelockSeconds,
+      agentTimelockedOperationWindowSeconds: r.agentTimelockedOperationWindowSeconds,
+      collateralPoolTokenTimelockSeconds: r.collateralPoolTokenTimelockSeconds,
+      liquidationStepSeconds: r.liquidationStepSeconds,
+      liquidationCollateralFactorBIPS: parseBipsList(r.liquidationCollateralFactorBIPS),
+      liquidationFactorVaultCollateralBIPS: parseBipsList(r.liquidationFactorVaultCollateralBIPS),
+      diamondCutMinTimelockSeconds: r.diamondCutMinTimelockSeconds,
+      maxEmergencyPauseDurationSeconds: r.maxEmergencyPauseDurationSeconds,
+      emergencyPauseDurationResetAfterSeconds: r.emergencyPauseDurationResetAfterSeconds,
+      redemptionPaymentExtensionSeconds: r.redemptionPaymentExtensionSeconds,
+      minimumRedeemAmountUBA: r.minimumRedeemAmountUBA,
+      redeemWithTagSupported: r.redeemWithTagSupported,
+      mintingTagManager: r.mintingTagManager,
+      smartAccountManager: r.smartAccountManager,
+      wNat: r.wNat,
+      directMintingDailyLimitUBA: r.directMintingDailyLimitUBA,
+      directMintingHourlyLimitUBA: r.directMintingHourlyLimitUBA,
+      directMintingLargeMintingThresholdUBA: r.directMintingLargeMintingThresholdUBA,
+      directMintingLargeMintingDelaySeconds: r.directMintingLargeMintingDelaySeconds,
+      directMintingFeeBIPS: r.directMintingFeeBIPS,
+      directMintingMinimumFeeUBA: r.directMintingMinimumFeeUBA,
+      directMintingExecutorFeeUBA: r.directMintingExecutorFeeUBA,
+      directMintingFeeReceiver: r.directMintingFeeReceiver,
+      directMintingOthersCanExecuteAfterSeconds: r.directMintingOthersCanExecuteAfterSeconds,
+      directMintingsUnblockUntilTimestamp: r.directMintingsUnblockUntilTimestamp,
+      directMintingPaymentAddress: r.directMintingPaymentAddress,
+      coreVaultManager: r.coreVaultManager,
+      coreVaultNativeAddress: r.coreVaultNativeAddress,
+      coreVaultMinimumAmountLeftBIPS: r.coreVaultMinimumAmountLeftBIPS,
+      coreVaultMinimumRedeemLots: r.coreVaultMinimumRedeemLots,
+      coreVaultRedemptionFeeBIPS: r.coreVaultRedemptionFeeBIPS,
+      coreVaultTransferDefaultPenaltyBIPS: r.coreVaultTransferDefaultPenaltyBIPS,
+      coreVaultTransferTimeExtensionSeconds: r.coreVaultTransferTimeExtensionSeconds,
+      coreVaultDonationTag: r.coreVaultDonationTag,
+      coreVaultEscrowAmount: r.coreVaultEscrowAmount,
+      coreVaultMinimalAmount: r.coreVaultMinimalAmount,
+      coreVaultEscrowEndTimeSeconds: r.coreVaultEscrowEndTimeSeconds,
+      coreVaultChainPaymentFee: r.coreVaultChainPaymentFee
+    }
+  }
+
+  ////////////////////////////////////////////////////////////////////////
   // live state
 
   async prices(): Promise<VT.PriceTick[]> {

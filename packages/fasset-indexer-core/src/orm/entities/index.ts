@@ -22,6 +22,7 @@ export * from "./agent"
 export * from "./state/price"
 export * from "./state/balance"
 export * from './state/settings'
+export * from './state/system-settings'
 export * from './events/core-vault-manager'
 export * from './events/price'
 // v1.3

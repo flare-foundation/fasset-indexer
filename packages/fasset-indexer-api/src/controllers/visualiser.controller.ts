@@ -41,6 +41,19 @@ export class VisualiserController {
     return apiResponse(this.service.scene(), 200)
   }
 
+  @Get('settings')
+  @UseInterceptors(CacheInterceptor)
+  @ApiOperation({
+    summary: 'On-chain system settings snapshot per FAsset',
+    description: 'Returns the latest watchdog-polled view of asset-manager and core-vault parameters (fees, BIPS, lot sizes, timelocks, attestation windows, liquidation factors, core-vault wiring) for each supported FAsset. Refreshed by the watchdog every 5 minutes.'
+  })
+  @ApiQuery({ name: 'fasset', type: String, required: false, description: 'Filter by FAsset (FXRP, FBTC, ...)' })
+  getSystemSettings(
+    @Query('fasset') fasset?: string
+  ): Promise<ApiResponse<VT.SystemSettingsEntry[]>> {
+    return apiResponse(this.service.systemSettings({ fasset: fasset as FAsset | undefined }), 200)
+  }
+
   //////////////////////////////////////////////////////////////////////
   // agents
 

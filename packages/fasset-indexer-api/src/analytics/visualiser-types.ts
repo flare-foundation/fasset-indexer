@@ -231,6 +231,84 @@ export interface VisualiserEventFeed {
   hasMore: boolean
 }
 
+// system settings — polled snapshot of on-chain configuration parameters
+
+export interface SystemSettingsEntry {
+  fasset: FAsset
+  updatedAt: number
+  // minting / collateral
+  lotSizeAMG: bigint
+  mintingCapAMG: bigint
+  mintingPoolHoldingsRequiredBIPS: bigint
+  collateralReservationFeeBIPS: bigint
+  underlyingBlocksForPayment: bigint
+  underlyingSecondsForPayment: bigint
+  // redemption
+  redemptionFeeBIPS: bigint
+  redemptionDefaultFactorVaultCollateralBIPS: bigint
+  confirmationByOthersAfterSeconds: bigint
+  confirmationByOthersRewardUSD5: bigint
+  maxRedeemedTickets: bigint
+  // challenge
+  paymentChallengeRewardBIPS: bigint
+  paymentChallengeRewardUSD5: bigint
+  // collateral / pricing
+  withdrawalWaitMinSeconds: bigint
+  maxTrustedPriceAgeSeconds: bigint
+  vaultCollateralBuyForFlareFactorBIPS: bigint
+  // attestation
+  attestationWindowSeconds: bigint
+  minUpdateRepeatTimeSeconds: bigint
+  // timelocks
+  agentExitAvailableTimelockSeconds: bigint
+  agentFeeChangeTimelockSeconds: bigint
+  agentMintingCRChangeTimelockSeconds: bigint
+  poolExitCRChangeTimelockSeconds: bigint
+  agentTimelockedOperationWindowSeconds: bigint
+  collateralPoolTokenTimelockSeconds: bigint
+  // liquidation
+  liquidationStepSeconds: bigint
+  liquidationCollateralFactorBIPS: bigint[]
+  liquidationFactorVaultCollateralBIPS: bigint[]
+  // diamond / emergency pause
+  diamondCutMinTimelockSeconds: bigint
+  maxEmergencyPauseDurationSeconds: bigint
+  emergencyPauseDurationResetAfterSeconds: bigint
+  // redemption (extra single-value getters)
+  redemptionPaymentExtensionSeconds: bigint
+  minimumRedeemAmountUBA: bigint
+  redeemWithTagSupported: boolean
+  // wiring addresses
+  mintingTagManager: string
+  smartAccountManager: string
+  wNat: string
+  // direct minting
+  directMintingDailyLimitUBA: bigint
+  directMintingHourlyLimitUBA: bigint
+  directMintingLargeMintingThresholdUBA: bigint
+  directMintingLargeMintingDelaySeconds: bigint
+  directMintingFeeBIPS: bigint
+  directMintingMinimumFeeUBA: bigint
+  directMintingExecutorFeeUBA: bigint
+  directMintingFeeReceiver: string
+  directMintingOthersCanExecuteAfterSeconds: bigint
+  directMintingsUnblockUntilTimestamp: bigint
+  directMintingPaymentAddress: string
+  // core vault (null when no core vault is wired up for this fasset)
+  coreVaultManager?: string
+  coreVaultNativeAddress?: string
+  coreVaultMinimumAmountLeftBIPS?: bigint
+  coreVaultMinimumRedeemLots?: bigint
+  coreVaultRedemptionFeeBIPS?: bigint
+  coreVaultTransferDefaultPenaltyBIPS?: bigint
+  coreVaultTransferTimeExtensionSeconds?: bigint
+  coreVaultDonationTag?: bigint
+  coreVaultEscrowAmount?: bigint
+  coreVaultMinimalAmount?: bigint
+  coreVaultEscrowEndTimeSeconds?: number
+  coreVaultChainPaymentFee?: bigint
+}
+
 // bundled snapshots
 
 export interface SceneSnapshot extends SystemOverview {
