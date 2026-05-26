@@ -41,6 +41,17 @@ export class VisualiserController {
     return apiResponse(this.service.scene(), 200)
   }
 
+  @Get('emergency-pause')
+  @UseInterceptors(CacheInterceptor)
+  @CacheTTL(LIVE_STATE_CACHE_MS)
+  @ApiOperation({
+    summary: 'Current emergency-pause status per FAsset (derived from indexed events)',
+    description: 'For each supported FAsset, returns whether an emergency pause is currently active and the on-chain details from the latest EmergencyPauseTriggered event (level + paused-until for both external and governance). A more recent EmergencyPauseCancelled clears the pause; otherwise the pause clears naturally once the until-timestamp passes. Use this for the cold-load pause banner.'
+  })
+  getEmergencyPauseStatus(): Promise<ApiResponse<VT.EmergencyPauseStatus[]>> {
+    return apiResponse(this.service.emergencyPauseStatus(), 200)
+  }
+
   @Get('settings')
   @UseInterceptors(CacheInterceptor)
   @ApiOperation({

@@ -154,6 +154,56 @@ export class VisualiserAnalytics extends DashboardAnalytics {
   }
 
   ////////////////////////////////////////////////////////////////////////
+  // emergency pause status
+
+  async emergencyPauseStatus(): Promise<VT.EmergencyPauseStatus[]> {
+    const em = this.orm.em.fork()
+    const now = unixnow()
+    const [latestTriggered, latestCancelled] = await Promise.all([
+      em.find(Entities.EmergencyPauseTriggered, {}, {
+        populate: ['evmLog.block', 'evmLog.transaction'],
+        orderBy: { evmLog: { block: { timestamp: 'desc', index: 'desc' } } }
+      }),
+      em.find(Entities.EmergencyPauseCancelled, {}, {
+        populate: ['evmLog.block'],
+        orderBy: { evmLog: { block: { timestamp: 'desc', index: 'desc' } } }
+      })
+    ])
+    const latestTriggeredByFasset = new Map<FAssetType, Entities.EmergencyPauseTriggered>()
+    for (const e of latestTriggered) {
+      if (!latestTriggeredByFasset.has(e.fasset)) latestTriggeredByFasset.set(e.fasset, e)
+    }
+    const latestCancelledTsByFasset = new Map<FAssetType, number>()
+    for (const e of latestCancelled) {
+      if (!latestCancelledTsByFasset.has(e.fasset)) latestCancelledTsByFasset.set(e.fasset, e.evmLog.block.timestamp)
+    }
+    const ret: VT.EmergencyPauseStatus[] = []
+    for (const fasset of this.supportedFAssets) {
+      const t = latestTriggeredByFasset.get(FAssetType[fasset])
+      if (t == null) {
+        ret.push({ fasset, paused: false })
+        continue
+      }
+      const triggeredTs = t.evmLog.block.timestamp
+      const cancelledTs = latestCancelledTsByFasset.get(FAssetType[fasset]) ?? -1
+      const cancelledAfterTrigger = cancelledTs > triggeredTs
+      const externalActive = !cancelledAfterTrigger && Number(t.externalPausedUntil ?? 0) > now
+      const governanceActive = !cancelledAfterTrigger && Number(t.governancePausedUntil ?? 0) > now
+      ret.push({
+        fasset,
+        paused: externalActive || governanceActive,
+        externalLevel: t.externalLevel ?? undefined,
+        externalPausedUntil: Number(t.externalPausedUntil ?? 0) || undefined,
+        governanceLevel: t.governanceLevel ?? undefined,
+        governancePausedUntil: Number(t.governancePausedUntil ?? 0) || undefined,
+        triggeredAtTimestamp: triggeredTs,
+        triggeredTxHash: t.evmLog.transaction.hash
+      })
+    }
+    return ret
+  }
+
+  ////////////////////////////////////////////////////////////////////////
   // system settings
 
   async systemSettings(filter?: { fasset?: FAsset }): Promise<VT.SystemSettingsEntry[]> {

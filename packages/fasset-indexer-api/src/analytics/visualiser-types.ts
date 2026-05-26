@@ -231,6 +231,19 @@ export interface VisualiserEventFeed {
   hasMore: boolean
 }
 
+// emergency pause status — derived from EmergencyPauseTriggered/Cancelled events
+
+export interface EmergencyPauseStatus {
+  fasset: FAsset
+  paused: boolean
+  externalLevel?: number
+  externalPausedUntil?: number
+  governanceLevel?: number
+  governancePausedUntil?: number
+  triggeredAtTimestamp?: number
+  triggeredTxHash?: string
+}
+
 // system settings — polled snapshot of on-chain configuration parameters
 
 export interface SystemSettingsEntry {
