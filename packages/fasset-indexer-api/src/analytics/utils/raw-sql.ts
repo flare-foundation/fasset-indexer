@@ -311,14 +311,31 @@ ORDER BY el.block_index DESC
 `
 
 export const MINTED_BY_UNDERLYING_ADDRESS = `
-SELECT me.fasset, SUM(ut.value) as val FROM minting_executed me
-  JOIN collateral_reserved cr ON cr.evm_log_id = me.collateral_reserved_evm_log_id
-  JOIN underlying_reference ur ON ur.reference = cr.payment_reference
-  JOIN underlying_transaction ut ON ut.id = ur.transaction_id
-  JOIN underlying_address ua ON ua.id = ut.source_id
-  JOIN underlying_block ub ON ub.height = ut.block_height
-  WHERE ua.text = ? AND ub.timestamp >= ? AND ub.timestamp < ?
-  GROUP BY me.fasset
+SELECT fasset, SUM(val) as val FROM (
+  SELECT me.fasset, ut.value AS val
+    FROM minting_executed me
+    JOIN collateral_reserved cr ON cr.evm_log_id = me.collateral_reserved_evm_log_id
+    JOIN underlying_reference ur ON ur.reference = cr.payment_reference
+    JOIN underlying_transaction ut ON ut.id = ur.transaction_id
+    JOIN underlying_address ua ON ua.id = ut.source_id
+    JOIN underlying_block ub ON ub.height = ut.block_height
+    WHERE ua.text = ? AND ub.timestamp >= ? AND ub.timestamp < ?
+  UNION ALL
+  SELECT dm.fasset, ut.value AS val
+    FROM direct_minting_executed dm
+    JOIN underlying_transaction ut ON ut.hash = dm.transaction_id
+    JOIN underlying_address ua ON ua.id = ut.source_id
+    JOIN underlying_block ub ON ub.height = ut.block_height
+    WHERE ua.text = ? AND ub.timestamp >= ? AND ub.timestamp < ?
+  UNION ALL
+  SELECT dms.fasset, ut.value AS val
+    FROM direct_minting_executed_to_smart_account dms
+    JOIN underlying_transaction ut ON ut.hash = dms.transaction_id
+    JOIN underlying_address ua ON ua.id = dms.source_address_id
+    JOIN underlying_block ub ON ub.height = ut.block_height
+    WHERE ua.text = ? AND ub.timestamp >= ? AND ub.timestamp < ?
+) t
+GROUP BY fasset
 `
 
 export const REDEEMED_BY_UNDERLYING_ADDRESS = `
@@ -333,9 +350,19 @@ SELECT rp.fasset, SUM(ut.value) as val FROM redemption_performed rp
 `
 
 export const UNDERLYING_MINTERS = `
-SELECT DISTINCT ua.text as address FROM minting_executed me
-  JOIN collateral_reserved cr ON cr.evm_log_id = me.collateral_reserved_evm_log_id
-  JOIN evm_address ea ON ea.id = cr.minter_id
-  JOIN underlying_reference ur ON ur.reference = cr.payment_reference
-  JOIN underlying_address ua ON ua.id = ur.address_id
-  WHERE ea.hex = ?`
+SELECT DISTINCT address FROM (
+  SELECT ua.text AS address
+    FROM minting_executed me
+    JOIN collateral_reserved cr ON cr.evm_log_id = me.collateral_reserved_evm_log_id
+    JOIN evm_address ea ON ea.id = cr.minter_id
+    JOIN underlying_reference ur ON ur.reference = cr.payment_reference
+    JOIN underlying_address ua ON ua.id = ur.address_id
+    WHERE ea.hex = ?
+  UNION ALL
+  SELECT ua.text AS address
+    FROM direct_minting_executed dm
+    JOIN evm_address ea ON ea.id = dm.target_address_id
+    JOIN underlying_transaction ut ON ut.hash = dm.transaction_id
+    JOIN underlying_address ua ON ua.id = ut.source_id
+    WHERE ea.hex = ?
+) t`

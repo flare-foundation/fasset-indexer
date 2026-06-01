@@ -157,7 +157,7 @@ export class AgentStatistics extends SharedAnalytics {
 
   async mintedByUnderlyingAddressDuring(address: string, start: number, end: number): Promise<FAssetValueResult> {
     const em = this.orm.em.fork()
-    const r = await em.execute(SQL.MINTED_BY_UNDERLYING_ADDRESS, [address, start, end]) as { fasset: FAssetType, val: string }[]
+    const r = await em.execute(SQL.MINTED_BY_UNDERLYING_ADDRESS, [address, start, end, address, start, end, address, start, end]) as { fasset: FAssetType, val: string }[]
     return this.convertOrmResultToFAssetValueResult(r, 'val')
   }
 
@@ -169,7 +169,7 @@ export class AgentStatistics extends SharedAnalytics {
 
   async underlyingMinterAddresses(address: string): Promise<string[]> {
     const em = this.orm.em.fork()
-    const minters = await em.execute(SQL.UNDERLYING_MINTERS, [address]) as { address: string }[]
+    const minters = await em.execute(SQL.UNDERLYING_MINTERS, [address, address]) as { address: string }[]
     return minters.map(({ address }) => address)
   }
 
