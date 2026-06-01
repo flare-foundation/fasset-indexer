@@ -3,6 +3,7 @@ import { ApiOperation, ApiParam, ApiTags } from "@nestjs/swagger"
 import { Controller, Get, Param, UseInterceptors } from "@nestjs/common"
 import { FxrpLaunchService } from "../services/fxrp-launch.service"
 import { ApiResponse, apiResponse } from "../shared/api-response"
+import { EvmAddressPipe } from "../shared/evm-address.pipe"
 import { FAssetValueResult } from "../analytics/types"
 
 @ApiTags('FXRP Launch')
@@ -16,7 +17,7 @@ export class FxrpLaunch {
   @ApiParam({ name: 'user', type: String, description: 'minting user' })
   @ApiParam({ name: "from", type: Number, description: 'time of first allowed minting' })
   getPoolCollateralDiff(
-    @Param('user') user: string,
+    @Param('user', new EvmAddressPipe()) user: string,
     @Param('from') from: number
   ): Promise<ApiResponse<FAssetValueResult>> {
     return apiResponse(this.service.mintedByUserFromTimestamp(user, from), 200)

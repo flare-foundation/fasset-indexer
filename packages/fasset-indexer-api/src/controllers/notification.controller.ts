@@ -2,6 +2,7 @@ import { Controller, Get, Query } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
 import { FAsset, FAssetType } from 'fasset-indexer-core'
 import { apiResponse, type ApiResponse } from '../shared/api-response'
+import { EvmAddressPipe } from '../shared/evm-address.pipe'
 import { NotificationService } from '../services/notification.service'
 
 
@@ -24,7 +25,7 @@ export class NotificationController {
   }
 
   @Get('/last-collateral-pool-withdrawal?')
-  getLastCollateralPoolClaim(@Query('pool') pool: string): Promise<ApiResponse<number>> {
+  getLastCollateralPoolClaim(@Query('pool', new EvmAddressPipe()) pool: string): Promise<ApiResponse<number>> {
     return apiResponse(this.service.lastCollateralPoolClaim(pool), 200)
   }
 
@@ -52,7 +53,7 @@ export class NotificationController {
   }
 
   @Get('/full-liquidation-reason?')
-  fullLiquidationReason(@Query('agent') agent: string): Promise<ApiResponse<any>> {
+  fullLiquidationReason(@Query('agent', new EvmAddressPipe()) agent: string): Promise<ApiResponse<any>> {
     return apiResponse(this.service.fullLiquidationReason(agent), 200)
   }
 

@@ -5,6 +5,7 @@ import { FAssetType } from 'fasset-indexer-core'
 import { unixnow } from '../shared/utils'
 import { DashboardService } from '../services/dashboard.service'
 import { apiResponse, type ApiResponse } from '../shared/api-response'
+import { EvmAddressPipe } from '../shared/evm-address.pipe'
 import {
   CP_SCORE_MIN_POOL_COLLATERAL_WEI,
   MAX_RETURNED_OBJECTS,
@@ -75,19 +76,19 @@ export class DashboardController {
 
   @Get('agent-minting-executed-count?')
   @ApiOperation({ summary: 'Number of executed mintings by agent' })
-  getAgentMintingExecutedCount(@Query('agent') agent: string): Promise<ApiResponse<AmountResult>> {
+  getAgentMintingExecutedCount(@Query('agent', new EvmAddressPipe()) agent: string): Promise<ApiResponse<AmountResult>> {
     return apiResponse(this.service.agentMintingExecutedCount(agent), 200)
   }
 
   @Get('agent-redemption-success-rate?')
   @ApiOperation({ summary: 'Redemption success rate by agent' })
-  getAgentRedemptionSuccessRate(@Query('agent') agent: string): Promise<ApiResponse<AmountResult>> {
+  getAgentRedemptionSuccessRate(@Query('agent', new EvmAddressPipe()) agent: string): Promise<ApiResponse<AmountResult>> {
     return apiResponse(this.service.agentRedemptionSuccessRate(agent), 200)
   }
 
   @Get('agent-performed-liquidation-count?')
   @ApiOperation({ summary: 'Number of performed liquidations by agent' })
-  getAgentLiquidationCount(@Query('agent') agent: string): Promise<ApiResponse<AmountResult>> {
+  getAgentLiquidationCount(@Query('agent', new EvmAddressPipe()) agent: string): Promise<ApiResponse<AmountResult>> {
     return apiResponse(this.service.agentLiquidationCount(agent), 200)
   }
 
@@ -117,7 +118,7 @@ export class DashboardController {
   @Get('user-collateral-pool-token-portfolio?')
   @ApiOperation({ summary: 'User\'s collateral pool token portfolio' })
   getUserCollateralPoolTokenPortfolio(
-    @Query('user') user: string
+    @Query('user', new EvmAddressPipe()) user: string
   ): Promise<ApiResponse<TokenPortfolio>> {
     return apiResponse(this.service.userCollateralPoolTokenPortfolio(user), 200)
   }
@@ -127,8 +128,8 @@ export class DashboardController {
   @ApiQuery({ name: "pool", type: String, required: false })
   @ApiQuery({ name: "user", type: String, required: false })
   getTotalClaimedPoolFees(
-    @Query('pool') pool?: string,
-    @Query('user') user?: string
+    @Query('pool', new EvmAddressPipe({ optional: true })) pool?: string,
+    @Query('user', new EvmAddressPipe({ optional: true })) user?: string
   ): Promise<ApiResponse<FAssetValueResult>> {
     return apiResponse(this.service.totalClaimedPoolFees(pool, user), 200)
   }
@@ -172,7 +173,7 @@ export class DashboardController {
   @ApiQuery({ name: "pool", type: String, required: false })
   getPoolCollateralDiff(
     @Query('timestamps') timestamps: string | string[],
-    @Query('pool') pool?: string
+    @Query('pool', new EvmAddressPipe({ optional: true })) pool?: string
   ): Promise<ApiResponse<Timespan<bigint>>> {
     const ts = this.parseTimestamps(timestamps)
     const er = this.restrictTimespan(ts)
@@ -186,7 +187,7 @@ export class DashboardController {
   @ApiQuery({ name: "pool", type: String, required: false })
   getPoolFeesDiff(
     @Query('timestamps') timestamps: string | string[],
-    @Query('pool') pool?: string
+    @Query('pool', new EvmAddressPipe({ optional: true })) pool?: string
   ): Promise<ApiResponse<FAssetTimespan<bigint> | Timespan<bigint>>> {
     const ts = this.parseTimestamps(timestamps)
     const er = this.restrictTimespan(ts)

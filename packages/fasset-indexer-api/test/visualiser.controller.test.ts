@@ -3,7 +3,7 @@ import { expect } from 'chai'
 import sinon from 'sinon'
 import { VisualiserController } from '../src/controllers/visualiser.controller'
 import { VisualiserService } from '../src/services/visualiser.service'
-import { ApiHarness, buildController, expectOk } from './helpers'
+import { ApiHarness, ADDR, BAD_ADDR, buildController, expectOk } from './helpers'
 
 
 describe('VisualiserController', () => {
@@ -94,29 +94,39 @@ describe('VisualiserController', () => {
   })
 
   describe('GET /api/visualiser/agents/by-vault', () => {
-    it('forwards vault query param', async () => {
-      const spy = sinon.stub().resolves({ vaultAddress: '0xv' })
+    it('forwards checksummed vault query param', async () => {
+      const spy = sinon.stub().resolves({ vaultAddress: ADDR.VAULT })
       service.agent = spy
-      const res = await h.request().get('/api/visualiser/agents/by-vault').query({ vault: '0xv' })
+      const res = await h.request().get('/api/visualiser/agents/by-vault').query({ vault: ADDR.VAULT.toLowerCase() })
       expectOk(res)
-      expect(spy.calledOnceWith('0xv')).to.equal(true)
+      expect(spy.calledOnceWith(ADDR.VAULT)).to.equal(true)
     })
 
     it('returns null when agent is unknown', async () => {
       service.agent = async () => null
-      const res = await h.request().get('/api/visualiser/agents/by-vault').query({ vault: '0xnope' })
+      const res = await h.request().get('/api/visualiser/agents/by-vault').query({ vault: ADDR.VAULT })
       expectOk(res)
       expect(res.body.data).to.equal(null)
+    })
+
+    it('rejects invalid vault address with 400', async () => {
+      const res = await h.request().get('/api/visualiser/agents/by-vault').query({ vault: BAD_ADDR })
+      expect(res.status).to.equal(400)
     })
   })
 
   describe('GET /api/visualiser/agents/:vault/state', () => {
-    it('uses :vault path param', async () => {
+    it('uses :vault path param (checksummed)', async () => {
       const spy = sinon.stub().resolves({ overview: {}, activeMintings: [], activeRedemptions: [], activeTickets: [] })
       service.agentState = spy
-      const res = await h.request().get('/api/visualiser/agents/0xVault/state')
+      const res = await h.request().get(`/api/visualiser/agents/${ADDR.VAULT.toLowerCase()}/state`)
       expectOk(res)
-      expect(spy.calledOnceWith('0xVault')).to.equal(true)
+      expect(spy.calledOnceWith(ADDR.VAULT)).to.equal(true)
+    })
+
+    it('rejects invalid vault path param with 400', async () => {
+      const res = await h.request().get(`/api/visualiser/agents/${BAD_ADDR}/state`)
+      expect(res.status).to.equal(400)
     })
   })
 
@@ -130,12 +140,12 @@ describe('VisualiserController', () => {
   })
 
   describe('GET /api/visualiser/redemption-tickets/active', () => {
-    it('forwards fasset, agent, limit (defaulting limit to 200)', async () => {
+    it('forwards fasset, checksummed agent, limit (defaulting limit to 200)', async () => {
       const spy = sinon.stub().resolves([])
       service.activeRedemptionTickets = spy
-      const res = await h.request().get('/api/visualiser/redemption-tickets/active').query({ fasset: 'FXRP', agent: '0xag' })
+      const res = await h.request().get('/api/visualiser/redemption-tickets/active').query({ fasset: 'FXRP', agent: ADDR.AGENT.toLowerCase() })
       expectOk(res)
-      expect(spy.firstCall.args).to.deep.equal(['FXRP', '0xag', 200])
+      expect(spy.firstCall.args).to.deep.equal(['FXRP', ADDR.AGENT, 200])
     })
 
     it('honours an explicit limit', async () => {
@@ -144,6 +154,11 @@ describe('VisualiserController', () => {
       const res = await h.request().get('/api/visualiser/redemption-tickets/active').query({ limit: 10 })
       expectOk(res)
       expect(spy.firstCall.args).to.deep.equal([undefined, undefined, 10])
+    })
+
+    it('rejects invalid agent address with 400', async () => {
+      const res = await h.request().get('/api/visualiser/redemption-tickets/active').query({ agent: BAD_ADDR })
+      expect(res.status).to.equal(400)
     })
   })
 
@@ -155,6 +170,11 @@ describe('VisualiserController', () => {
       expectOk(res)
       expect(spy.firstCall.args).to.deep.equal(['FBTC', undefined, 200])
     })
+
+    it('rejects invalid agent address with 400', async () => {
+      const res = await h.request().get('/api/visualiser/mintings/active').query({ agent: BAD_ADDR })
+      expect(res.status).to.equal(400)
+    })
   })
 
   describe('GET /api/visualiser/redemptions/active', () => {
@@ -164,6 +184,11 @@ describe('VisualiserController', () => {
       const res = await h.request().get('/api/visualiser/redemptions/active').query({ limit: 5 })
       expectOk(res)
       expect(spy.firstCall.args).to.deep.equal([undefined, undefined, 5])
+    })
+
+    it('rejects invalid agent address with 400', async () => {
+      const res = await h.request().get('/api/visualiser/redemptions/active').query({ agent: BAD_ADDR })
+      expect(res.status).to.equal(400)
     })
   })
 
@@ -195,12 +220,17 @@ describe('VisualiserController', () => {
   })
 
   describe('GET /api/visualiser/flows/active', () => {
-    it('forwards the filter object', async () => {
+    it('forwards the filter object with checksummed agent', async () => {
       const spy = sinon.stub().resolves([])
       service.activeFlows = spy
-      const res = await h.request().get('/api/visualiser/flows/active').query({ fasset: 'FXRP', agent: '0xa' })
+      const res = await h.request().get('/api/visualiser/flows/active').query({ fasset: 'FXRP', agent: ADDR.AGENT.toLowerCase() })
       expectOk(res)
-      expect(spy.firstCall.args[0]).to.deep.equal({ fasset: 'FXRP', agentVault: '0xa' })
+      expect(spy.firstCall.args[0]).to.deep.equal({ fasset: 'FXRP', agentVault: ADDR.AGENT })
+    })
+
+    it('rejects invalid agent address with 400', async () => {
+      const res = await h.request().get('/api/visualiser/flows/active').query({ agent: BAD_ADDR })
+      expect(res.status).to.equal(400)
     })
   })
 
@@ -217,16 +247,21 @@ describe('VisualiserController', () => {
       expect(opts).to.deep.equal({ fasset: 'FXRP', agentVault: undefined, sinceBlock: undefined })
     })
 
-    it('honours since + since_block + limit', async () => {
+    it('honours since + since_block + limit; checksums agent', async () => {
       const spy = sinon.stub().resolves({ flows: [], cursor: { timestamp: 1000, blockIndex: 7 } })
       service.flowsSince = spy
       const res = await h.request().get('/api/visualiser/flows').query({
-        since: 1000, since_block: 7, limit: 50, agent: '0xag'
+        since: 1000, since_block: 7, limit: 50, agent: ADDR.AGENT.toLowerCase()
       })
       expectOk(res)
       expect(spy.firstCall.args[0]).to.equal(1000)
       expect(spy.firstCall.args[1]).to.equal(50)
-      expect(spy.firstCall.args[2]).to.deep.equal({ fasset: undefined, agentVault: '0xag', sinceBlock: 7 })
+      expect(spy.firstCall.args[2]).to.deep.equal({ fasset: undefined, agentVault: ADDR.AGENT, sinceBlock: 7 })
+    })
+
+    it('rejects invalid agent address with 400', async () => {
+      const res = await h.request().get('/api/visualiser/flows').query({ agent: BAD_ADDR })
+      expect(res.status).to.equal(400)
     })
   })
 
@@ -285,19 +320,24 @@ describe('VisualiserController', () => {
       expect(spy.firstCall.args[2].kinds).to.equal(undefined)
     })
 
-    it('honours since + since_block + limit + agent + fasset', async () => {
+    it('honours since + since_block + limit + agent + fasset; checksums agent', async () => {
       const spy = sinon.stub().resolves({ events: [], cursor: { timestamp: 0, blockIndex: 0 } })
       service.eventsSince = spy
       const res = await h.request().get('/api/visualiser/events').query({
-        since: 1000, since_block: 5, limit: 50, agent: '0xag', fasset: 'FXRP'
+        since: 1000, since_block: 5, limit: 50, agent: ADDR.AGENT.toLowerCase(), fasset: 'FXRP'
       })
       expectOk(res)
       const [sinceTs, limit, opts] = spy.firstCall.args
       expect(sinceTs).to.equal(1000)
       expect(limit).to.equal(50)
-      expect(opts.agentVault).to.equal('0xag')
+      expect(opts.agentVault).to.equal(ADDR.AGENT)
       expect(opts.fasset).to.equal('FXRP')
       expect(opts.sinceBlock).to.equal(5)
+    })
+
+    it('rejects invalid agent address with 400', async () => {
+      const res = await h.request().get('/api/visualiser/events').query({ agent: BAD_ADDR })
+      expect(res.status).to.equal(400)
     })
   })
 })

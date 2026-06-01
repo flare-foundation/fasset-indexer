@@ -4,6 +4,7 @@ import { ApiOperation, ApiParam, ApiQuery, ApiTags } from '@nestjs/swagger'
 import { type FAsset } from 'fasset-indexer-core'
 import { VisualiserService } from '../services/visualiser.service'
 import { apiResponse, type ApiResponse } from '../shared/api-response'
+import { EvmAddressPipe } from '../shared/evm-address.pipe'
 import { unixnow } from '../shared/utils'
 import * as VT from '../analytics/visualiser-types'
 
@@ -66,7 +67,7 @@ export class VisualiserController {
   @UseInterceptors(CacheInterceptor)
   @ApiOperation({ summary: 'Single agent vault detail by vault address' })
   @ApiQuery({ name: 'vault', type: String, required: true })
-  getAgent(@Query('vault') vault: string): Promise<ApiResponse<VT.AgentOverview | null>> {
+  getAgent(@Query('vault', new EvmAddressPipe()) vault: string): Promise<ApiResponse<VT.AgentOverview | null>> {
     return apiResponse(this.service.agent(vault), 200)
   }
 
@@ -78,7 +79,7 @@ export class VisualiserController {
     description: 'Returns the agent overview together with their active mintings, active redemptions, active redemption tickets, and current liquidation status — so the agent-detail panel can render from a single call instead of filtering global active lists client-side.'
   })
   @ApiParam({ name: 'vault', type: String, description: 'Agent vault address' })
-  getAgentState(@Param('vault') vault: string): Promise<ApiResponse<VT.AgentState | null>> {
+  getAgentState(@Param('vault', new EvmAddressPipe()) vault: string): Promise<ApiResponse<VT.AgentState | null>> {
     return apiResponse(this.service.agentState(vault), 200)
   }
 
@@ -101,7 +102,7 @@ export class VisualiserController {
   @ApiQuery({ name: 'limit', type: Number, required: false })
   getActiveTickets(
     @Query('fasset') fasset?: string,
-    @Query('agent') agent?: string,
+    @Query('agent', new EvmAddressPipe({ optional: true })) agent?: string,
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number
   ): Promise<ApiResponse<VT.ActiveRedemptionTicket[]>> {
     return apiResponse(this.service.activeRedemptionTickets(fasset as FAsset | undefined, agent, limit ?? 200), 200)
@@ -116,7 +117,7 @@ export class VisualiserController {
   @ApiQuery({ name: 'limit', type: Number, required: false })
   getActiveMintings(
     @Query('fasset') fasset?: string,
-    @Query('agent') agent?: string,
+    @Query('agent', new EvmAddressPipe({ optional: true })) agent?: string,
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number
   ): Promise<ApiResponse<VT.ActiveMinting[]>> {
     return apiResponse(this.service.activeMintings(fasset as FAsset | undefined, agent, limit ?? 200), 200)
@@ -131,7 +132,7 @@ export class VisualiserController {
   @ApiQuery({ name: 'limit', type: Number, required: false })
   getActiveRedemptions(
     @Query('fasset') fasset?: string,
-    @Query('agent') agent?: string,
+    @Query('agent', new EvmAddressPipe({ optional: true })) agent?: string,
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number
   ): Promise<ApiResponse<VT.ActiveRedemption[]>> {
     return apiResponse(this.service.activeRedemptions(fasset as FAsset | undefined, agent, limit ?? 200), 200)
@@ -171,7 +172,7 @@ export class VisualiserController {
   @ApiQuery({ name: 'agent', type: String, required: false, description: 'Agent vault address' })
   getActiveFlows(
     @Query('fasset') fasset?: string,
-    @Query('agent') agent?: string
+    @Query('agent', new EvmAddressPipe({ optional: true })) agent?: string
   ): Promise<ApiResponse<VT.Flow[]>> {
     return apiResponse(this.service.activeFlows({
       fasset: fasset as FAsset | undefined,
@@ -196,7 +197,7 @@ export class VisualiserController {
     @Query('since_block', new ParseIntPipe({ optional: true })) sinceBlock?: number,
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
     @Query('fasset') fasset?: string,
-    @Query('agent') agent?: string
+    @Query('agent', new EvmAddressPipe({ optional: true })) agent?: string
   ): Promise<ApiResponse<VT.FlowsFeed>> {
     const sinceTs = since ?? unixnow() - 300
     return apiResponse(this.service.flowsSince(sinceTs, limit ?? 200, {
@@ -266,7 +267,7 @@ export class VisualiserController {
     @Query('since_block', new ParseIntPipe({ optional: true })) sinceBlock?: number,
     @Query('limit', new ParseIntPipe({ optional: true })) limit?: number,
     @Query('kind') kind?: string,
-    @Query('agent') agent?: string,
+    @Query('agent', new EvmAddressPipe({ optional: true })) agent?: string,
     @Query('fasset') fasset?: string
   ): Promise<ApiResponse<VT.VisualiserEventFeed>> {
     const sinceTs = since ?? unixnow() - 300

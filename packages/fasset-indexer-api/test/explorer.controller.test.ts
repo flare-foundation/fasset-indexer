@@ -7,7 +7,7 @@ import { ExplorerService } from '../src/services/explorer.service'
 import { DashboardService } from '../src/services/dashboard.service'
 import { TransactionType } from '../src/analytics/types'
 import { MAX_TIMESERIES_PTS } from '../src/config/constants'
-import { ApiHarness, buildController, expectOk } from './helpers'
+import { ApiHarness, ADDR, BAD_ADDR, buildController, expectOk } from './helpers'
 
 
 describe('ExplorerController', () => {
@@ -50,15 +50,29 @@ describe('ExplorerController', () => {
   })
 
   describe('GET /api/explorer/transactions', () => {
-    it('forwards required + optional args; coerces nothing on undefined types', async () => {
+    it('forwards required + optional args; user and agent are checksummed', async () => {
       const spy = sinon.stub().resolves({ transactions: [], count: 0 })
       explorer.transactions = spy
       const res = await h.request().get('/api/explorer/transactions').query({
-        limit: 10, offset: 0, user: '0xu', agent: '0xag',
+        limit: 10, offset: 0, user: ADDR.USER.toLowerCase(), agent: ADDR.AGENT.toLowerCase(),
         start: 100, end: 200, asc: 'true', status: 1
       })
       expectOk(res)
-      expect(spy.firstCall.args).to.deep.equal([10, 0, '0xu', '0xag', 100, 200, true, 1, undefined])
+      expect(spy.firstCall.args).to.deep.equal([10, 0, ADDR.USER, ADDR.AGENT, 100, 200, true, 1, undefined])
+    })
+
+    it('rejects invalid user address with 400', async () => {
+      const res = await h.request().get('/api/explorer/transactions').query({
+        limit: 10, offset: 0, user: BAD_ADDR
+      })
+      expect(res.status).to.equal(400)
+    })
+
+    it('rejects invalid agent address with 400', async () => {
+      const res = await h.request().get('/api/explorer/transactions').query({
+        limit: 10, offset: 0, agent: BAD_ADDR
+      })
+      expect(res.status).to.equal(400)
     })
 
     it('wraps a single types string into an array of TransactionType', async () => {

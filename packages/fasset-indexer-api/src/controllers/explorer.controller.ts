@@ -5,6 +5,7 @@ import { FAssetType } from 'fasset-indexer-core'
 import { ExplorerService } from '../services/explorer.service'
 import { DashboardService } from '../services/dashboard.service'
 import { apiResponse, ApiResponse } from '../shared/api-response'
+import { EvmAddressPipe } from '../shared/evm-address.pipe'
 import { MAX_TIMESERIES_PTS } from '../config/constants'
 import * as Types from '../analytics/types'
 
@@ -43,8 +44,8 @@ export class ExplorerController {
   getTransactions(
     @Query('limit', ParseIntPipe) limit: number,
     @Query('offset', ParseIntPipe) offset: number,
-    @Query('user') user?: string,
-    @Query('agent') agent?: string,
+    @Query('user', new EvmAddressPipe({ optional: true })) user?: string,
+    @Query('agent', new EvmAddressPipe({ optional: true })) agent?: string,
     @Query('asc', new ParseBoolPipe({ optional: true })) asc?: boolean,
     @Query('start', new ParseIntPipe({ optional: true })) start?: number,
     @Query('end', new ParseIntPipe({ optional: true })) end?: number,

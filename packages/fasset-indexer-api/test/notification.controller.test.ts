@@ -4,7 +4,7 @@ import sinon from 'sinon'
 import { FAssetType } from 'fasset-indexer-core'
 import { NotificationController } from '../src/controllers/notification.controller'
 import { NotificationService } from '../src/services/notification.service'
-import { ApiHarness, buildController, expectOk, stubResolve, stubReject } from './helpers'
+import { ApiHarness, ADDR, BAD_ADDR, buildController, expectOk, stubResolve, stubReject } from './helpers'
 
 
 describe('NotificationController', () => {
@@ -56,10 +56,17 @@ describe('NotificationController', () => {
   })
 
   describe('GET /api/notification/last-collateral-pool-withdrawal', () => {
-    it('returns the timestamp scalar', async () => {
-      stubResolve(service, 'lastCollateralPoolClaim', 1700001234)
-      const res = await h.request().get('/api/notification/last-collateral-pool-withdrawal').query({ pool: '0xpool' })
+    it('returns the timestamp scalar with checksummed pool', async () => {
+      const spy = sinon.stub().resolves(1700001234)
+      service.lastCollateralPoolClaim = spy
+      const res = await h.request().get('/api/notification/last-collateral-pool-withdrawal').query({ pool: ADDR.POOL.toLowerCase() })
       expect(expectOk<number>(res)).to.equal(1700001234)
+      expect(spy.firstCall.args[0]).to.equal(ADDR.POOL)
+    })
+
+    it('rejects invalid pool address with 400', async () => {
+      const res = await h.request().get('/api/notification/last-collateral-pool-withdrawal').query({ pool: BAD_ADDR })
+      expect(res.status).to.equal(400)
     })
   })
 
@@ -102,19 +109,24 @@ describe('NotificationController', () => {
   })
 
   describe('GET /api/notification/full-liquidation-reason', () => {
-    it('forwards the agent address', async () => {
+    it('forwards the checksummed agent address', async () => {
       const spy = sinon.stub().resolves({ reason: 'underlying-too-low' })
       service.fullLiquidationReason = spy
-      const res = await h.request().get('/api/notification/full-liquidation-reason').query({ agent: '0xag' })
+      const res = await h.request().get('/api/notification/full-liquidation-reason').query({ agent: ADDR.AGENT.toLowerCase() })
       expectOk(res)
-      expect(spy.calledOnceWith('0xag')).to.equal(true)
+      expect(spy.calledOnceWith(ADDR.AGENT)).to.equal(true)
     })
 
     it('returns null payload as null inside data', async () => {
       stubResolve(service, 'fullLiquidationReason', null)
-      const res = await h.request().get('/api/notification/full-liquidation-reason').query({ agent: '0xag' })
+      const res = await h.request().get('/api/notification/full-liquidation-reason').query({ agent: ADDR.AGENT })
       expectOk(res)
       expect(res.body.data).to.equal(null)
+    })
+
+    it('rejects invalid agent address with 400', async () => {
+      const res = await h.request().get('/api/notification/full-liquidation-reason').query({ agent: BAD_ADDR })
+      expect(res.status).to.equal(400)
     })
   })
 })

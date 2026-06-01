@@ -8,7 +8,7 @@ import {
   MAX_TIMESERIES_PTS, MAX_TIMESPAN_PTS, MAX_RETURNED_OBJECTS,
   CP_SCORE_MIN_POOL_COLLATERAL_WEI
 } from '../src/config/constants'
-import { ApiHarness, buildController, expectOk } from './helpers'
+import { ApiHarness, ADDR, BAD_ADDR, buildController, expectOk } from './helpers'
 
 
 describe('DashboardController', () => {
@@ -97,32 +97,47 @@ describe('DashboardController', () => {
   // -------------------------------------------------------------- agents
 
   describe('GET /api/dashboard/agent-minting-executed-count', () => {
-    it('forwards the agent param', async () => {
+    it('forwards the checksummed agent param', async () => {
       const spy = sinon.stub().resolves({ amount: 3 })
       dashboard.agentMintingExecutedCount = spy
-      const res = await h.request().get('/api/dashboard/agent-minting-executed-count').query({ agent: '0xag' })
+      const res = await h.request().get('/api/dashboard/agent-minting-executed-count').query({ agent: ADDR.AGENT.toLowerCase() })
       expectOk(res)
-      expect(spy.calledOnceWith('0xag')).to.equal(true)
+      expect(spy.calledOnceWith(ADDR.AGENT)).to.equal(true)
+    })
+
+    it('rejects invalid agent address with 400', async () => {
+      const res = await h.request().get('/api/dashboard/agent-minting-executed-count').query({ agent: BAD_ADDR })
+      expect(res.status).to.equal(400)
     })
   })
 
   describe('GET /api/dashboard/agent-redemption-success-rate', () => {
-    it('forwards the agent param', async () => {
+    it('forwards the checksummed agent param', async () => {
       const spy = sinon.stub().resolves({ amount: 0.95 })
       dashboard.agentRedemptionSuccessRate = spy
-      const res = await h.request().get('/api/dashboard/agent-redemption-success-rate').query({ agent: '0xag' })
+      const res = await h.request().get('/api/dashboard/agent-redemption-success-rate').query({ agent: ADDR.AGENT.toLowerCase() })
       expectOk(res)
-      expect(spy.calledOnceWith('0xag')).to.equal(true)
+      expect(spy.calledOnceWith(ADDR.AGENT)).to.equal(true)
+    })
+
+    it('rejects invalid agent address with 400', async () => {
+      const res = await h.request().get('/api/dashboard/agent-redemption-success-rate').query({ agent: BAD_ADDR })
+      expect(res.status).to.equal(400)
     })
   })
 
   describe('GET /api/dashboard/agent-performed-liquidation-count', () => {
-    it('forwards the agent param', async () => {
+    it('forwards the checksummed agent param', async () => {
       const spy = sinon.stub().resolves({ amount: 2 })
       dashboard.agentLiquidationCount = spy
-      const res = await h.request().get('/api/dashboard/agent-performed-liquidation-count').query({ agent: '0xag' })
+      const res = await h.request().get('/api/dashboard/agent-performed-liquidation-count').query({ agent: ADDR.AGENT.toLowerCase() })
       expectOk(res)
-      expect(spy.calledOnceWith('0xag')).to.equal(true)
+      expect(spy.calledOnceWith(ADDR.AGENT)).to.equal(true)
+    })
+
+    it('rejects invalid agent address with 400', async () => {
+      const res = await h.request().get('/api/dashboard/agent-performed-liquidation-count').query({ agent: BAD_ADDR })
+      expect(res.status).to.equal(400)
     })
   })
 
@@ -167,22 +182,29 @@ describe('DashboardController', () => {
   })
 
   describe('GET /api/dashboard/user-collateral-pool-token-portfolio', () => {
-    it('forwards the user param', async () => {
+    it('forwards the checksummed user param', async () => {
       const spy = sinon.stub().resolves({ pools: [] })
       dashboard.userCollateralPoolTokenPortfolio = spy
-      const res = await h.request().get('/api/dashboard/user-collateral-pool-token-portfolio').query({ user: '0xu' })
+      const res = await h.request().get('/api/dashboard/user-collateral-pool-token-portfolio').query({ user: ADDR.USER.toLowerCase() })
       expectOk(res)
-      expect(spy.calledOnceWith('0xu')).to.equal(true)
+      expect(spy.calledOnceWith(ADDR.USER)).to.equal(true)
+    })
+
+    it('rejects invalid user address with 400', async () => {
+      const res = await h.request().get('/api/dashboard/user-collateral-pool-token-portfolio').query({ user: BAD_ADDR })
+      expect(res.status).to.equal(400)
     })
   })
 
   describe('GET /api/dashboard/total-claimed-pool-fees', () => {
-    it('forwards both optional filters', async () => {
+    it('forwards both optional filters (checksummed)', async () => {
       const spy = sinon.stub().resolves({ FXRP: { value: 10n } })
       dashboard.totalClaimedPoolFees = spy
-      const res = await h.request().get('/api/dashboard/total-claimed-pool-fees').query({ pool: '0xp', user: '0xu' })
+      const res = await h.request().get('/api/dashboard/total-claimed-pool-fees').query({
+        pool: ADDR.POOL.toLowerCase(), user: ADDR.USER.toLowerCase()
+      })
       expectOk(res)
-      expect(spy.firstCall.args).to.deep.equal(['0xp', '0xu'])
+      expect(spy.firstCall.args).to.deep.equal([ADDR.POOL, ADDR.USER])
     })
 
     it('passes undefined for both when omitted', async () => {
@@ -191,6 +213,11 @@ describe('DashboardController', () => {
       const res = await h.request().get('/api/dashboard/total-claimed-pool-fees')
       expectOk(res)
       expect(spy.firstCall.args).to.deep.equal([undefined, undefined])
+    })
+
+    it('rejects invalid pool address with 400', async () => {
+      const res = await h.request().get('/api/dashboard/total-claimed-pool-fees').query({ pool: BAD_ADDR })
+      expect(res.status).to.equal(400)
     })
   })
 
@@ -244,12 +271,12 @@ describe('DashboardController', () => {
   timespanEndpoint('/api/dashboard/timespan/tracked-underlying-backing-ratio', 'trackedUnderlyingBackingRatioTimeSeries')
 
   describe('GET /api/dashboard/timespan/pool-collateral', () => {
-    it('forwards timestamps and the optional pool', async () => {
+    it('forwards timestamps and the optional checksummed pool', async () => {
       const spy = sinon.stub().resolves({ timestamps: [], values: [] })
       dashboard.poolCollateralTimespan = spy
-      const res = await h.request().get('/api/dashboard/timespan/pool-collateral').query({ timestamps: '1,2', pool: '0xp' })
+      const res = await h.request().get('/api/dashboard/timespan/pool-collateral').query({ timestamps: '1,2', pool: ADDR.POOL.toLowerCase() })
       expectOk(res)
-      expect(spy.firstCall.args).to.deep.equal([[1, 2], '0xp'])
+      expect(spy.firstCall.args).to.deep.equal([[1, 2], ADDR.POOL])
     })
 
     it('passes undefined pool when omitted', async () => {
@@ -265,15 +292,25 @@ describe('DashboardController', () => {
       const res = await h.request().get('/api/dashboard/timespan/pool-collateral').query({ timestamps: ts })
       expect(res.body.status).to.equal(400)
     })
+
+    it('rejects invalid pool address with 400', async () => {
+      const res = await h.request().get('/api/dashboard/timespan/pool-collateral').query({ timestamps: '1,2', pool: BAD_ADDR })
+      expect(res.status).to.equal(400)
+    })
   })
 
   describe('GET /api/dashboard/timespan/claimed-pool-fees', () => {
-    it('forwards timestamps and the optional pool', async () => {
+    it('forwards timestamps and the optional checksummed pool', async () => {
       const spy = sinon.stub().resolves({})
       dashboard.claimedPoolFeesTimespan = spy
-      const res = await h.request().get('/api/dashboard/timespan/claimed-pool-fees').query({ timestamps: '1,2,3', pool: '0xp' })
+      const res = await h.request().get('/api/dashboard/timespan/claimed-pool-fees').query({ timestamps: '1,2,3', pool: ADDR.POOL.toLowerCase() })
       expectOk(res)
-      expect(spy.firstCall.args).to.deep.equal([[1, 2, 3], '0xp'])
+      expect(spy.firstCall.args).to.deep.equal([[1, 2, 3], ADDR.POOL])
+    })
+
+    it('rejects invalid pool address with 400', async () => {
+      const res = await h.request().get('/api/dashboard/timespan/claimed-pool-fees').query({ timestamps: '1,2', pool: BAD_ADDR })
+      expect(res.status).to.equal(400)
     })
   })
 

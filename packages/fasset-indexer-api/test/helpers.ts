@@ -74,3 +74,15 @@ export function stubResolve<T>(target: any, name: string, value: T): void {
 export function stubReject(target: any, name: string, reason: any): void {
   target[name] = async () => { throw reason instanceof Error ? reason : new Error(String(reason)) }
 }
+
+// Valid EIP-55 checksummed addresses for use in controller tests.
+// The EvmAddressPipe rejects anything else, so placeholders like '0xag' won't reach the service.
+export const ADDR = {
+  AGENT:    '0x000000219Ab540356cBA9d6f3f5B1BFC8e29c5DD',
+  VAULT:    '0xABCDeFABCDEfABCDEfABcDeFABCDEfABCdEF1234',
+  USER:     '0xDeaDbeefdEAdbeefdEadbEEFdeadbeEFdEaDbeeF',
+  POOL:     '0xfeEDfaCeFeEdFaceFEedFACefEEDFaCEfEeDfAce',
+  REDEEMER: '0xC0FfEE0000000000000000000000000000c0fFEe',
+  ZERO:     '0x0000000000000000000000000000000000000000'
+}
+export const BAD_ADDR = '0xnope'
