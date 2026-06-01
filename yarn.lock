@@ -112,6 +112,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@electric-sql/pglite-socket@npm:^0.1.6":
+  version: 0.1.6
+  resolution: "@electric-sql/pglite-socket@npm:0.1.6"
+  peerDependencies:
+    "@electric-sql/pglite": 0.4.6
+  bin:
+    pglite-server: dist/scripts/server.js
+  checksum: 92c72e5a4c7580cde249e1e6e823ab608b9059e2b85362eb9d86334572c754e13b5ddeff3b594b903d45dcfdbc9999bfc866596971522fc8a486cef365ac6dbc
+  languageName: node
+  linkType: hard
+
+"@electric-sql/pglite@npm:^0.4.6":
+  version: 0.4.6
+  resolution: "@electric-sql/pglite@npm:0.4.6"
+  checksum: 8f97325d555d59a96d8066e8fa546908faf6298850d487cb22d763eb78a66cfe91640341da3ef2df23549071dc4d6cbf24732fcc28ddef75eecc071259dedfd4
+  languageName: node
+  linkType: hard
+
 "@esbuild/aix-ppc64@npm:0.25.5":
   version: 0.25.5
   resolution: "@esbuild/aix-ppc64@npm:0.25.5"
@@ -3738,7 +3756,10 @@ __metadata:
   version: 0.0.0-use.local
   resolution: "fasset-indexer-api@workspace:packages/fasset-indexer-api"
   dependencies:
+    "@electric-sql/pglite": ^0.4.6
+    "@electric-sql/pglite-socket": ^0.1.6
     "@mikro-orm/core": 6.3.6
+    "@mikro-orm/postgresql": 6.3.6
     "@nestjs/cache-manager": ^2.3.0
     "@nestjs/cli": ^10.0.0
     "@nestjs/common": ^10.0.0
@@ -3761,6 +3782,7 @@ __metadata:
     fasset-indexer-xrp: "workspace:*"
     helmet: ^7.1.0
     mocha: ^11.7.6
+    pg: ^8.21.0
     reflect-metadata: ^0.2.0
     rxjs: ^7.8.1
     sinon: ^22.0.0
@@ -6344,10 +6366,24 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pg-cloudflare@npm:^1.4.0":
+  version: 1.4.0
+  resolution: "pg-cloudflare@npm:1.4.0"
+  checksum: cddea0ab52b4c4a3c842a2304ccc10ef61e06fd00ba633f4c2c04b31e9352adee8ee0a7b1fdc8e8738527d3e39534f75903f467a0b1a6af6cc49fb5abe90481c
+  languageName: node
+  linkType: hard
+
 "pg-connection-string@npm:2.6.2":
   version: 2.6.2
   resolution: "pg-connection-string@npm:2.6.2"
   checksum: 22265882c3b6f2320785378d0760b051294a684989163d5a1cde4009e64e84448d7bf67d9a7b9e7f69440c3ee9e2212f9aa10dd17ad6773f6143c6020cebbcb5
+  languageName: node
+  linkType: hard
+
+"pg-connection-string@npm:^2.13.0":
+  version: 2.13.0
+  resolution: "pg-connection-string@npm:2.13.0"
+  checksum: 27f0182688f7c1121eb4ef7f7b6c184b04228b99a954005bf8f34dd0a4f0a3b12f9aa333680ae60e39c61a2931308a28c178df9a8db2f8ba22c8fafa225b284e
   languageName: node
   linkType: hard
 
@@ -6365,12 +6401,28 @@ __metadata:
   languageName: node
   linkType: hard
 
+"pg-pool@npm:^3.14.0":
+  version: 3.14.0
+  resolution: "pg-pool@npm:3.14.0"
+  peerDependencies:
+    pg: ">=8.0"
+  checksum: cf077bace1c7a55011322c71973cf22fb152bf71312c15484dc75818ace77f7759d96069fb0125163f6fa56c5470a0ea70734c2f6218d398018e4ecf835bf40e
+  languageName: node
+  linkType: hard
+
 "pg-pool@npm:^3.6.2":
   version: 3.10.0
   resolution: "pg-pool@npm:3.10.0"
   peerDependencies:
     pg: ">=8.0"
   checksum: f2958ae9ba97f2514548d8f7ccd0fc6ab1299143e8d5a976f5888c3dbf22bdf4c577e40212b1403e5add7489ce276d16c1a23ef987089c4c43d5a2eaddd6bb73
+  languageName: node
+  linkType: hard
+
+"pg-protocol@npm:^1.14.0":
+  version: 1.14.0
+  resolution: "pg-protocol@npm:1.14.0"
+  checksum: 35a3189e8a3538433a1d709b94f229e6b7bb1a6bd9aef83364e157b7c639ac7c285e0cb809ae2fcab82c544b729cae474353b7b58dd9b3ea3727e30595fc7c47
   languageName: node
   linkType: hard
 
@@ -6381,7 +6433,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pg-types@npm:^2.1.0":
+"pg-types@npm:2.2.0, pg-types@npm:^2.1.0":
   version: 2.2.0
   resolution: "pg-types@npm:2.2.0"
   dependencies:
@@ -6416,7 +6468,29 @@ __metadata:
   languageName: node
   linkType: hard
 
-"pgpass@npm:1.x":
+"pg@npm:^8.21.0":
+  version: 8.21.0
+  resolution: "pg@npm:8.21.0"
+  dependencies:
+    pg-cloudflare: ^1.4.0
+    pg-connection-string: ^2.13.0
+    pg-pool: ^3.14.0
+    pg-protocol: ^1.14.0
+    pg-types: 2.2.0
+    pgpass: 1.0.5
+  peerDependencies:
+    pg-native: ">=3.0.1"
+  dependenciesMeta:
+    pg-cloudflare:
+      optional: true
+  peerDependenciesMeta:
+    pg-native:
+      optional: true
+  checksum: 79ef8f60b754328e662e06ed4815bb3d6cc81b478bb2ad197332c052c1e057349dc4214c57a67449eaaff6e199f06cd19b2094d222c417d07f1fed7c81f95a7a
+  languageName: node
+  linkType: hard
+
+"pgpass@npm:1.0.5, pgpass@npm:1.x":
   version: 1.0.5
   resolution: "pgpass@npm:1.0.5"
   dependencies:

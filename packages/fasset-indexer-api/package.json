@@ -28,6 +28,9 @@
     "rxjs": "^7.8.1"
   },
   "devDependencies": {
+    "@electric-sql/pglite": "^0.4.6",
+    "@electric-sql/pglite-socket": "^0.1.6",
+    "@mikro-orm/postgresql": "6.3.6",
     "@nestjs/cli": "^10.0.0",
     "@nestjs/schematics": "^10.0.0",
     "@nestjs/testing": "^10.0.0",
@@ -40,6 +43,7 @@
     "chai": "^6.2.2",
     "chai-as-promised": "^8.0.2",
     "mocha": "^11.7.6",
+    "pg": "^8.21.0",
     "sinon": "^22.0.0",
     "source-map-support": "^0.5.21",
     "supertest": "^6.3.3",
