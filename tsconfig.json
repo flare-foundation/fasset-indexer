@@ -23,6 +23,7 @@
       "module": "commonjs"
     }
   },
+  "files": [],
   "references": [
     {
       "path": "packages/fasset-indexer-api"
