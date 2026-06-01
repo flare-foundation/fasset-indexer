@@ -323,14 +323,14 @@ SELECT fasset, SUM(val) as val FROM (
   UNION ALL
   SELECT dm.fasset, ut.value AS val
     FROM direct_minting_executed dm
-    JOIN underlying_transaction ut ON ut.hash = dm.transaction_id
+    JOIN underlying_transaction ut ON ut.hash = UPPER(SUBSTRING(dm.transaction_id FROM 3))
     JOIN underlying_address ua ON ua.id = ut.source_id
     JOIN underlying_block ub ON ub.height = ut.block_height
     WHERE ua.text = ? AND ub.timestamp >= ? AND ub.timestamp < ?
   UNION ALL
   SELECT dms.fasset, ut.value AS val
     FROM direct_minting_executed_to_smart_account dms
-    JOIN underlying_transaction ut ON ut.hash = dms.transaction_id
+    JOIN underlying_transaction ut ON ut.hash = UPPER(SUBSTRING(dms.transaction_id FROM 3))
     JOIN underlying_address ua ON ua.id = dms.source_address_id
     JOIN underlying_block ub ON ub.height = ut.block_height
     WHERE ua.text = ? AND ub.timestamp >= ? AND ub.timestamp < ?
@@ -362,7 +362,7 @@ SELECT DISTINCT address FROM (
   SELECT ua.text AS address
     FROM direct_minting_executed dm
     JOIN evm_address ea ON ea.id = dm.target_address_id
-    JOIN underlying_transaction ut ON ut.hash = dm.transaction_id
+    JOIN underlying_transaction ut ON ut.hash = UPPER(SUBSTRING(dm.transaction_id FROM 3))
     JOIN underlying_address ua ON ua.id = ut.source_id
     WHERE ea.hex = ?
 ) t`
