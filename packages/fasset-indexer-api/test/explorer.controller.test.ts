@@ -134,7 +134,7 @@ describe('ExplorerController', () => {
       const res = await h.request().get('/api/explorer/timeseries/redeemed').query({
         endtime: 1000, npoints: MAX_TIMESERIES_PTS + 1
       })
-      expect(res.body.status).to.equal(500)
+      expect(res.body.status).to.equal(400)
       expect(res.body.error).to.match(/Cannot request more than/)
     })
   })
@@ -155,7 +155,7 @@ describe('ExplorerController', () => {
       const res = await h.request().get('/api/explorer/timeseries/minted').query({
         endtime: 1000, npoints: MAX_TIMESERIES_PTS + 1
       })
-      expect(res.body.status).to.equal(500)
+      expect(res.body.status).to.equal(400)
     })
   })
 })

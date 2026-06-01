@@ -110,8 +110,8 @@ export class DashboardController {
   ): Promise<ApiResponse<FAssetCollateralPoolScore>> {
     const err = this.restrictReturnedObjects(n)
     if (err !== null) return apiResponse(Promise.reject(err), 400)
-    return apiResponse(this.service.bestCollateralPools(n, BigInt(minNatWei) ?? CP_SCORE_MIN_POOL_COLLATERAL_WEI,
-      unixnow(), 3600 * 24 * 7, 100), 200)
+    const minWei = minNatWei != null ? BigInt(minNatWei) : CP_SCORE_MIN_POOL_COLLATERAL_WEI
+    return apiResponse(this.service.bestCollateralPools(n, minWei, unixnow(), 3600 * 24 * 7, 100), 200)
   }
 
   @Get('user-collateral-pool-token-portfolio?')

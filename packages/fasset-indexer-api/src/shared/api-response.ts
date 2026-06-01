@@ -48,10 +48,13 @@ export async function apiResponse<T>(action: Promise<T>, status: number, sanitiz
   try {
     return new ApiResponse<T>(removeObjectCycles(await action), status)
   } catch (reason) {
+    const errorStatus = status >= 400 && status < 600 ? status : 500
     if (sanitize) {
-      const message = reason instanceof Error && reason.message ? reason.message : "Server error"
-      return new ApiResponse<T>(undefined, 500, message)
+      const message = reason instanceof Error
+        ? (reason.message || "Server error")
+        : (typeof reason === 'string' && reason ? reason : "Server error")
+      return new ApiResponse<T>(undefined, errorStatus, message)
     }
-    return new ApiResponse<T>(undefined, 500, String(reason))
+    return new ApiResponse<T>(undefined, errorStatus, String(reason))
   }
 }

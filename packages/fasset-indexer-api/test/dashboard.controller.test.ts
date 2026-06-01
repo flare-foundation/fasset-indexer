@@ -5,7 +5,8 @@ import { FAssetType } from 'fasset-indexer-core'
 import { DashboardController } from '../src/controllers/dashboard.controller'
 import { DashboardService } from '../src/services/dashboard.service'
 import {
-  MAX_TIMESERIES_PTS, MAX_TIMESPAN_PTS, MAX_RETURNED_OBJECTS
+  MAX_TIMESERIES_PTS, MAX_TIMESPAN_PTS, MAX_RETURNED_OBJECTS,
+  CP_SCORE_MIN_POOL_COLLATERAL_WEI
 } from '../src/config/constants'
 import { ApiHarness, buildController, expectOk } from './helpers'
 
@@ -148,23 +149,19 @@ describe('DashboardController', () => {
       expect(minNat).to.equal(BigInt('999000000000000000'))
     })
 
-    // Current controller calls BigInt(minNatWei) ?? CP_SCORE_MIN_POOL_COLLATERAL_WEI,
-    // so a missing minNatWei throws BigInt(undefined) before the ?? fallback fires.
-    // The CP_SCORE_MIN_POOL_COLLATERAL_WEI default is unreachable today; pinning the
-    // behavior here so any future fix is intentional rather than silent.
-    it('errors out when minNatWei is omitted (BigInt(undefined) throws before ?? fallback)', async () => {
+    it('defaults to CP_SCORE_MIN_POOL_COLLATERAL_WEI when minNatWei omitted', async () => {
       const spy = sinon.stub().resolves({ FXRP: [] })
       dashboard.bestCollateralPools = spy
       const res = await h.request().get('/api/dashboard/best-performing-collateral-pools').query({ n: 5 })
-      expect(res.status).to.equal(500)
-      expect(spy.called).to.equal(false)
+      expectOk(res)
+      expect(spy.firstCall.args[1]).to.equal(CP_SCORE_MIN_POOL_COLLATERAL_WEI)
     })
 
     it('rejects n over MAX_RETURNED_OBJECTS', async () => {
       const res = await h.request().get('/api/dashboard/best-performing-collateral-pools').query({
         n: MAX_RETURNED_OBJECTS + 1
       })
-      expect(res.body.status).to.equal(500)
+      expect(res.body.status).to.equal(400)
       expect(res.body.error).to.match(/Cannot request more than/)
     })
   })
@@ -231,7 +228,7 @@ describe('DashboardController', () => {
       it('rejects timespans over MAX_TIMESPAN_PTS', async () => {
         const ts = Array.from({ length: MAX_TIMESPAN_PTS + 1 }, (_, i) => i + 1).join(',')
         const res = await h.request().get(path).query({ timestamps: ts })
-        expect(res.body.status).to.equal(500)
+        expect(res.body.status).to.equal(400)
         expect(res.body.error).to.match(/Timespan must be an array of maximum/)
       })
     })
@@ -266,7 +263,7 @@ describe('DashboardController', () => {
     it('rejects over MAX_TIMESPAN_PTS', async () => {
       const ts = Array.from({ length: MAX_TIMESPAN_PTS + 1 }, (_, i) => i).join(',')
       const res = await h.request().get('/api/dashboard/timespan/pool-collateral').query({ timestamps: ts })
-      expect(res.body.status).to.equal(500)
+      expect(res.body.status).to.equal(400)
     })
   })
 
@@ -304,7 +301,7 @@ describe('DashboardController', () => {
         const res = await h.request().get(path).query({
           endtime: 1000, npoints: MAX_TIMESERIES_PTS + 1
         })
-        expect(res.body.status).to.equal(500)
+        expect(res.body.status).to.equal(400)
         expect(res.body.error).to.match(/Cannot request more than/)
       })
 

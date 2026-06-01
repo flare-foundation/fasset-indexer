@@ -68,12 +68,12 @@ describe('StatisticsController', () => {
   avgEndpoint('/api/statistics/redemption-frequency-wa', 'redemptionCountWA')
 
   describe('GET /api/statistics/timeseries/user-minted', () => {
-    it('rejects npoints > 1 with an error envelope', async () => {
+    it('rejects npoints > 1 with a 400 envelope', async () => {
       const res = await h.request().get('/api/statistics/timeseries/user-minted').query({
         endtime: 1000, npoints: 2, user: '0xu'
       })
-      expect(res.body.status).to.equal(500)
-      expect(res.body.error).to.equal('Server error')
+      expect(res.body.status).to.equal(400)
+      expect(res.body.error).to.equal('at most one point allowed')
     })
 
     it('forwards (end, npoints, start, user) to dashboard.mintedTimeSeries', async () => {
@@ -109,8 +109,8 @@ describe('StatisticsController', () => {
       const res = await h.request().get('/api/statistics/timeseries/user-redeemed').query({
         endtime: 1000, npoints: 5, user: '0xu'
       })
-      expect(res.body.status).to.equal(500)
-      expect(res.body.error).to.equal('Server error')
+      expect(res.body.status).to.equal(400)
+      expect(res.body.error).to.equal('at most one point allowed')
     })
 
     it('forwards (end, npoints, start, user) to dashboard.redeemedTimeSeries', async () => {
