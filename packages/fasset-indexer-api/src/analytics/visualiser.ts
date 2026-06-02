@@ -1030,10 +1030,20 @@ export class VisualiserAnalytics extends DashboardAnalytics {
     const wantedKinds = filter?.kinds && filter.kinds.length > 0 ? new Set(filter.kinds) : null
     const wants = (k: VT.VisualiserEventKind): boolean => wantedKinds == null || wantedKinds.has(k)
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // Shared shim across entity kinds with different FilterQuery / AutoPath /
+    // QueryOrderMap specialisations; the three casts paper over mikro-orm's
+    // per-T generics that can't be satisfied uniformly from this outer scope.
     const fetch = async <T extends object>(kind: VT.VisualiserEventKind, ent: new () => T, populate: readonly string[]): Promise<T[]> => {
       if (!wants(kind)) return []
-      return em.find(ent, where as any, { populate: populate as any, orderBy: order as any, limit: cap })
+      return em.find(ent,
+        where as Parameters<typeof em.find<T>>[1],
+        {
+          populate: populate as Parameters<typeof em.find<T>>[2] extends infer O
+            ? O extends { populate?: infer P } ? P : never : never,
+          orderBy: order as Parameters<typeof em.find<T>>[2] extends infer O
+            ? O extends { orderBy?: infer Q } ? Q : never : never,
+          limit: cap
+        })
     }
 
     const [

@@ -14,7 +14,7 @@ export class AgentScore extends AgentStatistics {
   }
 
   protected async redemptionSuccessScore(vault: string, now: number, delta: number, lim: number): Promise<Score> {
-    const [wa, _] = await this.redemptionDefaultWA(vault, now, delta, lim)
+    const [wa] = await this.redemptionDefaultWA(vault, now, delta, lim)
     if (wa === BigInt(0)) return Score.A
     const backedFAssets = await this.backedFAssets(vault)
     const defaultRatio = backedFAssets * MAX_BIPS / wa

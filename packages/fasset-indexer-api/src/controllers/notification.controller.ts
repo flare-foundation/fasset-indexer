@@ -1,9 +1,28 @@
 import { Controller, Get, Query } from '@nestjs/common'
 import { ApiTags } from '@nestjs/swagger'
+import * as Entities from 'fasset-indexer-core/entities'
 import { FAsset, FAssetType } from 'fasset-indexer-core'
 import { apiResponse, type ApiResponse } from '../shared/api-response'
 import { EvmAddressPipe } from '../shared/evm-address.pipe'
 import { NotificationService } from '../services/notification.service'
+
+
+type RedemptionPaymentStatus =
+  | Entities.RedemptionPerformed
+  | Entities.RedemptionDefault
+  | Entities.UnderlyingReference
+  | null
+
+type UnhandledDogeRedemption = {
+  fasset: string, name: string, hex: string, request_id: string,
+  index: number, timestamp: number, diff: number
+}
+
+type FullLiquidationReason =
+  | Entities.IllegalPaymentConfirmed
+  | Entities.DuplicatePaymentConfirmed
+  | Entities.UnderlyingBalanceTooLow
+  | null
 
 
 @ApiTags("Notification")
@@ -15,12 +34,14 @@ export class NotificationController {
   getRedemptionPaymentStatus(
     @Query('redemptionId') redemptionId: number,
     @Query('fasset') fasset: FAsset
-  ): Promise<ApiResponse<any>> {
+  ): Promise<ApiResponse<RedemptionPaymentStatus>> {
     return apiResponse(this.service.getRedemptionPaymentStatus(redemptionId, FAssetType[fasset]), 200)
   }
 
   @Get('/unhandled-redemptions?')
-  getUnhandledDogeRedemptions(@Query('startTime') startTime: number): Promise<any> {
+  getUnhandledDogeRedemptions(
+    @Query('startTime') startTime: number
+  ): Promise<ApiResponse<UnhandledDogeRedemption[]>> {
     return apiResponse(this.service.unhandledDogeRedemptions(startTime), 200)
   }
 
@@ -53,7 +74,9 @@ export class NotificationController {
   }
 
   @Get('/full-liquidation-reason?')
-  fullLiquidationReason(@Query('agent', new EvmAddressPipe()) agent: string): Promise<ApiResponse<any>> {
+  fullLiquidationReason(
+    @Query('agent', new EvmAddressPipe()) agent: string
+  ): Promise<ApiResponse<FullLiquidationReason>> {
     return apiResponse(this.service.fullLiquidationReason(agent), 200)
   }
 

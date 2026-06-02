@@ -30,7 +30,7 @@ export class ApiResponse<T> {
 
 function getJsonReplacer() {
   const seen = new WeakSet<object>()
-  return function (_key: string, value: any) {
+  return function (_key: string, value: unknown): unknown {
     if (typeof value === 'bigint') return value.toString()
     if (value && typeof value === 'object') {
       if (seen.has(value)) return undefined
@@ -40,7 +40,7 @@ function getJsonReplacer() {
   }
 }
 
-function removeObjectCycles(obj: any) {
+function removeObjectCycles<T>(obj: T): T {
   return JSON.parse(JSON.stringify(obj, getJsonReplacer()))
 }
 

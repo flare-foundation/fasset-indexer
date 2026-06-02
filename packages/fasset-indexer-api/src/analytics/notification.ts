@@ -18,7 +18,9 @@ export class NotificationAnalytics {
   ////////////////////////////////////////////////////////////////////////////
   // underlying connectors
 
-  async getRedemptionPaymentStatus(redemptionId: number, fasset: FAssetType): Promise<any> {
+  async getRedemptionPaymentStatus(
+    redemptionId: number, fasset: FAssetType
+  ): Promise<Entities.RedemptionPerformed | Entities.RedemptionDefault | Entities.UnderlyingReference | null> {
     const em = this.orm.em.fork()
     const redemption = await em.findOneOrFail(Entities.RedemptionRequested,
       { requestId: redemptionId, fasset })
@@ -34,7 +36,10 @@ export class NotificationAnalytics {
     return null
   }
 
-  async unhandledDogeRedemptions(startTime: number, limit = 100): Promise<any> {
+  async unhandledDogeRedemptions(startTime: number, limit = 100): Promise<Array<{
+    fasset: string, name: string, hex: string, request_id: string,
+    index: number, timestamp: number, diff: number
+  }>> {
     const em = this.orm.em.fork()
     const result = await em.getConnection('read').execute(UNFINALIZED_DOGE_REDEMPTIONS, [startTime, limit]) as {
       fasset: string, name: string, hex: string, request_id: string, index: number, timestamp: number
