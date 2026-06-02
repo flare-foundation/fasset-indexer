@@ -1,4 +1,3 @@
-import * as Entities from 'fasset-indexer-core/entities'
 import type { EntityManager } from 'fasset-indexer-core/orm'
 
 
@@ -14,14 +13,24 @@ import type { EntityManager } from 'fasset-indexer-core/orm'
 // the populated query filter on `evm_log_id IN (...)` which hits the PK index;
 // total cost drops to <100ms.
 //
+// Why raw SQL instead of `em.find(EvmLog, ..., { fields: ['id'] })`:
+// a partial-fields find places partial EvmLog entities (id-only) into the
+// mikro-orm identity map. When the caller subsequently runs
+//   em.find(SomeEvent, { evmLog: { $in: ids } }, { populate: [...] })
+// the populate reuses those id-only partial entities for the event's `evmLog`
+// relation and never hydrates `name`/`index`/`address`/etc., silently dropping
+// columns from the API response. Going through Knex directly leaves the
+// identity map untouched, so the subsequent populate loads the full entity.
+//
 // Returns the list of evm_log ids for the tx (typically <50 even for busy
 // transactions). Caller passes the list back as `evmLog: { $in: ids }`.
 export async function findEvmLogIdsByTxHash(
   em: EntityManager, hash: string
 ): Promise<number[]> {
-  const logs = await em.find(Entities.EvmLog,
-    { transaction: { hash } },
-    { fields: ['id'] }
-  )
-  return logs.map(l => l.id)
+  const knex = em.getConnection('read').getKnex()
+  const rows: Array<{ id: number }> = await knex('evm_log as el')
+    .join('evm_transaction as et', 'et.id', 'el.transaction_id')
+    .where('et.hash', hash)
+    .select('el.id')
+  return rows.map(r => r.id)
 }
