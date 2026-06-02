@@ -40,13 +40,16 @@ export async function batchedRedemptionEventDetails(
     if (bucket) bucket.push(rr)
     else byKind.set(rr.resolution, [rr])
   }
-  const findResolution = <T extends object>(
+  // Constraint pins T to entities that own a `redemptionRequested` field —
+  // i.e. the five resolution rows — so the filter object below type-checks
+  // through `FilterQuery<T>` without an unsound cast.
+  const findResolution = <T extends { redemptionRequested: Entities.RedemptionRequested }>(
     kind: core.RedemptionResolution, entity: Parameters<typeof em.find<T>>[0]
   ): Promise<T[]> => {
     const bucket = byKind.get(kind)
     if (!bucket) return Promise.resolve([])
-    return em.find(entity,
-      { redemptionRequested: { $in: bucket } } as unknown as FilterQuery<T>,
+    return em.find<T>(entity,
+      { redemptionRequested: { $in: bucket } } as FilterQuery<T>,
       { populate: resolutionPopulate as any }
     )
   }
