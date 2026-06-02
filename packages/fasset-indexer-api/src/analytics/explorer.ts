@@ -238,27 +238,40 @@ export class ExplorerAnalytics extends SharedAnalytics {
       resolutionByRr.set(r.redemptionRequested, r)
     }
 
-    // Group underlying refs by their payment reference; per-reference, apply the
-    // same success-preferring shape as getUnderlyingTransaction.
+    // Group underlying refs by their payment reference. Per RR, narrow to refs
+    // whose underlying tx actually flowed from the agent's underlying address
+    // to the redeemer's payment address — same correctness guard
+    // getUnderlyingTransaction applied via its `transaction: { source, target }`
+    // filter, only now in JS over a pre-fetched bucket instead of N extra
+    // queries.
     const refsByPaymentRef = new Map<string, Entities.UnderlyingReference[]>()
     for (const ref of underlyingRefs) {
       const list = refsByPaymentRef.get(ref.reference)
       if (list) list.push(ref)
       else refsByPaymentRef.set(ref.reference, [ref])
     }
-    const pickUnderlying = (refs: Entities.UnderlyingReference[] | undefined):
-      Entities.UnderlyingReference | Entities.UnderlyingReference[] | null => {
-      if (!refs || refs.length === 0) return null
-      const successful = refs.filter(x => x.transaction.result === XRP_TRANSACTION_SUCCESS_CODE)
+    const pickUnderlying = (
+      rr: Entities.RedemptionRequested
+    ): Entities.UnderlyingReference | Entities.UnderlyingReference[] | null => {
+      const bucket = refsByPaymentRef.get(rr.paymentReference)
+      if (!bucket || bucket.length === 0) return null
+      const agentUnderlyingId = rr.agentVault.underlyingAddress.id
+      const redeemerPaymentId = rr.paymentAddress.id
+      const matching = bucket.filter(x =>
+        x.transaction.source?.id === agentUnderlyingId &&
+        x.transaction.target?.id === redeemerPaymentId
+      )
+      if (matching.length === 0) return null
+      const successful = matching.filter(x => x.transaction.result === XRP_TRANSACTION_SUCCESS_CODE)
       if (successful.length > 0) return successful.length > 1 ? successful : successful[0]
-      return refs.length > 1 ? refs : refs[0]
+      return matching.length > 1 ? matching : matching[0]
     }
 
     return rrs.map(rr => {
       const events: ExplorerType.RedeemEventDetails['events'] = { original: rr }
       const resolution = resolutionByRr.get(rr)
       if (resolution != null) events.resolution = resolution
-      return { events, underlyingTransaction: pickUnderlying(refsByPaymentRef.get(rr.paymentReference)) }
+      return { events, underlyingTransaction: pickUnderlying(rr) }
     })
   }
 
