@@ -370,6 +370,7 @@ export class Fixtures {
     valueUBA: bigint,
     feeUBA?: bigint,
     requestId?: number,
+    kind?: 'plain' | 'tagged',
     blockIndex?: number, blockTimestamp?: number
   }): Promise<E.RedemptionRequested> {
     const redeemer = await this.evmAddress(opts.redeemerHex)
@@ -385,7 +386,11 @@ export class Fixtures {
       evmLog: log,
       fasset: opts.fasset,
       agentVault: opts.agentVault,
-      kind: 'plain',
+      kind: opts.kind ?? 'plain',
+      // tagged-kind RR shares the table with plain via single-table inheritance
+      // and requires destinationTag — supply a deterministic non-zero value
+      // when caller asks for kind='tagged'.
+      ...(opts.kind === 'tagged' ? { destinationTag: BigInt(monotonicRequestId) } : {}),
       requestId: opts.requestId ?? monotonicRequestId++,
       redeemer,
       paymentAddress,
