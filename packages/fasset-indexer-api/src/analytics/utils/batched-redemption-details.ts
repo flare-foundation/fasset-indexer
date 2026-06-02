@@ -2,7 +2,6 @@ import * as core from 'fasset-indexer-core'
 import * as Entities from 'fasset-indexer-core/entities'
 import { XRP_TRANSACTION_SUCCESS_CODE } from 'fasset-indexer-xrp/constants'
 import type { EntityManager } from 'fasset-indexer-core/orm'
-import type { FilterQuery } from '@mikro-orm/core'
 import type * as ExplorerType from '../types'
 
 
@@ -28,7 +27,6 @@ export async function batchedRedemptionEventDetails(
   if (rrs.length === 0) return []
 
   const RES = core.RedemptionResolution
-  const resolutionPopulate: string[] = ['evmLog.block', 'evmLog.transaction.source', 'redemptionRequested']
 
   // Bucket requests by resolution kind, then issue one find per kind that
   // actually has any requests. Each find populates redemptionRequested so the
@@ -40,31 +38,46 @@ export async function batchedRedemptionEventDetails(
     if (bucket) bucket.push(rr)
     else byKind.set(rr.resolution, [rr])
   }
-  // Constraint pins T to entities that own a `redemptionRequested` field —
-  // i.e. the five resolution rows — so the filter object below type-checks
-  // through `FilterQuery<T>` without an unsound cast.
-  const findResolution = <T extends { redemptionRequested: Entities.RedemptionRequested }>(
-    kind: core.RedemptionResolution, entity: Parameters<typeof em.find<T>>[0]
-  ): Promise<T[]> => {
-    const bucket = byKind.get(kind)
-    if (!bucket) return Promise.resolve([])
-    return em.find<T>(entity,
-      { redemptionRequested: { $in: bucket } } as FilterQuery<T>,
-      { populate: resolutionPopulate as any }
-    )
-  }
+  // One em.find per resolution kind that actually has any matching requests.
+  // The populate list is the same across all five (they all inherit evmLog
+  // from EventBound and own redemptionRequested) but each call site lets
+  // mikro-orm infer the AutoPath specialisation against the concrete entity,
+  // so the populate strings type-check without any cast. Empty bucket → skip
+  // the round-trip entirely.
+  const performedBucket = byKind.get(RES.PERFORMED) ?? []
+  const defaultedBucket = byKind.get(RES.DEFAULTED) ?? []
+  const rejectedBucket = byKind.get(RES.REJECTED) ?? []
+  const blockedBucket = byKind.get(RES.BLOCKED) ?? []
+  const failedBucket = byKind.get(RES.FAILED) ?? []
 
   // Fasset is fixed across one tx's redemptions (a single AssetManager fires
   // them), so we can use the first row's fasset for the underlying-refs filter.
   const fasset = rrs[0].fasset
   const references = rrs.map(rr => rr.paymentReference)
 
+  const resolutionPopulate = ['evmLog.block', 'evmLog.transaction.source', 'redemptionRequested'] as const
+
   const [performed, defaulted, rejected, blocked, failed, underlyingRefs] = await Promise.all([
-    findResolution<Entities.RedemptionPerformed>(RES.PERFORMED, Entities.RedemptionPerformed),
-    findResolution<Entities.RedemptionDefault>(RES.DEFAULTED, Entities.RedemptionDefault),
-    findResolution<Entities.RedemptionRejected>(RES.REJECTED, Entities.RedemptionRejected),
-    findResolution<Entities.RedemptionPaymentBlocked>(RES.BLOCKED, Entities.RedemptionPaymentBlocked),
-    findResolution<Entities.RedemptionPaymentFailed>(RES.FAILED, Entities.RedemptionPaymentFailed),
+    performedBucket.length === 0 ? Promise.resolve([] as Entities.RedemptionPerformed[]) :
+      em.find(Entities.RedemptionPerformed,
+        { redemptionRequested: { $in: performedBucket } },
+        { populate: resolutionPopulate }),
+    defaultedBucket.length === 0 ? Promise.resolve([] as Entities.RedemptionDefault[]) :
+      em.find(Entities.RedemptionDefault,
+        { redemptionRequested: { $in: defaultedBucket } },
+        { populate: resolutionPopulate }),
+    rejectedBucket.length === 0 ? Promise.resolve([] as Entities.RedemptionRejected[]) :
+      em.find(Entities.RedemptionRejected,
+        { redemptionRequested: { $in: rejectedBucket } },
+        { populate: resolutionPopulate }),
+    blockedBucket.length === 0 ? Promise.resolve([] as Entities.RedemptionPaymentBlocked[]) :
+      em.find(Entities.RedemptionPaymentBlocked,
+        { redemptionRequested: { $in: blockedBucket } },
+        { populate: resolutionPopulate }),
+    failedBucket.length === 0 ? Promise.resolve([] as Entities.RedemptionPaymentFailed[]) :
+      em.find(Entities.RedemptionPaymentFailed,
+        { redemptionRequested: { $in: failedBucket } },
+        { populate: resolutionPopulate }),
     // Bare `WHERE fasset = ? AND reference IN (...)` — hits the reference
     // index. Intentionally NO `transaction: { source, target }` filter here:
     // underlying_transaction's source_id/target_id are not indexed, and
