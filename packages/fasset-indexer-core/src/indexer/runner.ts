@@ -15,7 +15,7 @@ export class IndexerRunner {
   ) { }
 
   async run(cyclesleep: number, startBlock?: number, layered: boolean = false) {
-    while (true) {
+    for (;;) {
       try {
         const resp = await this.indexer.run(startBlock)
         if (resp != null) {
@@ -23,8 +23,9 @@ export class IndexerRunner {
           this.indexer = resp
           layered = false
         }
-      } catch (e: any) {
-        const stacktrace = (e.stack != null) ? `\n${e.stack}` : ''
+      } catch (e: unknown) {
+        const stack = e instanceof Error ? e.stack : undefined
+        const stacktrace = stack != null ? `\n${stack}` : ''
         logger.error(`error running ${this.name} indexer: ${e}${stacktrace}`)
         await sleep(SLEEP_AFTER_ERROR_MS)
         continue

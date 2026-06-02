@@ -20,7 +20,10 @@ export function raceIndexerSyncedFlagName(updateName: string): string {
 export async function raceIndexerStats(em: EntityManager, updateName: string): Promise<[number, number]> {
   const firstUnhandledRace = await getVar(em, raceUpdateFirstUnhandledBlockName(updateName))
   const firstUnhandledRegular = await getVar(em, FIRST_UNHANDLED_EVENT_BLOCK_DB_KEY)
-  return [parseInt(firstUnhandledRace?.value!), parseInt(firstUnhandledRegular?.value!)]
+  // parseInt(undefined) returns NaN — the callers (updateDistance) already
+  // gate on isNaN, so propagate undefined through `??` instead of pretending
+  // with a non-null assertion that the row always exists.
+  return [parseInt(firstUnhandledRace?.value ?? ''), parseInt(firstUnhandledRegular?.value ?? '')]
 }
 
 export async function raceIndexerSynced(em: EntityManager, updateName: string): Promise<boolean> {
@@ -31,7 +34,7 @@ export async function raceIndexerSynced(em: EntityManager, updateName: string): 
 export async function backIndexerStats(em: EntityManager, updateName: string): Promise<[number, number]> {
   const firstUnhandled = await getVar(em, backUpdateLastBlockName(updateName))
   const last = await getVar(em, backUpdateFirstUnhandledBlockName(updateName))
-  return [parseInt(firstUnhandled?.value!), parseInt(last?.value!)]
+  return [parseInt(firstUnhandled?.value ?? ''), parseInt(last?.value ?? '')]
 }
 
 export async function backIndexerSynced(em: EntityManager, updateName: string): Promise<boolean> {

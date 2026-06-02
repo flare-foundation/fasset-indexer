@@ -18,10 +18,12 @@ export class XrpClient {
   }
 
   async transaction(hash: string): Promise<IXrpTransaction> {
-    const resp = await this.request('tx', [{
-      transaction: hash,
-      binary: false
-    }])
+    // The 'tx' RPC returns the transaction fields and a status string on the
+    // same `result` object — model the intersection so ensureSuccess and the
+    // return type both check against `resp.result`.
+    const resp = await this.request<{ result: IXrpTransaction & { status: string, error_message?: string } }>(
+      'tx', [{ transaction: hash, binary: false }]
+    )
     this.ensureSuccess(resp)
     return resp.result
   }
@@ -82,7 +84,7 @@ export class XrpClient {
     }])
   }
 
-  private async request(method: string, params: object): Promise<any> {
+  private async request<T>(method: string, params: object): Promise<T> {
     const headers: Record<string, string> = { 'Content-Type': 'application/json' }
     const apiKey = this.config.xrpRpcApiKey
     if (apiKey) {
@@ -97,7 +99,7 @@ export class XrpClient {
     return resp.json()
   }
 
-  private ensureSuccess(resp: { result: { status: string, error_message?: string }}): any {
+  private ensureSuccess(resp: { result: { status: string, error_message?: string }}): void {
     if (resp.result.status != 'success') {
       throw new Error(`rpc returned ${JSON.stringify(resp.result.error_message)}`)
     }

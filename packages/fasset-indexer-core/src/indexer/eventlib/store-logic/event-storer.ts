@@ -433,10 +433,12 @@ export class EventStorer {
   ): Promise<[ Entities.AgentVault, Entities.AgentVaultSettings, Entities.AgentVaultCreated]> {
     const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
     const { 0: owner, 1: agentVault } = logArgs
-    const [ collateralPool, collateralPoolToken, underlyingAddress, vaultCollateralToken, poolWNatToken,
+    // poolWNatToken (position 4) is part of the on-chain tuple but isn't
+    // persisted on AgentVault; it falls out as a positional discard.
+    const [ collateralPool, collateralPoolToken, underlyingAddress, vaultCollateralToken, ,
       feeBIPS, poolFeeShareBIPS, mintingVaultCollateralRatioBIPS, mintingPoolCollateralRatioBIPS,
       buyFAssetByAgentFactorBIPS, poolExitCollateralRatioBIPS, redemptionPoolFeeShareBIPS
-    ] = (logArgs as any).creationData
+    ] = (logArgs as unknown as { creationData: [string, string, string, string, string, bigint, bigint, bigint, bigint, bigint, bigint, bigint] }).creationData
     // addresses
     const [_owner, evmAddresses, underlyingAddresses] = await Promise.all([
       em.findOneOrFail(Entities.AgentOwner, { manager: { address: { hex: owner }}}),
@@ -1563,7 +1565,7 @@ export class EventStorer {
   protected async onEmergencyPauseCancelled(
     em: EntityManager,
     evmLog: Entities.EvmLog,
-    logArgs: AssetManager.EmergencyPauseCanceledEvent.OutputTuple
+    _logArgs: AssetManager.EmergencyPauseCanceledEvent.OutputTuple
   ): Promise<Entities.EmergencyPauseCancelled> {
     const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
     return em.create(Entities.EmergencyPauseCancelled, { evmLog, fasset })
@@ -1640,7 +1642,7 @@ export class EventStorer {
   protected async onNotAllEscrowsProcessed(
     em: EntityManager,
     evmLog: Entities.EvmLog,
-    logArgs: CoreVaultManager.NotAllEscrowsProcessedEvent.OutputTuple
+    _logArgs: CoreVaultManager.NotAllEscrowsProcessedEvent.OutputTuple
   ): Promise<Entities.CoreVaultManagerNotAllEscrowsProcessed> {
     const fasset = this.lookup.coreVaultManagerToFAssetType(evmLog.address.hex)
     return em.create(Entities.CoreVaultManagerNotAllEscrowsProcessed, { evmLog, fasset })

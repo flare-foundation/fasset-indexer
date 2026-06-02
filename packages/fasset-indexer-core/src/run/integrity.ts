@@ -76,7 +76,6 @@ async function markNewDatabase(context: Context): Promise<void> {
   await context.orm.em.transactional(async em => {
     await setVar(em, 'chain', envchain)
     await setVar(em, 'asset_manager_controller', amc)
-    // @ts-ignore - not sure why compiler thinks minblock can be null
     await setVar(em, MIN_EVM_BLOCK_NUMBER_DB_KEY, minblock.toString())
   })
 }
@@ -89,7 +88,9 @@ async function getContractCreationBlock(provider: JsonRpcApiProvider, address: s
     const resp = await fetch(`${blockExplorer}/api/v2/addresses/${address}`)
     const json = await resp.json()
     hash = json.creation_transaction_hash
-  } catch (e) {}
+  } catch {
+    // explorer lookup is best-effort; fall through to the throw below
+  }
   if (hash == null) {
     throw new Error(`
       Fetching contract creation block from block explorer ${blockExplorer} failed.

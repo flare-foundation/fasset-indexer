@@ -233,7 +233,7 @@ export class SmartAccountsEventStorer {
   }
 
   async storeSwapExecuted(em: EntityManager, log: Entities.EvmLog, args: MAC.SwapExecutedEvent.OutputTuple) {
-    const [personalAccount, tokenIn, tokenOut, xrplOwner, amountIn, amountOut] = args
+    const [personalAccount, tokenIn, tokenOut, , amountIn, amountOut] = args
     const _personalAccount = await em.findOneOrFail(Entities.PersonalAccount, { address: { hex: personalAccount } })
     const _tokenIn = await findOrCreateEntity(em, Entities.EvmAddress, { hex: tokenIn })
     const _tokenOut = await findOrCreateEntity(em, Entities.EvmAddress, { hex: tokenOut })

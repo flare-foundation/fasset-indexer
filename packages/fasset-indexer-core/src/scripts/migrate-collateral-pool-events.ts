@@ -29,7 +29,7 @@ async function migrateCollateralPoolPaidOut(em: EntityManager) {
   const paidOutEvents = await em.findAll(CollateralPoolPaidOut)
   for (const paidOut of paidOutEvents) {
     await em.transactional(em => {
-      const ents = CollateralPoolEventMigration.migrateCollateralPoolPaidOut(em, paidOut)
+      CollateralPoolEventMigration.migrateCollateralPoolPaidOut(em, paidOut)
       em.remove(paidOut)
     })
   }
@@ -39,7 +39,7 @@ async function migrateCollateralPoolClaimedReward(em: EntityManager) {
   const claimedRewardEvents = await em.findAll(CollateralPoolClaimedReward)
   for (const claimed of claimedRewardEvents) {
     await em.transactional(em => {
-      const ents = CollateralPoolEventMigration.migrateCollateralPoolClaimedReward(em, claimed)
+      CollateralPoolEventMigration.migrateCollateralPoolClaimedReward(em, claimed)
       em.remove(claimed)
     })
   }

@@ -33,7 +33,7 @@ export class StateUpdater extends EventStorer {
     return [agentVaultEntity, avs, avc]
   }
 
-  protected override async onPublishedPrices(em: EntityManager, evmLog: EvmLog, args: any): Promise<PricesPublished> {
+  protected override async onPublishedPrices(em: EntityManager, evmLog: EvmLog, args: Parameters<EventStorer['onPublishedPrices']>[2]): Promise<PricesPublished> {
     return await super.onPublishedPrices(em, evmLog, args)
   }
 
@@ -74,14 +74,15 @@ export class StateUpdater extends EventStorer {
     try {
       const assetManager = this.context.fAssetTypeToAssetManagerAddress(agentVault.fasset)
       await updateAgentVaultInfo(this.context, em, assetManager, agentVault.address.hex)
-    } catch (e: any) {
+    } catch (e: unknown) {
+      const err = e as { reason?: string, data?: string, invocation?: { args: string[] } }
       if (
-          e?.reason == 'invalid agent vault address' // pre-upgraded asset manager
-        || e?.reason === 'InvalidAgentVaultAddress()' // upgraded asset manager, decodes with ABI
-        || e?.data == '0xd68a46c5' // upgraded asset manager encoded in case of missing ABI
+          err?.reason == 'invalid agent vault address' // pre-upgraded asset manager
+        || err?.reason === 'InvalidAgentVaultAddress()' // upgraded asset manager, decodes with ABI
+        || err?.data == '0xd68a46c5' // upgraded asset manager encoded in case of missing ABI
       ) {
         return await em.transactional(async (em) => {
-          const address = e.invocation.args[0]
+          const address = err.invocation!.args[0]
           const untrackedAgentVault = em.create(UntrackedAgentVault, { address })
           agentVault.destroyed = true
           em.persist(untrackedAgentVault)

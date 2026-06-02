@@ -36,7 +36,9 @@ async function updateTransactions(context: Context) {
 async function main() {
   const config = new ConfigLoader()
   const context = await Context.create(config)
-  while (await updateTransactions(context)) {}
+  while (await updateTransactions(context)) {
+    // updateTransactions returns true while there's another batch to process
+  }
   await context.orm.close()
 }
 

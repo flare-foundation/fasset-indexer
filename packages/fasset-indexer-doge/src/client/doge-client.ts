@@ -11,7 +11,7 @@ export class DogeClient {
   ) { }
 
   async blockHeight(): Promise<number> {
-    const res = await this.call('getblockcount', [])
+    const res = await this.call<{ result: number }>('getblockcount', [])
     return res.result
   }
 
@@ -24,17 +24,17 @@ export class DogeClient {
   }
 
   async transaction(tx: string): Promise<IDogeTx> {
-    const res = await this.call('getrawtransaction', [tx, true])
+    const res = await this.call<{ result: IDogeTx }>('getrawtransaction', [tx, true])
     return res.result
   }
 
   async blockHash(height: number): Promise<string> {
-    const res = await this.call('getblockhash', [height])
+    const res = await this.call<{ result: string }>('getblockhash', [height])
     return res.result
   }
 
   protected async blockFromHash(hash: string): Promise<IDogeBlock> {
-    const res = await this.call('getblock', [hash])
+    const res = await this.call<{ result: IDogeBlock }>('getblock', [hash])
     return res.result
   }
 
@@ -43,7 +43,7 @@ export class DogeClient {
     return this.blockFromHash(hash)
   }
 
-  protected async call(method: string, params: any[]): Promise<any> {
+  protected async call<T>(method: string, params: unknown[]): Promise<T> {
     const res = await fetch(this.rpcUrl, {
       method: 'POST',
       headers: this.headers,

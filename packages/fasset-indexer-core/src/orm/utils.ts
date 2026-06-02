@@ -36,7 +36,7 @@ export async function findOrCreateEntities<T extends object, K extends string & 
   const uniqueValues = [...new Set(values)]
   if (uniqueValues.length === 0) return new Map()
   const existing = await em.find(entityClass, { [key]: { $in: uniqueValues } } as FilterQuery<T>)
-  const map = new Map<string, T>(existing.map(e => [(e as any)[key] as string, e]))
+  const map = new Map<string, T>(existing.map(e => [(e as Record<K, string>)[key], e]))
   for (const value of uniqueValues) {
     if (!map.has(value)) {
       map.set(value, em.create(entityClass, { [key]: value } as RequiredEntityData<T>))

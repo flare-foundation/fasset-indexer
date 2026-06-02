@@ -1,5 +1,5 @@
 import { EntityManager, raw } from "@mikro-orm/knex"
-import { ERC20Transfer, TokenBalance } from "../orm/entities"
+import { ERC20Transfer } from "../orm/entities"
 import { ConfigLoader } from "../config/config"
 import { Context } from "../context/context"
 
