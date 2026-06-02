@@ -55,7 +55,15 @@ export async function batchedRedemptionEventDetails(
   const fasset = rrs[0].fasset
   const references = rrs.map(rr => rr.paymentReference)
 
-  const resolutionPopulate = ['evmLog.block', 'evmLog.transaction.source', 'redemptionRequested'] as const
+  // NOTE: we intentionally do NOT populate `redemptionRequested` here. With
+  // RR's single-table inheritance (kind = 'plain' | 'tagged'), mikro-orm's
+  // populate appends `AND r5.kind = 'plain'` to the join, which silently
+  // EXCLUDES RedemptionWithTagRequested rows — the populated relation comes
+  // back null and the resolution would be dropped from the response. We don't
+  // need the full entity anyway: the unpopulated Reference's `.id` returns
+  // the FK value (RR's PK = evm_log_id) directly, which is all we need to
+  // zip the resolution back to its originating RR below.
+  const resolutionPopulate = ['evmLog.block', 'evmLog.transaction.source'] as const
 
   const [performed, defaulted, rejected, blocked, failed, underlyingRefs] = await Promise.all([
     performedBucket.length === 0 ? Promise.resolve([] as Entities.RedemptionPerformed[]) :
@@ -91,13 +99,20 @@ export async function batchedRedemptionEventDetails(
     )
   ])
 
-  // Index resolutions by the underlying RedemptionRequested entity instance.
-  // Mikro-orm's identity map keeps the same RR object reachable from both the
-  // initial fetch and the resolution's populated `redemptionRequested`, so
-  // strict-equal map keying works (no need to dive into PK columns).
-  const resolutionByRr = new Map<Entities.RedemptionRequested, ExplorerType.RedeemEventDetails['events']['resolution']>()
+  // Index resolutions by the RedemptionRequested primary key (evm_log_id).
+  // Earlier this map keyed off entity references and relied on the identity
+  // map keeping the same RR object reachable from both finds — that failed in
+  // production for `tagged` redemptions because mikro-orm's polymorphic
+  // populate joined with kind='plain' only and returned null for tagged rows.
+  // PK-keyed matching off the unpopulated Reference's `.id` is robust across
+  // discriminator subtypes regardless of whether populate is applied.
+  const resolutionByRrId = new Map<number, ExplorerType.RedeemEventDetails['events']['resolution']>()
   for (const r of [...performed, ...defaulted, ...rejected, ...blocked, ...failed]) {
-    resolutionByRr.set(r.redemptionRequested, r)
+    // RR's PK is its `evmLog` OneToOne; even without populate, mikro-orm
+    // auto-loads `{ evmLog: { id: <fk> } }` on the relation so `evmLog.id` is
+    // the FK value (RR's primary key column = evm_log_id).
+    const id = r.redemptionRequested?.evmLog?.id
+    if (id != null) resolutionByRrId.set(id, r)
   }
 
   // Group underlying refs by their payment reference, then per RR narrow to
@@ -130,7 +145,7 @@ export async function batchedRedemptionEventDetails(
 
   return rrs.map(rr => {
     const events: ExplorerType.RedeemEventDetails['events'] = { original: rr }
-    const resolution = resolutionByRr.get(rr)
+    const resolution = resolutionByRrId.get(rr.evmLog.id)
     if (resolution != null) events.resolution = resolution
     return { events, underlyingTransaction: pickUnderlying(rr) }
   })
