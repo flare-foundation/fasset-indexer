@@ -9,6 +9,7 @@ import { SharedAnalytics } from "./shared"
 import * as ExplorerType from "./types"
 import * as SQL from "./utils/raw-sql"
 import { batchedRedemptionEventDetails } from "./utils/batched-redemption-details"
+import { findEvmLogIdsByTxHash } from "./utils/find-by-evm-tx"
 import { DEAD_ADDRESS, EXPLORER_DEFAULT_LOOKBACK_SECONDS } from "../config/constants"
 import type { EntityManager, ORM } from "fasset-indexer-core/orm"
 import type { FilterQuery } from "@mikro-orm/core"
@@ -125,8 +126,10 @@ export class ExplorerAnalytics extends SharedAnalytics {
     hash: string
   ): Promise<ExplorerType.MintTransactionDetails> {
     const em = this.orm.em.fork()
+    const logIds = await findEvmLogIdsByTxHash(em, hash)
+    if (logIds.length === 0) return { flows: [] }
     const collateralReservations = await em.find(Entities.CollateralReserved,
-      { evmLog: { transaction: { hash }} },
+      { evmLog: { $in: logIds } },
       { populate: [
         'evmLog.block', 'evmLog.transaction.source',
         'agentVault.address', 'agentVault.owner.manager',
@@ -143,12 +146,14 @@ export class ExplorerAnalytics extends SharedAnalytics {
     hash: string
   ): Promise<ExplorerType.DirectMintTransactionDetails> {
     const em = this.orm.em.fork()
+    const logIds = await findEvmLogIdsByTxHash(em, hash)
+    if (logIds.length === 0) return { flows: [] }
     const [directMints, directMintsSA] = await Promise.all([
       em.find(Entities.DirectMintingExecuted,
-        { evmLog: { transaction: { hash } } },
+        { evmLog: { $in: logIds } },
         { populate: ['evmLog.block', 'evmLog.transaction.source', 'targetAddress', 'executor'] }),
       em.find(Entities.DirectMintingExecutedToSmartAccount,
-        { evmLog: { transaction: { hash } } },
+        { evmLog: { $in: logIds } },
         { populate: ['evmLog.block', 'evmLog.transaction.source', 'sourceAddress', 'executor'] })
     ])
     const flows = await Promise.all(
@@ -161,16 +166,18 @@ export class ExplorerAnalytics extends SharedAnalytics {
     hash: string
   ): Promise<ExplorerType.RedeemTransactionDetails> {
     const em = this.orm.em.fork()
+    const logIds = await findEvmLogIdsByTxHash(em, hash)
+    if (logIds.length === 0) return { flows: [], flags: [] }
     const [redemptionRequests, redemptionRequestIncompletes] = await Promise.all([
       em.find(Entities.RedemptionRequested,
-        { evmLog: { transaction: { hash } } },
+        { evmLog: { $in: logIds } },
         { populate: [
           'evmLog.block', 'evmLog.transaction.source',
           'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager',
           'redeemer', 'paymentAddress', 'executor'
         ] }),
       em.find(Entities.RedemptionRequestIncomplete,
-        { evmLog: { transaction: { hash } }},
+        { evmLog: { $in: logIds } },
         { populate: [ 'evmLog.block', 'redeemer' ] })
     ])
     if (redemptionRequests.length === 0) {
@@ -184,8 +191,10 @@ export class ExplorerAnalytics extends SharedAnalytics {
     hash: string
   ): Promise<ExplorerType.TransferToCoreVaultTransactionDetails> {
     const em = this.orm.em.fork()
+    const logIds = await findEvmLogIdsByTxHash(em, hash)
+    if (logIds.length === 0) return { flows: [] }
     const transferToCoreVaultRequests = await em.find(Entities.TransferToCoreVaultStarted,
-      { evmLog: { transaction: { hash } } },
+      { evmLog: { $in: logIds } },
       { populate: [
         'evmLog.block', 'evmLog.transaction.source',
         'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
@@ -201,8 +210,10 @@ export class ExplorerAnalytics extends SharedAnalytics {
     hash: string
   ): Promise<ExplorerType.ReturnFromCoreVaultTransactionDetails> {
     const em = this.orm.em.fork()
+    const logIds = await findEvmLogIdsByTxHash(em, hash)
+    if (logIds.length === 0) return { flows: [] }
     const returnFromCoreVaultRequests = await em.find(Entities.ReturnFromCoreVaultRequested,
-      { evmLog: { transaction: { hash }} }, { populate: [
+      { evmLog: { $in: logIds } }, { populate: [
         'evmLog.block', 'evmLog.transaction.source',
         'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
       ] }
@@ -217,8 +228,10 @@ export class ExplorerAnalytics extends SharedAnalytics {
     hash: string
   ): Promise<ExplorerType.SelfMintTransactionDetails> {
     const em = this.orm.em.fork()
+    const logIds = await findEvmLogIdsByTxHash(em, hash)
+    if (logIds.length === 0) return { flows: [] }
     const selfMints = await em.find(Entities.SelfMint,
-      { evmLog: { transaction: { hash }} }, { populate: [
+      { evmLog: { $in: logIds } }, { populate: [
         'evmLog.block', 'evmLog.transaction.source',
         'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
       ] }
@@ -233,8 +246,10 @@ export class ExplorerAnalytics extends SharedAnalytics {
     hash: string
   ): Promise<ExplorerType.BalanceTopupTransactionDetails> {
     const em = this.orm.em.fork()
+    const logIds = await findEvmLogIdsByTxHash(em, hash)
+    if (logIds.length === 0) return { flows: [] }
     const topups = await em.find(Entities.UnderlyingBalanceToppedUp,
-      { evmLog: { transaction: { hash }}}, { populate: [
+      { evmLog: { $in: logIds } }, { populate: [
         'evmLog.block', 'evmLog.transaction.source',
         'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
       ] }
@@ -249,8 +264,10 @@ export class ExplorerAnalytics extends SharedAnalytics {
     hash: string
   ): Promise<ExplorerType.WithdrawalTransactionDetails> {
     const em = this.orm.em.fork()
+    const logIds = await findEvmLogIdsByTxHash(em, hash)
+    if (logIds.length === 0) return { flows: [] }
     const withdrawals = await em.find(Entities.UnderlyingWithdrawalAnnounced,
-      { evmLog: { transaction: { hash }} }, { populate: [
+      { evmLog: { $in: logIds } }, { populate: [
         'evmLog.block', 'evmLog.transaction.source',
         'agentVault.address', 'agentVault.underlyingAddress', 'agentVault.owner.manager'
       ] })
