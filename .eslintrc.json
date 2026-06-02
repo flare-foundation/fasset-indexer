@@ -9,5 +9,14 @@
       "plugin:@typescript-eslint/eslint-recommended",
       "plugin:@typescript-eslint/recommended"
     ],
-    "ignorePatterns": ["node_modules", "dist", "packages/fasset-indexer-core/chain"]
+    "ignorePatterns": ["node_modules", "dist", "packages/fasset-indexer-core/chain"],
+    "overrides": [
+      {
+        "files": ["packages/*/test/**/*.ts"],
+        "rules": {
+          "@typescript-eslint/no-explicit-any": "off",
+          "@typescript-eslint/no-var-requires": "off"
+        }
+      }
+    ]
   }
