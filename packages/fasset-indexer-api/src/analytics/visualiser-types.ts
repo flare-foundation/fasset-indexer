@@ -307,6 +307,11 @@ export interface SystemSettingsEntry {
   directMintingOthersCanExecuteAfterSeconds: bigint
   directMintingsUnblockUntilTimestamp: bigint
   directMintingPaymentAddress: string
+  // direct-minting rolling-window limiter consumption (null on pre-upgrade asset managers)
+  directMintingHourlyMintedUBA?: bigint
+  directMintingHourlyWindowStart?: number
+  directMintingDailyMintedUBA?: bigint
+  directMintingDailyWindowStart?: number
   // core vault (null when no core vault is wired up for this fasset)
   coreVaultManager?: string
   coreVaultNativeAddress?: string

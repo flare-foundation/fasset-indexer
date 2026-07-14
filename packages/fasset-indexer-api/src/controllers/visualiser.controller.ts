@@ -56,7 +56,7 @@ export class VisualiserController {
   @UseInterceptors(CacheInterceptor)
   @ApiOperation({
     summary: 'On-chain system settings snapshot per FAsset',
-    description: 'Returns the latest watchdog-polled view of asset-manager and core-vault parameters (fees, BIPS, lot sizes, timelocks, attestation windows, liquidation factors, core-vault wiring) for each supported FAsset. Refreshed by the watchdog every 5 minutes.'
+    description: 'Returns the latest watchdog-polled view of asset-manager and core-vault parameters (fees, BIPS, lot sizes, timelocks, attestation windows, liquidation factors, core-vault wiring) for each supported FAsset. Includes the direct-minting hourly/daily limit caps and their live rolling-window consumption (mintedInWindow + windowStart; null on pre-upgrade asset managers). Refreshed by the watchdog every 5 minutes.'
   })
   @ApiQuery({ name: 'fasset', type: String, required: false, description: 'Filter by FAsset (FXRP, FBTC, ...)' })
   getSystemSettings(

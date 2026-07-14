@@ -574,4 +574,34 @@ export class Fixtures {
     })
     return dms
   }
+
+  // Upsert a watchdog-style SystemSettings snapshot. All non-nullable columns
+  // default to zero/empty so a test only spells out the fields it asserts on;
+  // nullable columns (core-vault, direct-minting limiter state) stay unset
+  // unless overridden. Keyed by fasset (the PK).
+  async systemSettings(overrides: Partial<E.SystemSettings> & { fasset: FAssetType }): Promise<E.SystemSettings> {
+    const base = {
+      updatedAt: 1_700_000_000,
+      lotSizeAMG: 0n, mintingCapAMG: 0n, mintingPoolHoldingsRequiredBIPS: 0n,
+      collateralReservationFeeBIPS: 0n, underlyingBlocksForPayment: 0n, underlyingSecondsForPayment: 0n,
+      redemptionFeeBIPS: 0n, redemptionDefaultFactorVaultCollateralBIPS: 0n, confirmationByOthersAfterSeconds: 0n,
+      confirmationByOthersRewardUSD5: 0n, maxRedeemedTickets: 0n,
+      paymentChallengeRewardBIPS: 0n, paymentChallengeRewardUSD5: 0n,
+      withdrawalWaitMinSeconds: 0n, maxTrustedPriceAgeSeconds: 0n, vaultCollateralBuyForFlareFactorBIPS: 0n,
+      attestationWindowSeconds: 0n, minUpdateRepeatTimeSeconds: 0n,
+      agentExitAvailableTimelockSeconds: 0n, agentFeeChangeTimelockSeconds: 0n, agentMintingCRChangeTimelockSeconds: 0n,
+      poolExitCRChangeTimelockSeconds: 0n, agentTimelockedOperationWindowSeconds: 0n, collateralPoolTokenTimelockSeconds: 0n,
+      liquidationStepSeconds: 0n, liquidationCollateralFactorBIPS: '', liquidationFactorVaultCollateralBIPS: '',
+      diamondCutMinTimelockSeconds: 0n, maxEmergencyPauseDurationSeconds: 0n, emergencyPauseDurationResetAfterSeconds: 0n,
+      redemptionPaymentExtensionSeconds: 0n, minimumRedeemAmountUBA: 0n, redeemWithTagSupported: false,
+      mintingTagManager: '', smartAccountManager: '', wNat: '',
+      directMintingDailyLimitUBA: 0n, directMintingHourlyLimitUBA: 0n, directMintingLargeMintingThresholdUBA: 0n,
+      directMintingLargeMintingDelaySeconds: 0n, directMintingFeeBIPS: 0n, directMintingMinimumFeeUBA: 0n,
+      directMintingExecutorFeeUBA: 0n, directMintingFeeReceiver: '', directMintingOthersCanExecuteAfterSeconds: 0n,
+      directMintingsUnblockUntilTimestamp: 0n, directMintingPaymentAddress: ''
+    }
+    const e = this.em.create(E.SystemSettings, { ...base, ...overrides })
+    await this.em.persistAndFlush(e)
+    return e
+  }
 }

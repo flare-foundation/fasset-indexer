@@ -182,6 +182,22 @@ export class SystemSettings {
   @Property({ type: 'text' })
   directMintingPaymentAddress!: string
 
+  // === asset manager — direct minting rolling-window limiter state ===
+  // Live per-window consumption from get*LimiterState(). Null when the asset
+  // manager predates these getters (older ABI reverts — see watchdog try/catch).
+
+  @Property({ type: new uint256(), nullable: true })
+  directMintingHourlyMintedUBA?: bigint
+
+  @Property({ type: 'integer', nullable: true })
+  directMintingHourlyWindowStart?: number
+
+  @Property({ type: new uint256(), nullable: true })
+  directMintingDailyMintedUBA?: bigint
+
+  @Property({ type: 'integer', nullable: true })
+  directMintingDailyWindowStart?: number
+
   // === asset manager — core vault parameters (null when no core vault configured) ===
 
   @Property({ type: 'text', nullable: true })

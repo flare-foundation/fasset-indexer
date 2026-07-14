@@ -176,6 +176,21 @@ export class EvmStateWatchdog {
       directMintingsUnblockUntilTimestamp,
       directMintingPaymentAddress
     }
+    // Live rolling-window limiter consumption. These getters only exist on the
+    // latest asset-manager ABI; an un-upgraded asset manager reverts, so leave
+    // the columns null rather than failing the whole settings row.
+    try {
+      const [hourly, daily] = await Promise.all([
+        assetManager.getDirectMintingHourlyLimiterState(),
+        assetManager.getDirectMintingDailyLimiterState()
+      ])
+      row.directMintingHourlyMintedUBA = hourly._mintedInCurrentWindow
+      row.directMintingHourlyWindowStart = Number(hourly._windowStartTimestamp)
+      row.directMintingDailyMintedUBA = daily._mintedInCurrentWindow
+      row.directMintingDailyWindowStart = Number(daily._windowStartTimestamp)
+    } catch (e) {
+      logger.error(`error fetching direct-minting limiter state for ${FAssetType[fasset]}: ${e}`)
+    }
     // Core-vault parameters live on the asset manager too — pull them when the
     // asset manager has a core vault wired up. getCoreVaultManager() returns the
     // zero address when no core vault is configured.
