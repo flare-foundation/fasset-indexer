@@ -160,12 +160,29 @@ const explorerQueryTransactions = new Map([
     SELECT tp.evm_log_id, tp.agent_vault_address_id, tp.deposited_uba as value_uba, NULL::integer as user_id, 1 as resolution, NULL::text as payment_reference
     FROM underlying_balance_topped_up tp`
   ],
+  // The smart-account arm's mint target is not on the asset-manager event: it
+  // mints to the smart account manager, which forwards to a personal account.
+  // That PA is a pure function of the XRPL source address — the smart account
+  // manager derives it via getOrCreatePersonalAccount(sourceAddress) before
+  // reading the memo, and a memo instruction cannot redirect it (the UserOp
+  // sender is required to equal the PA). So personal_account, populated from
+  // MASTER_ACCOUNT_CONTROLLER:PersonalAccountCreated, resolves the target.
+  //
+  // LEFT JOIN, not JOIN: a PA whose creation event predates the indexed range
+  // is missing from personal_account, and those rows must still appear in the
+  // unfiltered listing (with a null user) rather than vanish.
+  //
+  // Caveat on value_uba: minted_amount_uba is what the asset manager minted to
+  // the manager, before it deducts the executor fee. The PA is credited
+  // minted_amount_uba - executorFee, and executorFee lives only on the smart
+  // account manager's own DirectMintingExecuted event, which is not indexed.
   [TransactionType.DirectMint, `
     SELECT dm.evm_log_id, NULL::integer as agent_vault_address_id, dm.minted_amount_uba as value_uba, dm.target_address_id as user_id, 1 as resolution, NULL::text as payment_reference
     FROM direct_minting_executed dm
     UNION ALL
-    SELECT dms.evm_log_id, NULL::integer as agent_vault_address_id, dms.minted_amount_uba as value_uba, NULL::integer as user_id, 1 as resolution, NULL::text as payment_reference
-    FROM direct_minting_executed_to_smart_account dms`
+    SELECT dms.evm_log_id, NULL::integer as agent_vault_address_id, dms.minted_amount_uba as value_uba, pa.address_id as user_id, 1 as resolution, NULL::text as payment_reference
+    FROM direct_minting_executed_to_smart_account dms
+    LEFT JOIN personal_account pa ON pa.underlying_address_id = dms.source_address_id`
   ]
 ])
 
@@ -364,5 +381,15 @@ SELECT DISTINCT address FROM (
     JOIN evm_address ea ON ea.id = dm.target_address_id
     JOIN underlying_transaction ut ON ut.hash = UPPER(SUBSTRING(dm.transaction_id FROM 3))
     JOIN underlying_address ua ON ua.id = ut.source_id
+    WHERE ea.hex = ?
+  UNION ALL
+  -- Smart-account direct mints: the minter is the personal account derived from
+  -- the XRPL source address, so that source address is the underlying address we
+  -- report. Inner join — an unmapped PA cannot match the queried hex anyway.
+  SELECT ua.text AS address
+    FROM direct_minting_executed_to_smart_account dms
+    JOIN personal_account pa ON pa.underlying_address_id = dms.source_address_id
+    JOIN evm_address ea ON ea.id = pa.address_id
+    JOIN underlying_address ua ON ua.id = dms.source_address_id
     WHERE ea.hex = ?
 ) t`

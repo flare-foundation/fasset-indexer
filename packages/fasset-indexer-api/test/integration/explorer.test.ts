@@ -2,6 +2,7 @@ import { describe, it, before, after, beforeEach } from 'mocha'
 import { expect } from 'chai'
 import { FAssetType, RedemptionResolution } from 'fasset-indexer-core'
 import { ExplorerAnalytics } from '../../src/analytics/explorer'
+import { TransactionType } from '../../src/analytics/types'
 import { startTestDb, TestDb } from './db-harness'
 import { Fixtures } from './fixtures'
 
@@ -266,5 +267,303 @@ describe('ExplorerAnalytics.redemptionTransactionDetails — batched per-tx', ()
     const result = await explorer.redemptionTransactionDetails(evmTxHash)
     expect(result.flows).to.deep.equal([])
     expect(result.flags).to.have.length(1)
+  })
+})
+
+// The asset manager's DirectMintingExecutedToSmartAccount carries no mint
+// target — it mints to the smart account manager, which forwards to a personal
+// account derived from the XRPL source address. The DirectMint union arm
+// resolves that target through personal_account. Before this, the arm
+// hardcoded NULL as user_id, so these mints showed a blank user and were
+// dropped entirely from any ?user= filtered listing.
+describe('ExplorerAnalytics.transactions — smart-account direct mint target', () => {
+  let db: TestDb
+  let explorer: ExplorerAnalytics
+
+  const XRPL_SOURCE = 'rSmartAccountSource11111111111111'
+  const PA_HEX = '0x00000000000000000000000000000000000000a1'
+  const EXECUTOR = '0x103b384064AE85577127097A7CCadFD6FB13F437'
+  const TS = 1_700_030_000
+
+  before(async function () {
+    this.timeout(60000)
+    db = await startTestDb()
+    explorer = new ExplorerAnalytics(db.orm, 'coston2')
+  })
+
+  after(async () => { if (db) await db.stop() })
+
+  beforeEach(async () => { await db.orm.schema.refreshDatabase() })
+
+  const DIRECT_MINT_ONLY = [TransactionType.DirectMint]
+
+  it('reports the personal account as the user', async () => {
+    const fx = new Fixtures(db.orm.em.fork())
+    await fx.personalAccount({
+      fasset: FAssetType.FXRP, addressHex: PA_HEX, underlyingText: XRPL_SOURCE
+    })
+    await fx.directMintingExecutedToSmartAccount({
+      fasset: FAssetType.FXRP, sourceText: XRPL_SOURCE, executorHex: EXECUTOR,
+      mintedAmountUBA: 3_000_000n, blockIndex: 7000, blockTimestamp: TS
+    })
+
+    const r = await explorer.transactions(10, 0, undefined, undefined, TS - 10, TS + 10,
+      false, undefined, DIRECT_MINT_ONLY)
+
+    expect(r.count).to.equal(1)
+    expect(r.transactions).to.have.length(1)
+    expect(r.transactions[0].name).to.equal('DirectMint')
+    expect(r.transactions[0].user).to.equal(PA_HEX)
+    // minted_amount_uba, i.e. pre-executor-fee. See the caveat on the union arm.
+    expect(r.transactions[0].value).to.equal(3_000_000n)
+  })
+
+  it('returns the mint when filtering by the personal account address', async () => {
+    const fx = new Fixtures(db.orm.em.fork())
+    await fx.personalAccount({
+      fasset: FAssetType.FXRP, addressHex: PA_HEX, underlyingText: XRPL_SOURCE
+    })
+    await fx.directMintingExecutedToSmartAccount({
+      fasset: FAssetType.FXRP, sourceText: XRPL_SOURCE, executorHex: EXECUTOR,
+      mintedAmountUBA: 3_000_000n, blockIndex: 7001, blockTimestamp: TS
+    })
+
+    const hit = await explorer.transactions(10, 0, PA_HEX, undefined, TS - 10, TS + 10,
+      false, undefined, DIRECT_MINT_ONLY)
+    expect(hit.count).to.equal(1)
+    expect(hit.transactions[0].user).to.equal(PA_HEX)
+
+    // The XRPL source's own executor is not the minter — must not match.
+    const miss = await explorer.transactions(10, 0, EXECUTOR, undefined, TS - 10, TS + 10,
+      false, undefined, DIRECT_MINT_ONLY)
+    expect(miss.count).to.equal(0)
+  })
+
+  // A PA whose PersonalAccountCreated predates the indexed range has no
+  // personal_account row. The LEFT JOIN must still list the mint (with no
+  // user) rather than drop it from the unfiltered listing.
+  it('still lists the mint when the personal account mapping is missing', async () => {
+    const fx = new Fixtures(db.orm.em.fork())
+    await fx.directMintingExecutedToSmartAccount({
+      fasset: FAssetType.FXRP, sourceText: 'rUnmappedSource2222222222222222',
+      executorHex: EXECUTOR, mintedAmountUBA: 500n,
+      blockIndex: 7002, blockTimestamp: TS
+    })
+
+    const r = await explorer.transactions(10, 0, undefined, undefined, TS - 10, TS + 10,
+      false, undefined, DIRECT_MINT_ONLY)
+
+    expect(r.count).to.equal(1)
+    expect(r.transactions[0].user).to.equal(null)
+  })
+
+  // The mapping is keyed on the XRPL address, and one PA maps to exactly one
+  // XRPL address (underlying_address_id is unique). Two mints from different
+  // sources must not cross-attribute.
+  it('does not cross-attribute mints from different XRPL sources', async () => {
+    const fx = new Fixtures(db.orm.em.fork())
+    const OTHER_PA = '0x00000000000000000000000000000000000000b2'
+    const OTHER_SOURCE = 'rOtherSource33333333333333333333'
+    await fx.personalAccount({
+      fasset: FAssetType.FXRP, addressHex: PA_HEX, underlyingText: XRPL_SOURCE
+    })
+    await fx.personalAccount({
+      fasset: FAssetType.FXRP, addressHex: OTHER_PA, underlyingText: OTHER_SOURCE
+    })
+    await fx.directMintingExecutedToSmartAccount({
+      fasset: FAssetType.FXRP, sourceText: XRPL_SOURCE, executorHex: EXECUTOR,
+      mintedAmountUBA: 111n, blockIndex: 7003, blockTimestamp: TS
+    })
+    await fx.directMintingExecutedToSmartAccount({
+      fasset: FAssetType.FXRP, sourceText: OTHER_SOURCE, executorHex: EXECUTOR,
+      mintedAmountUBA: 222n, blockIndex: 7004, blockTimestamp: TS
+    })
+
+    const r = await explorer.transactions(10, 0, PA_HEX, undefined, TS - 10, TS + 10,
+      false, undefined, DIRECT_MINT_ONLY)
+    expect(r.count).to.equal(1)
+    expect(r.transactions[0].value).to.equal(111n)
+  })
+
+  // The non-smart-account arm reads target_address_id straight off the event
+  // and must be unaffected by the added join.
+  it('leaves the plain DirectMintingExecuted arm intact', async () => {
+    const fx = new Fixtures(db.orm.em.fork())
+    const TARGET = '0x7570066008Ac4E72b02ac14eBbde5FBe16B6dCC8'
+    await fx.directMintingExecuted({
+      fasset: FAssetType.FXRP, targetHex: TARGET, executorHex: EXECUTOR,
+      sourceText: 'rPlainSource444444444444444444', mintedAmountUBA: 999n,
+      blockIndex: 7005, blockTimestamp: TS,
+      underlyingTxHash: 'C'.repeat(64)
+    })
+
+    const r = await explorer.transactions(10, 0, TARGET, undefined, TS - 10, TS + 10,
+      false, undefined, DIRECT_MINT_ONLY)
+    expect(r.count).to.equal(1)
+    expect(r.transactions[0].user).to.equal(TARGET)
+    expect(r.transactions[0].value).to.equal(999n)
+  })
+})
+
+// personal_account is populated from MASTER_ACCOUNT_CONTROLLER:PersonalAccountCreated,
+// which the explorer config only started indexing alongside the join above. Every
+// deployment therefore passes through a window where the table is empty (pre-backfill)
+// or partially filled (PAs created before the backfill start block). The join must
+// degrade to exactly the old behaviour there: same rows, same count, same order, with
+// user simply absent — never a dropped row, never a duplicated one.
+describe('ExplorerAnalytics.transactions — DirectMint parity with no personal_account rows', () => {
+  let db: TestDb
+  let explorer: ExplorerAnalytics
+
+  const EXECUTOR = '0x103b384064AE85577127097A7CCadFD6FB13F437'
+  const PLAIN_TARGET = '0x7570066008Ac4E72b02ac14eBbde5FBe16B6dCC8'
+  const MINTER = '0xcccccccccccccccccccccccccccccccccccccCCC'
+  const TS = 1_700_040_000
+
+  before(async function () {
+    this.timeout(60000)
+    db = await startTestDb()
+    explorer = new ExplorerAnalytics(db.orm, 'coston2')
+  })
+
+  after(async () => { if (db) await db.stop() })
+
+  beforeEach(async () => { await db.orm.schema.refreshDatabase() })
+
+  // Three smart-account mints, one plain direct mint, one standard mint — none
+  // of them with a personal_account row anywhere in the database.
+  async function seedUnmapped(fx: Fixtures): Promise<void> {
+    for (let i = 0; i < 3; i++) {
+      await fx.directMintingExecutedToSmartAccount({
+        fasset: FAssetType.FXRP,
+        sourceText: `rUnmapped${i}`.padEnd(30, 'x'),
+        executorHex: EXECUTOR,
+        mintedAmountUBA: BigInt(100 + i),
+        blockIndex: 8000 + i, blockTimestamp: TS,
+        underlyingTxHash: `E${i}`.padEnd(64, '0')
+      })
+    }
+    await fx.directMintingExecuted({
+      fasset: FAssetType.FXRP, targetHex: PLAIN_TARGET, executorHex: EXECUTOR,
+      sourceText: 'rPlainParitySource', mintedAmountUBA: 777n,
+      blockIndex: 8010, blockTimestamp: TS,
+      underlyingTxHash: 'F'.repeat(64)
+    })
+    const ag = await fx.agentVault({
+      fasset: FAssetType.FXRP,
+      addressHex: '0x0000000000000000000000000000000000000e01',
+      underlyingText: 'rAgentE01',
+      poolHex: '0xcc0000000000000000000000000000000000e01'
+    })
+    await fx.collateralReserved({
+      fasset: FAssetType.FXRP, agentVault: ag, minterHex: MINTER,
+      paymentAddressText: 'rPayE01', paymentReference: '0x' + '33'.repeat(32),
+      valueUBA: 555n, blockIndex: 8011, blockTimestamp: TS
+    })
+  }
+
+  async function assertNoPersonalAccounts(): Promise<void> {
+    const Entities = require('fasset-indexer-core/entities')
+    const n = await db.orm.em.fork().count(Entities.PersonalAccount, {})
+    expect(n, 'guard: fixtures must not create personal_account rows').to.equal(0)
+  }
+
+  it('lists every smart-account mint with an absent user and no row loss', async () => {
+    const fx = new Fixtures(db.orm.em.fork())
+    await seedUnmapped(fx)
+    await assertNoPersonalAccounts()
+
+    const r = await explorer.transactions(50, 0, undefined, undefined, TS - 10, TS + 10,
+      true, undefined, [TransactionType.DirectMint])
+
+    // 3 smart-account + 1 plain = 4 rows, exactly as the pre-join query returned.
+    expect(r.count).to.equal(4)
+    expect(r.transactions).to.have.length(4)
+    // count and page agree — a fan-out in the join would inflate one but not the other.
+    expect(r.count).to.equal(r.transactions.length)
+
+    const smartAccount = r.transactions.filter(t => t.value !== 777n)
+    expect(smartAccount).to.have.length(3)
+    for (const t of smartAccount) {
+      expect(t.name).to.equal('DirectMint')
+      expect(t.user).to.equal(null)
+      // everything else on the row still resolves
+      expect(t.hash).to.match(/^0x/)
+      expect(t.timestamp).to.equal(TS)
+      expect(t.origin).to.match(/^0x/)
+    }
+    // values preserved and distinct — no collapsing of the three rows into one
+    expect(smartAccount.map(t => t.value).sort()).to.deep.equal([100n, 101n, 102n])
+
+    // the plain arm is untouched
+    const plain = r.transactions.find(t => t.value === 777n)!
+    expect(plain.user).to.equal(PLAIN_TARGET)
+  })
+
+  it('leaves a mixed all-types listing unchanged', async () => {
+    const fx = new Fixtures(db.orm.em.fork())
+    await seedUnmapped(fx)
+    await assertNoPersonalAccounts()
+
+    // Default types = every arm, so a regression in the DirectMint arm would
+    // show up as a wrong total here too.
+    const r = await explorer.transactions(50, 0, undefined, undefined, TS - 10, TS + 10, true)
+
+    expect(r.count).to.equal(5) // 3 SA + 1 plain direct + 1 standard mint
+    expect(r.transactions).to.have.length(5)
+    expect(r.transactions.filter(t => t.name === 'DirectMint')).to.have.length(4)
+    const standard = r.transactions.find(t => t.name === 'Mint')!
+    expect(standard.user).to.equal(MINTER)
+    // ascending on-chain order preserved across the union
+    const timestamps = r.transactions.map(t => t.timestamp)
+    expect(timestamps).to.deep.equal([...timestamps].sort((a, b) => a - b))
+  })
+
+  it('excludes unmapped smart-account mints from every user filter', async () => {
+    const fx = new Fixtures(db.orm.em.fork())
+    await seedUnmapped(fx)
+    await assertNoPersonalAccounts()
+
+    // The executor and the asset manager are the only EVM addresses on an
+    // unmapped smart-account row; neither may surface it as a user match.
+    for (const addr of [EXECUTOR, '0x00000000000000000000000000000000000000ff']) {
+      const r = await explorer.transactions(50, 0, addr, undefined, TS - 10, TS + 10,
+        true, undefined, [TransactionType.DirectMint])
+      expect(r.count, `user=${addr}`).to.equal(0)
+      expect(r.transactions, `user=${addr}`).to.have.length(0)
+    }
+
+    // The plain arm still filters correctly with the table empty.
+    const plain = await explorer.transactions(50, 0, PLAIN_TARGET, undefined, TS - 10, TS + 10,
+      true, undefined, [TransactionType.DirectMint])
+    expect(plain.count).to.equal(1)
+    expect(plain.transactions[0].value).to.equal(777n)
+  })
+
+  // Partial backfill: some PAs mapped, some not. Both kinds must coexist in one
+  // listing, and the filter must return only the mapped one.
+  it('handles a partially backfilled personal_account table', async () => {
+    const fx = new Fixtures(db.orm.em.fork())
+    await seedUnmapped(fx)
+    const MAPPED_PA = '0x00000000000000000000000000000000000000c3'
+    const MAPPED_SOURCE = 'rMappedParitySource'
+    await fx.personalAccount({
+      fasset: FAssetType.FXRP, addressHex: MAPPED_PA, underlyingText: MAPPED_SOURCE
+    })
+    await fx.directMintingExecutedToSmartAccount({
+      fasset: FAssetType.FXRP, sourceText: MAPPED_SOURCE, executorHex: EXECUTOR,
+      mintedAmountUBA: 4242n, blockIndex: 8020, blockTimestamp: TS,
+      underlyingTxHash: 'AB'.repeat(32)
+    })
+
+    const all = await explorer.transactions(50, 0, undefined, undefined, TS - 10, TS + 10,
+      true, undefined, [TransactionType.DirectMint])
+    expect(all.count).to.equal(5) // 3 unmapped SA + 1 mapped SA + 1 plain
+    expect(all.transactions.filter(t => t.user == null)).to.have.length(3)
+
+    const mapped = await explorer.transactions(50, 0, MAPPED_PA, undefined, TS - 10, TS + 10,
+      true, undefined, [TransactionType.DirectMint])
+    expect(mapped.count).to.equal(1)
+    expect(mapped.transactions[0].value).to.equal(4242n)
   })
 })

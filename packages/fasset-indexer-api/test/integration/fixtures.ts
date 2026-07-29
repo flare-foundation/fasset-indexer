@@ -574,4 +574,21 @@ export class Fixtures {
     })
     return dms
   }
+
+  // The XRPL-address → personal-account mapping the indexer writes when it sees
+  // MASTER_ACCOUNT_CONTROLLER:PersonalAccountCreated. Smart-account direct mints
+  // resolve their target through this row.
+  async personalAccount(opts: {
+    fasset: FAssetType, addressHex: string, underlyingText: string
+  }): Promise<E.PersonalAccount> {
+    const address = await this.evmAddress(opts.addressHex)
+    const existing = await this.em.findOne(E.PersonalAccount, { address })
+    if (existing) return existing
+    const underlyingAddress = await this.underlyingAddress(opts.underlyingText)
+    const e = this.em.create(E.PersonalAccount, {
+      fasset: opts.fasset, address, underlyingAddress
+    })
+    await this.em.persistAndFlush(e)
+    return e
+  }
 }
