@@ -1,0 +1,6 @@
+[submodule "domain/fasset"]
+	path = domain/fasset
+	url = git@gitlab.com:flarenetwork/fassets/fasset.git
+[submodule "domain/flare-smart-accounts"]
+	path = domain/flare-smart-accounts
+	url = git@gitlab.com:flarenetwork/smart-accounts/flare-smart-accounts.git
