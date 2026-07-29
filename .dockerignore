@@ -1,0 +1,16 @@
+# knowledge-base submodules: reference material only, never built or shipped
+domain
+
+# the image runs `yarn install --immutable` and `yarn build` itself,
+# so host-side artifacts must not leak into the build context
+.git
+**/node_modules
+**/dist
+**/*.tsbuildinfo
+
+# local-only
+.env
+.env.temp
+.env-docker
+*.log
+*.db
