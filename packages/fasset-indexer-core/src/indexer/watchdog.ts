@@ -19,7 +19,7 @@ export class EvmStateWatchdog {
   constructor(public readonly context: Context) {}
 
   async run(): Promise<void> {
-    while (true) {
+    for (;;) {
       try {
         await this.context.orm.em.fork().transactional(async em => {
           await this.watchAgentInfo(em)
@@ -30,7 +30,7 @@ export class EvmStateWatchdog {
             logger.error(`error while updating system settings: ${e}`)
           }
         })
-      } catch (e: any) {
+      } catch (e) {
         logger.error(`error in top-level Flare watchdog: ${e}`)
       }
       await sleep(this.context.config.stateFetchCycleSleepMs)
@@ -46,7 +46,7 @@ export class EvmStateWatchdog {
         logger.info(`updating agent ${agent.address.hex} info for agent vault`)
         const assetManager = this.context.fAssetTypeToAssetManagerAddress(agent.fasset)
         await updateAgentVaultInfo(this.context, em, assetManager, agent.address.hex)
-      } catch (e: any) {
+      } catch (e) {
         logger.error(`error updating agent ${agent.address} info: ${e}`)
       }
     }
@@ -69,7 +69,7 @@ export class EvmStateWatchdog {
           decimals: Number(_priceDecimals),
           timestamp: Number(_timestamp)
         })
-      } catch (err: any) {
+      } catch (err) {
         logger.error(`error updating ${symbol} price: ${err}`)
       }
     }

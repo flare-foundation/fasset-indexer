@@ -1,4 +1,5 @@
 import { readFileSync } from "fs"
+import { config as loadDotenv } from "dotenv"
 import { defineConfig, Options } from "@mikro-orm/knex"
 import { SqliteDriver } from "@mikro-orm/sqlite"
 import { PostgreSqlDriver } from "@mikro-orm/postgresql"
@@ -18,7 +19,7 @@ export class ConfigLoader {
   private _configJson: ConfigJson | undefined
 
   constructor() {
-    require('dotenv').config()
+    loadDotenv()
   }
 
   get dbConfig(): Options<SqliteDriver | PostgreSqlDriver> {
@@ -33,7 +34,7 @@ export class ConfigLoader {
   }
 
   get dbSchemaUpdateType(): SchemaUpdate {
-    let type = process.env.DB_SCHEMA_UPDATE_TYPE
+    const type = process.env.DB_SCHEMA_UPDATE_TYPE
     if (this.isNull(type)) {
       return 'safe'
     }
