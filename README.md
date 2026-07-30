@@ -63,6 +63,24 @@ For dev purposes you can also set **ADDRESSES_JSON** if using non-official FAsse
 
 To run the API, run `yarn run-api`.
 
+## Tests
+
+The suites run against postgres rather than an ephemeral sqlite file, so that they
+exercise the same engine and type checking as production. The devcontainer
+(`.devcontainer/compose.yaml`) starts one and points the tests at it; no setup is
+needed beyond opening the workspace in it.
+
+Run `yarn test` from `packages/fasset-indexer-core` or `packages/fasset-indexer-api`.
+
+Outside the devcontainer, either start a postgres yourself and override the
+defaults (`fasset:fasset@localhost:5432/fasset_indexer_test`) via **TEST_DB_HOST**,
+**TEST_DB_PORT**, **TEST_DB_NAME**, **TEST_DB_USER**, **TEST_DB_PASSWORD**, or
+bring up just the database with
+`docker compose -f .devcontainer/compose.yaml up db`.
+
+The core suite creates its schema once and truncates between tests, so it needs a
+database it can own — point it at a throwaway one, never at an indexed database.
+
 ## Docker Deployment
 
 A local docker image can be either built from this repository, or one from github can be utilised. The repository also includes the `compose.yaml` file that features a local postgres deployment and requires the following `.env` config:

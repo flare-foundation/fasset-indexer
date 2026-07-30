@@ -1,0 +1,53 @@
+# Devcontainer stack: the workspace container plus a postgres the test suite
+# runs against. Kept separate from the repo-root compose.yaml, which describes
+# the deployed services and expects CI/deploy variables to be set.
+services:
+  app:
+    image: mcr.microsoft.com/devcontainers/typescript-node:20
+    # Keep the container alive; devcontainer.json attaches to it.
+    command: sleep infinity
+    volumes:
+      - ..:/workspaces/fasset-indexer:cached
+      # ConfigLoader calls dotenv on construction. Masking .env keeps a host
+      # .env from leaking into tests and overriding TEST_DB_* below.
+      - /dev/null:/workspaces/fasset-indexer/.env:ro
+      - ${HOME}/.claude:/home/node/.claude
+      - ${HOME}/.claude.json:/home/node/.claude.json
+    environment:
+      TEST_DB_HOST: db
+      TEST_DB_PORT: 5432
+      TEST_DB_NAME: fasset_indexer_test
+      TEST_DB_USER: fasset
+      TEST_DB_PASSWORD: fasset
+    depends_on:
+      db:
+        condition: service_healthy
+
+  db:
+    # Matches the postgres in the repo-root compose.yaml, so tests exercise the
+    # same engine that runs in production.
+    image: postgres:16.8
+    environment:
+      POSTGRES_DB: fasset_indexer_test
+      POSTGRES_USER: fasset
+      POSTGRES_PASSWORD: fasset
+    # Durability tuning that is only safe because this database holds nothing
+    # but disposable test data. Buys a large speedup on the insert-heavy suites.
+    command:
+      - postgres
+      - -c
+      - fsync=off
+      - -c
+      - synchronous_commit=off
+      - -c
+      - full_page_writes=off
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fasset -d fasset_indexer_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+volumes:
+  db_data:

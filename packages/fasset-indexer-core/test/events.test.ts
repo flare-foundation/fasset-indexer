@@ -1,5 +1,4 @@
-import { unlink } from "fs"
-import { describe, beforeEach, afterEach, it } from "mocha"
+import { describe, before, beforeEach, after, it } from "mocha"
 import { use, expect } from "chai"
 import chaiAsPromised from "chai-as-promised"
 import { FAssetType, RedemptionResolution } from "../src"
@@ -8,7 +7,7 @@ import { Context } from "../src/context/context"
 import { EventInterface } from "../src/context/events"
 import { EventStorer } from "../src/indexer/eventlib/store-logic/event-storer"
 import { EventFixture } from "./fixtures/events/event"
-import { TestConfigLoader } from "./fixtures/config"
+import { createTestContext, resetDatabase } from "./fixtures/db"
 import { EVENTS } from "../src/config/constants"
 
 
@@ -23,16 +22,18 @@ describe("FAsset evm events", () => {
   let fixture: EventFixture
   let storer: EventStorer
 
+  before(async () => {
+    context = await createTestContext()
+  })
+
   beforeEach(async () => {
-    const loader = new TestConfigLoader()
-    context = await Context.create(loader)
+    await resetDatabase(context.orm)
     fixture = new EventFixture(context.orm)
     storer = new EventStorer(context.orm, context)
   })
 
-  afterEach(async () => {
+  after(async () => {
     await context.orm.close(true)
-    unlink(context.config.dbConfig.dbName!, () => { })
   })
 
   describe("token operations", () => {

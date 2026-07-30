@@ -16,7 +16,8 @@ import {
   randomNativeAddress,
   randomNumber,
   randomString,
-  randomUnderlyingAddress
+  randomUnderlyingAddress,
+  nowSeconds
 } from "../utils"
 import { AGENT_SETTINGS, ASSET_MANAGERS, WNAT_TOKEN } from "../constants"
 import type { Event } from "../../../src/indexer/eventlib/types"
@@ -93,7 +94,7 @@ export class EventGeneration {
         source: source ?? randomChoice(ASSET_MANAGERS),
         block: {
           index: randomNumber(1, 1e6),
-          timestamp: Math.floor(Date.now() / 1000)
+          timestamp: nowSeconds()
         },
         transaction: {
           index: randomNumber(1, 1e6),
@@ -197,7 +198,7 @@ export class EventGeneration {
       BigInt(randomNumber(1e2, 1e4)),
       BigInt(randomNumber(1, 1e6)),
       BigInt(randomNumber(1, 1e6)),
-      BigInt(Date.now()),
+      BigInt(nowSeconds()),
       randomUnderlyingAddress(),
       randomHash(),
       randomNativeAddress(),
@@ -256,7 +257,7 @@ export class EventGeneration {
       BigInt(randomNumber(1, 1e4)),
       BigInt(randomNumber(1, 1e6)),
       BigInt(randomNumber(1, 1e6)),
-      BigInt(Date.now()),
+      BigInt(nowSeconds()),
       randomHash(),
       randomNativeAddress(),
       BigInt(randomNumber(1, 1e6))
@@ -361,7 +362,7 @@ export class EventGeneration {
   }
 
   protected async generateLiquidationStarted(): Promise<LiquidationStartedEvent.OutputTuple> {
-    return [await this.getRandomAgentVault(), BigInt(Date.now())]
+    return [await this.getRandomAgentVault(), BigInt(nowSeconds())]
   }
 
   protected async generateLiquidationPerformed(): Promise<LiquidationPerformedEvent.OutputTuple> {
@@ -375,7 +376,7 @@ export class EventGeneration {
   }
 
   protected async generateFullLiquidationStarted(): Promise<FullLiquidationStartedEvent.OutputTuple> {
-    return [await this.getRandomAgentVault(), BigInt(Date.now())]
+    return [await this.getRandomAgentVault(), BigInt(nowSeconds())]
   }
 
   protected async generateLiquidationEnded(): Promise<LiquidationEndedEvent.OutputTuple> {
@@ -530,7 +531,9 @@ export class EventGeneration {
 
   protected async generateSettingsUpdated(): Promise<SettingsUpdatedEvent.OutputTuple> {
     return [
-      BigInt(randomNumber(1e4, 1e12)),
+      // escrowEndTimeSeconds lands in an int4 column, unlike the bigint amounts
+      // that follow it, so it has to stay inside the 32-bit range.
+      BigInt(randomNumber(1e4, 1e9)),
       BigInt(randomNumber(1e4, 1e12)),
       BigInt(randomNumber(1e4, 1e12)),
       BigInt(randomNumber(1e4, 1e6))
