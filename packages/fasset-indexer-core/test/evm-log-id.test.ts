@@ -8,19 +8,11 @@ import { Context } from "../src/context/context"
 import { EventStorer } from "../src/indexer/eventlib/store-logic/event-storer"
 import { EventFixture } from "./fixtures/events/event"
 import { createTestContext, resetDatabase } from "./fixtures/db"
-import type { Event } from "../src/indexer/eventlib/types"
+import { atPosition as at } from "./fixtures/utils"
 
 use(chaiAsPromised)
 
 const ASSET_MANAGER_FXRP = "AssetManager_FTestXRP"
-
-// Place a generated event at an exact chain position; the fixture otherwise
-// randomises it.
-function at(event: Event, blockIndex: number, logIndex: number): Event {
-  event.block.index = blockIndex
-  event.index = logIndex
-  return event
-}
 
 describe("evm log id encoding", () => {
 
