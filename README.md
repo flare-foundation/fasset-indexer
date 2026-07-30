@@ -63,6 +63,36 @@ For dev purposes you can also set **ADDRESSES_JSON** if using non-official FAsse
 
 To run the API, run `yarn run-api`.
 
+## Schema migrations
+
+One-off SQL migrations live in `packages/fasset-indexer-core/migrations/` and are
+run manually; `DB_SCHEMA_UPDATE_TYPE` only reconciles the schema with the entity
+definitions, it does not rewrite data.
+
+**001-encode-evm-log-ids** must be run against any database indexed before evm
+log ids became position-encoded. `evm_log.id` is no longer an autoincrement
+sequence: it is `block_index * 2^20 + index`, so ordering by id is ordering by
+on-chain position and a block range converts to an id range arithmetically. This
+is what keeps back-indexed events sorted where they belong instead of at the top
+of the list with a fresh high id.
+
+To apply it, stop every indexer and the API, deploy with
+`DB_SCHEMA_UPDATE_TYPE=full` so the id columns widen to `bigint`, then:
+
+```
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
+  -f packages/fasset-indexer-core/migrations/001-encode-evm-log-ids.sql
+```
+
+It runs as a single transaction and refuses to proceed if any existing log index
+has reached `EVM_LOG_INDEX_SCALE`, or if the encoded ids would overlap the ids
+already in use. A second run is a no-op. `node
+packages/fasset-indexer-core/migrations/verify-001.js` exercises it end to end on
+a throwaway in-process postgres.
+
+Code and data have to move together: the encoding is a hard cutover, not a
+gradual one, so do not run the new indexer against an unmigrated database.
+
 ## Tests
 
 The suites run against postgres rather than an ephemeral sqlite file, so that they

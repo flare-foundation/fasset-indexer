@@ -10,6 +10,7 @@ import * as ExplorerType from "./types"
 import * as SQL from "./utils/raw-sql"
 import { batchedRedemptionEventDetails } from "./utils/batched-redemption-details"
 import { findEvmLogIdsByTxHash } from "./utils/find-by-evm-tx"
+import { EVM_LOG_INDEX_SCALE } from "fasset-indexer-core/config"
 import { DEAD_ADDRESS, EXPLORER_DEFAULT_LOOKBACK_SECONDS } from "../config/constants"
 import type { EntityManager, ORM } from "fasset-indexer-core/orm"
 import type { FilterQuery } from "@mikro-orm/core"
@@ -60,8 +61,9 @@ export class ExplorerAnalytics extends SharedAnalytics {
     const em = this.orm.em.fork()
     ;[start, end] = this.standardizeInterval(start, end)
     if (start == null && end == null) {
-      // Default to a recent window so reindexed-but-old events (high evm_log_id,
-      // old timestamp) don't bubble to the top of the list during reindex.
+      // Bound an unqualified request to a recent window. Ordering no longer
+      // depends on this -- encoded ids keep reindexed events in place -- so it is
+      // now only about how much of the union an open-ended query has to scan.
       end = unixnow()
       start = end - EXPLORER_DEFAULT_LOOKBACK_SECONDS
     }
@@ -72,18 +74,21 @@ export class ExplorerAnalytics extends SharedAnalytics {
     const conn = em.getConnection('read')
     let windowParams: (number | string)[] = []
     if (hasWindow) {
-      // Translate the timestamp window into an evm_log_id range so the union's
-      // per-arm PK indexes can prune at the source (see EXPLORER_TRANSACTIONS_ID_BOUNDS).
+      // Resolve the timestamp window to a block range, then to an evm_log_id
+      // range by arithmetic: ids encode block_index * EVM_LOG_INDEX_SCALE + index,
+      // so [lo_block, hi_block] maps exactly onto the ids those blocks can hold.
+      // The range is therefore the whole window predicate — no separate timestamp
+      // filter, and no margin to cover ids that fall outside their block's range.
       const [bounds] = await conn.execute(
-        SQL.EXPLORER_TRANSACTIONS_ID_BOUNDS, [start, end]
-      ) as [{ lo: string | number | null, hi: string | number | null }]
-      if (bounds.lo == null || bounds.hi == null) {
+        SQL.EXPLORER_TRANSACTIONS_BLOCK_BOUNDS, [start, end]
+      ) as [{ lo_block: string | number | null, hi_block: string | number | null }]
+      if (bounds.lo_block == null || bounds.hi_block == null) {
         // Requested window falls outside the indexed block range — no rows can match.
         return { transactions: [], count: 0 }
       }
-      const idLo = Number(bounds.lo) - SQL.EXPLORER_ID_RANGE_MARGIN
-      const idHi = Number(bounds.hi) + SQL.EXPLORER_ID_RANGE_MARGIN
-      windowParams = [idLo, idHi, start!, end!]
+      const idLo = Number(bounds.lo_block) * EVM_LOG_INDEX_SCALE
+      const idHi = (Number(bounds.hi_block) + 1) * EVM_LOG_INDEX_SCALE - 1
+      windowParams = [idLo, idHi]
     }
     const filterParams = [user ?? agent, ...windowParams, status].filter(x => x != null)
     const [transactions, countResult] = await Promise.all([

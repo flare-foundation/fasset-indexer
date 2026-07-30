@@ -192,54 +192,41 @@ const explorerTransactionsUnion = (methods: TransactionType[]) =>
     .map(([, v]) => v)
     .join(' UNION ALL ')
 
-// Slack applied to the [id_lo, id_hi] window converted from a timestamp range,
-// to absorb reindexed rows whose evm_log_id falls outside the natural id range
-// for that window.
-export const EXPLORER_ID_RANGE_MARGIN = 100_000
-
-// Translate a [start, end] timestamp window into an evm_log_id range. Each
-// side does two index seeks: the timestamp index pinpoints the boundary block,
-// then a forward (or backward) walk on (block_index, index) returns the first
-// evm_log row at-or-past the boundary — so blocks with no indexed logs are
-// skipped automatically instead of yielding NULL.
-export const EXPLORER_TRANSACTIONS_ID_BOUNDS = `
+// Translate a [start, end] timestamp window into the block range it covers. One
+// index seek per side; the caller turns the blocks into an evm_log_id range by
+// arithmetic, because evm_log ids encode block_index * EVM_LOG_INDEX_SCALE +
+// index (see evmLogId in the core package).
+//
+// This used to have to find the bounding evm_log rows themselves and then pad
+// the result, since an autoincrement id had no fixed relationship to block
+// position. The encoding makes the range exact, so no margin is needed and
+// blocks with no indexed logs cost nothing.
+export const EXPLORER_TRANSACTIONS_BLOCK_BOUNDS = `
 SELECT
-  (SELECT id FROM evm_log
-     WHERE block_index >= (SELECT index FROM evm_block WHERE timestamp >= ? ORDER BY timestamp ASC LIMIT 1)
-     ORDER BY block_index ASC, index ASC LIMIT 1) AS lo,
-  (SELECT id FROM evm_log
-     WHERE block_index <= (SELECT index FROM evm_block WHERE timestamp <= ? ORDER BY timestamp DESC LIMIT 1)
-     ORDER BY block_index DESC, index DESC LIMIT 1) AS hi
+  (SELECT index FROM evm_block WHERE timestamp >= ? ORDER BY timestamp ASC, index ASC LIMIT 1) AS lo_block,
+  (SELECT index FROM evm_block WHERE timestamp <= ? ORDER BY timestamp DESC, index DESC LIMIT 1) AS hi_block
 `
 
-// When `window` is set we already join evm_log + evm_block to filter by
-// timestamp; we use that to sort by (block_index, index) — the on-chain position
-// of the event, which is stable under reindex (the row's evm_log_id changes
-// when re-inserted, but its block_index and per-block log index don't). Sorting
-// by evm_log_id would let reindexed-but-old events bubble to the top with a
-// fresh high id.
+// evm_log_id encodes the log's on-chain position, so `evm_log_id BETWEEN ? AND ?`
+// is an exact expression of the requested block range — not an approximation of
+// the timestamp predicate. That lets the window be applied without joining
+// evm_log/evm_block at all: the filter pushes down per-arm, so each event table's
+// PK index prunes the union at the source instead of materialising it.
 //
-// An `evm_log_id BETWEEN ? AND ?` filter is also emitted (bounds derived from
-// the timestamp range, see EXPLORER_TRANSACTIONS_ID_BOUNDS): it's redundant
-// with the timestamp predicate but pushes down per-arm so each event table's
-// PK index prunes the union early instead of materializing the whole UNION ALL.
-//
-// Without a window we fall back to ORDER BY evm_log_id, which keeps the inner
-// sort a small top-N heap on the union (no evm_log/evm_block join). evm_log_id
-// is auto-increment in insertion order, matching block order for new traffic;
-// reindex / backfill can produce some out-of-order pairs, so callers that care
-// about correctness during reindex should pass a window.
+// It also means the join that used to exist purely to sort by (block_index,
+// index) is gone. Ordering by evm_log_id is ordering by chain position, so a
+// back-indexed old event sorts where it belongs rather than bubbling to the top
+// with a fresh high id.
 const explorerTransactionsFilter = (
   user: boolean, agent: boolean,
   window: boolean, status: boolean
 ) => `
-${window ? 'JOIN evm_log eli ON eli.id = ti.evm_log_id JOIN evm_block ebi ON ebi.index = eli.block_index' : ''}
 ${user ? 'JOIN evm_address eaui ON eaui.id = ti.user_id' : ''}
 ${agent ? 'JOIN evm_address eaai ON eaai.id = ti.agent_vault_address_id' : ''}
 WHERE 1=1
 ${user ? 'AND eaui.hex = ?' : ''}
 ${agent ? 'AND eaai.hex = ?' : ''}
-${window ? 'AND ti.evm_log_id BETWEEN ? AND ? AND ebi.timestamp BETWEEN ? AND ?' : ''}
+${window ? 'AND ti.evm_log_id BETWEEN ? AND ?' : ''}
 ${status ? 'AND ti.resolution = ?' : ''}
 `
 
@@ -251,12 +238,9 @@ export const EXPLORER_TRANSACTIONS = (
   methods: TransactionType[]
 ) => {
   const dir = asc ? 'ASC' : 'DESC'
-  const innerSortKey = window
-    ? `eli.block_index ${dir}, eli.index ${dir}`
-    : `ti.evm_log_id ${dir}`
-  const outerSortKey = window
-    ? `t.block_index ${dir}, t.log_idx ${dir}`
-    : `t.evm_log_id ${dir}`
+  // One sort key in both branches: evm_log_id is the chain position.
+  const innerSortKey = `ti.evm_log_id ${dir}`
+  const outerSortKey = `t.evm_log_id ${dir}`
   return `
 SELECT
   et.hash, el.name, eb.timestamp, eaa.hex as agent_vault,
@@ -264,7 +248,6 @@ SELECT
   t.value_uba, t.resolution, ur.id as underlying_payment
 FROM (
   SELECT ti.evm_log_id, ti.agent_vault_address_id, ti.value_uba, ti.user_id, ti.resolution, ti.payment_reference
-    ${window ? ', eli.block_index, eli.index AS log_idx' : ''}
   FROM (${explorerTransactionsUnion(methods)}) ti
   ${explorerTransactionsFilter(user, agent, window, status)}
   ORDER BY ${innerSortKey}

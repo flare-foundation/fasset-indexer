@@ -1,5 +1,6 @@
 import * as E from 'fasset-indexer-core/entities'
 import { FAssetType } from 'fasset-indexer-core'
+import { evmLogId } from 'fasset-indexer-core/orm'
 import type { EntityManager } from '@mikro-orm/core'
 
 
@@ -55,8 +56,12 @@ export class Fixtures {
   async evmLog(opts: {
     name: string, address: E.EvmAddress, block: E.EvmBlock, transaction: E.EvmTransaction
   }): Promise<E.EvmLog> {
+    // The id is assigned, not autoincremented: it encodes the log's chain
+    // position, which is what the explorer orders and range-filters on.
+    const index = monotonicEvmLogIndex++
     const e = this.em.create(E.EvmLog, {
-      index: monotonicEvmLogIndex++,
+      id: evmLogId(opts.block.index, index),
+      index,
       name: opts.name,
       address: opts.address,
       block: opts.block,
