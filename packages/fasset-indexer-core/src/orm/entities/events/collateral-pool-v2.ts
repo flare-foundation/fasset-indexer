@@ -10,7 +10,9 @@ export class CPClaimedReward extends FAssetEventBound {
   @Property({ type: new uint256() })
   amountNatWei!: bigint
 
-  @Property({ type: 'numeric' })
+  // 'numeric' comes back from postgres as a string. Matches the v1 entity
+  // (CollateralPoolClaimedReward), which the v2 migration copies this field from.
+  @Property({ type: 'number' })
   rewardType!: number
 }
 
