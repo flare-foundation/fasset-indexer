@@ -54,8 +54,8 @@ describe("data migrations", () => {
       expect(pending.map(m => m.name)).to.include('001-encode-evm-log-ids')
     })
 
-    it("should apply and record migrations when the schema update is full", async () => {
-      await runDataMigrations(context.orm, 'full')
+    it("should apply and record migrations when RUN_DATA_MIGRATIONS is on", async () => {
+      await runDataMigrations(context.orm, 'safe', true)
       expect(await pendingDataMigrations(context.orm)).to.be.empty
       const marker = await getVar(context.orm.em.fork(), 'dataMigration:001-encode-evm-log-ids')
       expect(marker, 'applied marker should be written').to.exist
@@ -63,18 +63,34 @@ describe("data migrations", () => {
     })
 
     it("should be a no-op once applied", async () => {
-      await runDataMigrations(context.orm, 'full')
+      await runDataMigrations(context.orm, 'safe', true)
       const first = await getVar(context.orm.em.fork(), 'dataMigration:001-encode-evm-log-ids')
-      await runDataMigrations(context.orm, 'full')
+      await runDataMigrations(context.orm, 'safe', true)
       const second = await getVar(context.orm.em.fork(), 'dataMigration:001-encode-evm-log-ids')
       expect(second!.value, 'marker should not be rewritten').to.equal(first!.value)
     })
 
-    it("should refuse to start when migrations are outstanding and the update is safe", async () => {
+    it("should refuse to start when migrations are outstanding and the switch is off", async () => {
       // The dangerous case: encoded ids being written into an unmigrated
       // database. Failing startup is the recoverable outcome.
-      await expect(runDataMigrations(context.orm, 'safe'))
-        .to.be.rejectedWith(/not applied.*DB_SCHEMA_UPDATE_TYPE=full/s)
+      await expect(runDataMigrations(context.orm, 'safe', false))
+        .to.be.rejectedWith(/not applied.*RUN_DATA_MIGRATIONS=true/s)
+    })
+
+    // The decoupling: reconciling the schema and rewriting millions of rows are
+    // different operations. A routine entity change needs 'full' and must not
+    // drag a data migration along with it.
+    it("should not apply migrations just because the schema update is full", async () => {
+      await expect(runDataMigrations(context.orm, 'full', false))
+        .to.be.rejectedWith(/not applied.*RUN_DATA_MIGRATIONS=true/s)
+      expect(await pendingDataMigrations(context.orm)).to.not.be.empty
+    })
+
+    // A fresh schema is the exception: the migrations are no-ops on an empty
+    // database, but still need recording or every later start sees them pending.
+    it("should record migrations on a freshly created schema", async () => {
+      await runDataMigrations(context.orm, 'recreate', false)
+      expect(await pendingDataMigrations(context.orm)).to.be.empty
     })
 
     // The production case: the migration was applied by hand, so the database is
@@ -87,20 +103,20 @@ describe("data migrations", () => {
       ) as [{ wrong: string }]
       expect(Number(encoded[0].wrong), 'fixture db is already encoded').to.equal(0)
 
-      await runDataMigrations(context.orm, 'full')
+      await runDataMigrations(context.orm, 'safe', true)
       expect(await pendingDataMigrations(context.orm)).to.be.empty
     })
 
     it("should record the marker atomically, so concurrent starts cannot collide", async () => {
       // Five services start at once on a rolling deploy; the advisory lock only
       // covers the migration's own transaction, not the marker write.
-      await Promise.all(Array.from({ length: 5 }, () => runDataMigrations(context.orm, 'full')))
+      await Promise.all(Array.from({ length: 5 }, () => runDataMigrations(context.orm, 'safe', true)))
       expect(await pendingDataMigrations(context.orm)).to.be.empty
     })
 
-    it("should start normally with safe once the migration is recorded", async () => {
+    it("should start normally with the switch off once the migration is recorded", async () => {
       await setVar(context.orm.em.fork(), 'dataMigration:001-encode-evm-log-ids', 'already-done')
-      await expect(runDataMigrations(context.orm, 'safe')).to.eventually.be.undefined
+      await expect(runDataMigrations(context.orm, 'safe', false)).to.eventually.be.undefined
     })
   })
 })

@@ -49,6 +49,16 @@ export class ConfigLoader {
     throw new Error(`invalid DB_SCHEMA_UPDATE_TYPE value ${type}`)
   }
 
+  // Applying data migrations is deliberately its own switch rather than riding on
+  // DB_SCHEMA_UPDATE_TYPE=full. Reconciling the schema with the entities and
+  // rewriting millions of rows are different operations with different blast
+  // radii, and coupling them meant a routine entity change silently triggered a
+  // full data rewrite.
+  get runDataMigrations(): boolean {
+    const value = process.env.RUN_DATA_MIGRATIONS
+    return value === 'true' || value === '1'
+  }
+
   get chain(): string {
     return this.required('CHAIN')
   }

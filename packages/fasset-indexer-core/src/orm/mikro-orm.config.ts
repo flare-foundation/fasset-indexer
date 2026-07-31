@@ -17,7 +17,11 @@ export const ORM_OPTIONS: Options<AbstractSqlDriver> = defineConfig({
   debug: false
 })
 
-export async function createOrm(options: OrmOptions, update: SchemaUpdate): Promise<ORM> {
+// `runMigrations` comes from RUN_DATA_MIGRATIONS and defaults to off, so a
+// caller that only reads (the api) never rewrites data by accident.
+export async function createOrm(
+  options: OrmOptions, update: SchemaUpdate, runMigrations = false
+): Promise<ORM> {
   const initOptions = { ...ORM_OPTIONS, ...options }
   const orm = await MikroORM.init(initOptions)
   await updateSchema(orm, update)
@@ -25,7 +29,7 @@ export async function createOrm(options: OrmOptions, update: SchemaUpdate): Prom
     throw new Error("Failed to connect to database")
   // After the schema matches the entities, before anything writes: a migration
   // that rewrites ids has to land before the first row is indexed.
-  await runDataMigrations(orm, update)
+  await runDataMigrations(orm, update, runMigrations)
   return orm
 }
 

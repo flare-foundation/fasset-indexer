@@ -66,11 +66,17 @@ export async function pendingDataMigrations(orm: ORM): Promise<DataMigration[]> 
   return pending
 }
 
-// Applying is gated on DB_SCHEMA_UPDATE_TYPE=full. Anything else with work
-// outstanding throws: the id encoding is a hard cutover, and an indexer writing
-// encoded ids into an unmigrated database produces exactly the mixed ordering
-// the encoding exists to prevent. Refusing to start is the recoverable failure.
-export async function runDataMigrations(orm: ORM, update: SchemaUpdate): Promise<void> {
+// Applying is gated on RUN_DATA_MIGRATIONS, not on the schema update type.
+// Rewriting millions of rows is a different operation from reconciling the
+// schema, and deserves its own decision.
+//
+// Outstanding work with the switch off still throws. The id encoding is a hard
+// cutover: an indexer writing encoded ids into an unmigrated database produces
+// exactly the mixed ordering the encoding exists to prevent. Refusing to start
+// is the recoverable failure.
+export async function runDataMigrations(
+  orm: ORM, update: SchemaUpdate, enabled: boolean
+): Promise<void> {
   const pending = await pendingDataMigrations(orm)
   if (pending.length === 0) return
 
@@ -78,10 +84,10 @@ export async function runDataMigrations(orm: ORM, update: SchemaUpdate): Promise
   // the empty database -- but they still need recording, or every later start
   // would see them as outstanding.
   const names = pending.map(m => m.name).join(", ")
-  if (update !== "full" && update !== "recreate") {
+  if (!enabled && update !== "recreate") {
     throw new Error(
       `${pending.length} data migration(s) not applied: ${names}. `
-      + `Start once with DB_SCHEMA_UPDATE_TYPE=full to apply them, then set it back to safe. `
+      + `Start once with RUN_DATA_MIGRATIONS=true to apply them, then unset it. `
       + `Refusing to start against a database they have not run on.`
     )
   }

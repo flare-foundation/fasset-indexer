@@ -21,7 +21,8 @@ Needs the following environment variables:
 - **DB_HOST**: needs to be set for non-sqlite database type;
 - **DB_USER**: needs to be set for non-sqlite database type;
 - **DB_PASSWORD**: needs to be set for non-sqlite database type.
-- **DB_SCHEMA_UPDATE_TYPE**: should be set to `full` after a major update, otherwise should be set to `safe`.
+- **DB_SCHEMA_UPDATE_TYPE**: should be set to `full` after a major update, otherwise should be set to `safe`. It reconciles the schema with the entity definitions and never rewrites data;
+- **RUN_DATA_MIGRATIONS**: set to `true` for one start to apply outstanding data migrations under `migrations/`, then unset. Separate from the above on purpose — see [schema migrations](#schema-migrations).
 
 If new events want to be added to tracking without stopping the indexer, you should set:
 
@@ -78,21 +79,30 @@ of the list with a fresh high id.
 
 ### Applying them on deploy
 
-Migrations apply themselves on startup when **`DB_SCHEMA_UPDATE_TYPE=full`**, so a
+Migrations apply themselves on startup when **`RUN_DATA_MIGRATIONS=true`**, so a
 deployment nobody can shell into is migrated by setting that variable and rolling
-the image. They run after the schema is reconciled and before anything is
-indexed, each inside its own transaction under an advisory lock, so a rolling
-start of several services queues rather than collides. A migration is recorded in
-`var` only once its `NNN-verify.sql` has passed, so a failed verification leaves
-it pending rather than silently marked done.
+the image. Unset it again afterwards.
 
-Set `DB_SCHEMA_UPDATE_TYPE` back to `safe` afterwards.
+This is deliberately **not** tied to `DB_SCHEMA_UPDATE_TYPE`. Reconciling the
+schema with the entities and rewriting millions of rows are different operations
+with different blast radii; coupling them meant a routine entity change needing
+`full` would silently drag a full data rewrite along with it.
 
-With anything outstanding and `DB_SCHEMA_UPDATE_TYPE` **not** `full`, startup
-fails rather than proceeding. That is deliberate: the id encoding is a hard
-cutover, and an indexer writing encoded ids into an unmigrated database produces
-exactly the mixed ordering the encoding exists to prevent. The error names the
-migrations it is waiting on.
+Only the indexers honour the switch. The api passes it as off, so a read-only
+service can never rewrite data by accident.
+
+Migrations run after the schema is reconciled and before anything is indexed,
+each inside its own transaction under an advisory lock, so a rolling start of
+several services queues rather than collides. A migration is recorded in `var`
+only once its `NNN-verify.sql` has passed, so a failed verification leaves it
+pending rather than silently marked done.
+
+With anything outstanding and the switch off, startup fails rather than
+proceeding. The id encoding is a hard cutover, and an indexer writing encoded ids
+into an unmigrated database produces exactly the mixed ordering the encoding
+exists to prevent. The error names the migrations it is waiting on. The one
+exception is `DB_SCHEMA_UPDATE_TYPE=recreate`, which builds the schema empty —
+the migrations are no-ops there but still get recorded.
 
 ### Applying them by hand
 
@@ -134,8 +144,12 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
      -f packages/fasset-indexer-core/migrations/001-verify.sql
    ```
 
-5. Deploy the new image with `DB_SCHEMA_UPDATE_TYPE=full` once, to pick up the
-   entity changes the migration does not cover, then set it back to `safe`.
+5. Deploy the new image with `DB_SCHEMA_UPDATE_TYPE=full` **and**
+   `RUN_DATA_MIGRATIONS=true` once, then unset both. `full` picks up the entity
+   changes the migration does not cover; `RUN_DATA_MIGRATIONS` lets the runner
+   record what you just applied by hand — it finds the work already done and
+   writes the marker. Without it, startup refuses on a migration it can see is
+   outstanding.
 6. `VACUUM ANALYZE` — the rewrite leaves a dead row version for every row it
    touched.
 
