@@ -63,6 +63,84 @@ For dev purposes you can also set **ADDRESSES_JSON** if using non-official FAsse
 
 To run the API, run `yarn run-api`.
 
+## Schema migrations
+
+One-off SQL migrations live in `packages/fasset-indexer-core/migrations/` and are
+run manually; `DB_SCHEMA_UPDATE_TYPE` only reconciles the schema with the entity
+definitions, it does not rewrite data.
+
+**001-encode-evm-log-ids** must be run against any database indexed before evm
+log ids became position-encoded. `evm_log.id` is no longer an autoincrement
+sequence: it is `block_index * 2^20 + index`, so ordering by id is ordering by
+on-chain position and a block range converts to an id range arithmetically. This
+is what keeps back-indexed events sorted where they belong instead of at the top
+of the list with a fresh high id.
+
+Run the data migration **before** deploying the new code, not after. The
+migration widens the id columns itself, so it does not need a schema update to
+have run first — and deploying first would start the new indexer against a
+database it cannot write correctly.
+
+1. Stop every writer: the `core`, `watchdog`, `ripple` and `dogecoin` services.
+   Stop `api` too if you would rather it not serve mid-rewrite.
+2. Take a backup. This is the only rollback path: there is no inverse migration,
+   and once the migration commits the old code can no longer insert, because the
+   sequence it relied on is gone.
+3. Check the preconditions (see below), then apply:
+
+```
+psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
+  -f packages/fasset-indexer-core/migrations/001-encode-evm-log-ids.sql
+```
+
+4. Deploy the new image with `DB_SCHEMA_UPDATE_TYPE=full` once, to pick up the
+   entity changes the migration does not cover, then set it back to `safe`.
+5. `VACUUM ANALYZE` — the rewrite leaves a dead row version for every row it
+   touched.
+
+The migration is a single transaction that refuses to proceed if any existing log
+index has reached `EVM_LOG_INDEX_SCALE`, or if the encoded ids would overlap ids
+already in use. A second run is a no-op. Preconditions can be checked without
+committing to anything:
+
+```sql
+SELECT count(*)                                        AS rows,
+       max("index")                                    AS max_log_index,
+       max("index") < 1048576                          AS scale_sufficient,
+       min(block_index)::bigint * 1048576 > max(id)    AS range_clear
+FROM evm_log;
+```
+
+Because every referencing row is updated, the rewrite roughly doubles the space
+those tables occupy until vacuumed; check free space first. All foreign keys are
+validated in one burst at COMMIT, so raise `statement_timeout` and
+`idle_in_transaction_session_timeout` for the session rather than letting it be
+killed part-way.
+
+`node packages/fasset-indexer-core/migrations/verify-001.js` exercises the
+migration on a throwaway in-process postgres, and
+`packages/fasset-indexer-core/test/migration-001.test.ts` runs it against the
+real entity schema. Neither tells you how long it takes on production volume —
+rehearse on a restored snapshot to size the maintenance window.
+
+## Tests
+
+The suites run against postgres rather than an ephemeral sqlite file, so that they
+exercise the same engine and type checking as production. The devcontainer
+(`.devcontainer/compose.yaml`) starts one and points the tests at it; no setup is
+needed beyond opening the workspace in it.
+
+Run `yarn test` from `packages/fasset-indexer-core` or `packages/fasset-indexer-api`.
+
+Outside the devcontainer, either start a postgres yourself and override the
+defaults (`fasset:fasset@localhost:5432/fasset_indexer_test`) via **TEST_DB_HOST**,
+**TEST_DB_PORT**, **TEST_DB_NAME**, **TEST_DB_USER**, **TEST_DB_PASSWORD**, or
+bring up just the database with
+`docker compose -f .devcontainer/compose.yaml up db`.
+
+The core suite creates its schema once and truncates between tests, so it needs a
+database it can own — point it at a throwaway one, never at an indexed database.
+
 ## Docker Deployment
 
 A local docker image can be either built from this repository, or one from github can be utilised. The repository also includes the `compose.yaml` file that features a local postgres deployment and requires the following `.env` config:

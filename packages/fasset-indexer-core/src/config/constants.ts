@@ -16,6 +16,21 @@ export const MAX_DATABASE_ENTRIES_FETCH = 200
 export const FIRST_UNHANDLED_EVENT_BLOCK_DB_KEY = "firstUnhandledEventBlock"
 export const MIN_EVM_BLOCK_NUMBER_DB_KEY = "minEvmBlockNumber"
 
+// evm_log primary keys encode the log's chain position as
+// block_index * EVM_LOG_INDEX_SCALE + index, so ordering by id is ordering by
+// position. That keeps back-indexed rows in their true place instead of at the
+// end of an autoincrement sequence, and lets a block range be turned into an id
+// range by arithmetic alone.
+//
+// The scale must exceed the largest log index any block can ever hold, which is
+// bounded by the block gas limit rather than by observed traffic: a log costs at
+// least 375 gas, so at Flare's 28M limit a block tops out near 74k logs. 2^16
+// would already be reachable today; 2^20 needs a ~393M gas block, 14x the
+// current limit, while leaving ids ~130x inside Number.MAX_SAFE_INTEGER.
+// Raising it later is a data migration, so it is deliberately generous.
+export const EVM_LOG_INDEX_BITS = 20
+export const EVM_LOG_INDEX_SCALE = 2 ** EVM_LOG_INDEX_BITS
+
 // event names
 // agent
 export const EVENTS = {

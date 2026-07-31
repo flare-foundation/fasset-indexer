@@ -35,6 +35,22 @@ export function randomBoolean() {
   return Math.random() > 0.5
 }
 
+// Chain timestamps are seconds, and the columns holding them are int4. Date.now()
+// is milliseconds, which is ~1000x out of domain and overflows on postgres.
+export function nowSeconds() {
+  return Math.floor(Date.now() / 1000)
+}
+
+// Pin a generated event to an exact chain position; the fixture otherwise
+// randomises it. Tests that care about ordering or id encoding need control here.
+export function atPosition<T extends { index: number, block: { index: number } }>(
+  event: T, blockIndex: number, logIndex: number
+): T {
+  event.block.index = blockIndex
+  event.index = logIndex
+  return event
+}
+
 export function randomChoice<T>(arr: T[]): T {
   return arr[randomNumber(0, arr.length)]
 }

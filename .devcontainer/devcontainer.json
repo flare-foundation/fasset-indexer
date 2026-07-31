@@ -1,16 +1,21 @@
 // For format details, see https://aka.ms/devcontainer.json. For config options, see the
-// README at: https://github.com/devcontainers/templates/tree/main/src/docker-existing-dockerfile
+// README at: https://github.com/devcontainers/templates/tree/main/src/docker-compose
 // git ssh: https://code.visualstudio.com/remote/advancedcontainers/sharing-git-credentials
 {
 	"name": "FAsset Indexer Container",
-    "image": "mcr.microsoft.com/devcontainers/typescript-node:20",
+    "dockerComposeFile": "compose.yaml",
+    "service": "app",
+    "workspaceFolder": "/workspaces/fasset-indexer",
+    "remoteUser": "node",
+    // Stop postgres with the workspace container rather than leaving it running.
+    "shutdownAction": "stopCompose",
+    // Bind mounts moved to compose.yaml: "mounts" is only honoured for
+    // image/Dockerfile devcontainers, not compose ones. This still runs on the
+    // host, so the paths exist before docker binds them.
     "initializeCommand": "mkdir -p ${localEnv:HOME}/.claude && touch ${localEnv:HOME}/.claude.json",
     "postCreateCommand": "npm install -g @anthropic-ai/claude-code",
-    "mounts": [
-        "source=/dev/null,target=${containerWorkspaceFolder}/.env,type=bind,readonly",
-        "source=${localEnv:HOME}/.claude,target=/home/node/.claude,type=bind",
-        "source=${localEnv:HOME}/.claude.json,target=/home/node/.claude.json,type=bind"
-    ],
+    // Reach the test database from host tools (psql, a GUI client).
+    "forwardPorts": ["db:5432"],
     "customizations": {
         "vscode": {
             "extensions": [

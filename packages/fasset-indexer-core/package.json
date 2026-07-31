@@ -43,9 +43,8 @@
         "run-indexer": "node dist/src/run/run-indexer.js",
         "run-watchdog": "node dist/src/run/run-watchdog.js",
         "--------- tests -----------": "----------- tests -----------",
-        "test": "yarn mocha test --timeout 100000",
-        "test-all": "yarn mocha test test/**/*.test.ts",
-        "--------- code generators -----------": "----------- code generators -----------",
+        "test": "mocha --timeout 100000",
+            "--------- code generators -----------": "----------- code generators -----------",
         "types": "rm -rf chain/typechain && yarn typechain --target=ethers-v6 chain/artifacts/**/*.json --out-dir chain/typechain/"
     },
     "devDependencies": {

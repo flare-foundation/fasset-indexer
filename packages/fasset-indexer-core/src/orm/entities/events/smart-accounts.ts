@@ -1,5 +1,5 @@
 import { Entity, ManyToOne, Property } from "@mikro-orm/core"
-import { AgentEventBound, EventBound, FAssetEventBound, PersonalAccountEventBound } from "./_bound"
+import { AgentEventBound, FAssetEventBound, PersonalAccountEventBound } from "./_bound"
 import { EvmAddress } from "../evm/address"
 import { uint256 } from "../../custom/uint"
 import { BYTES32_LENGTH } from "../../../config/constants"

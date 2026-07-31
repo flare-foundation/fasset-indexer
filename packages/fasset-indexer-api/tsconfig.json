@@ -5,7 +5,6 @@
     "outDir": "./dist",
     "resolveJsonModule": true,
     "removeComments": true,
-    "baseUrl": "./",
     "incremental": true,
     "strictNullChecks": false,
     "noImplicitAny": false,

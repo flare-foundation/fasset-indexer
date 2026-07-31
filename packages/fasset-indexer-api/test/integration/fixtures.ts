@@ -1,5 +1,6 @@
 import * as E from 'fasset-indexer-core/entities'
 import { FAssetType } from 'fasset-indexer-core'
+import { evmLogId } from 'fasset-indexer-core/orm'
 import type { EntityManager } from '@mikro-orm/core'
 
 
@@ -55,8 +56,12 @@ export class Fixtures {
   async evmLog(opts: {
     name: string, address: E.EvmAddress, block: E.EvmBlock, transaction: E.EvmTransaction
   }): Promise<E.EvmLog> {
+    // The id is assigned, not autoincremented: it encodes the log's chain
+    // position, which is what the explorer orders and range-filters on.
+    const index = monotonicEvmLogIndex++
     const e = this.em.create(E.EvmLog, {
-      index: monotonicEvmLogIndex++,
+      id: evmLogId(opts.block.index, index),
+      index,
       name: opts.name,
       address: opts.address,
       block: opts.block,
@@ -601,6 +606,23 @@ export class Fixtures {
       directMintingsUnblockUntilTimestamp: 0n, directMintingPaymentAddress: ''
     }
     const e = this.em.create(E.SystemSettings, { ...base, ...overrides })
+    await this.em.persistAndFlush(e)
+    return e
+  }
+
+  // The XRPL-address → personal-account mapping the indexer writes when it sees
+  // MASTER_ACCOUNT_CONTROLLER:PersonalAccountCreated. Smart-account direct mints
+  // resolve their target through this row.
+  async personalAccount(opts: {
+    fasset: FAssetType, addressHex: string, underlyingText: string
+  }): Promise<E.PersonalAccount> {
+    const address = await this.evmAddress(opts.addressHex)
+    const existing = await this.em.findOne(E.PersonalAccount, { address })
+    if (existing) return existing
+    const underlyingAddress = await this.underlyingAddress(opts.underlyingText)
+    const e = this.em.create(E.PersonalAccount, {
+      fasset: opts.fasset, address, underlyingAddress
+    })
     await this.em.persistAndFlush(e)
     return e
   }

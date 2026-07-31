@@ -120,19 +120,56 @@ describe('AgentStatistics — direct mints', () => {
       expect(r).to.deep.equal([SOURCE])
     })
 
-    it('does NOT include DirectMintingExecutedToSmartAccount sources (no EVM-user column on SA variant)', async () => {
+    // The SA variant has no EVM-user column; the minter is the personal account
+    // the smart account manager derives from the XRPL source address. So the
+    // executor must not match, and an unmapped source must not match either.
+    it('does NOT match a DirectMintingExecutedToSmartAccount on its executor', async () => {
       const fx = new Fixtures(db.orm.em.fork())
       const TARGET = '0x7570066008Ac4E72b02ac14eBbde5FBe16B6dCC8'
       const SOURCE = 'rSourceSAonly'
       await fx.directMintingExecutedToSmartAccount({
         fasset: FAssetType.FXRP,
         sourceText: SOURCE,
-        executorHex: TARGET, // even if executor matches, SA variant isn't keyed by EVM user
+        executorHex: TARGET, // executor is not the minter
         mintedAmountUBA: 1_000_000n,
         underlyingTxHash: 'B2C3D4E5'.padEnd(64, '0')
       })
 
       const r = await stats.underlyingMinterAddresses(TARGET)
+      expect(r).to.deep.equal([])
+    })
+
+    it('returns the XRPL source for a smart-account mint, keyed by personal account', async () => {
+      const fx = new Fixtures(db.orm.em.fork())
+      const PA = '0x00000000000000000000000000000000000000a1'
+      const SOURCE = 'rSourceSAmapped'
+      await fx.personalAccount({
+        fasset: FAssetType.FXRP, addressHex: PA, underlyingText: SOURCE
+      })
+      await fx.directMintingExecutedToSmartAccount({
+        fasset: FAssetType.FXRP,
+        sourceText: SOURCE,
+        executorHex: '0x103b384064AE85577127097A7CCadFD6FB13F437',
+        mintedAmountUBA: 1_000_000n,
+        underlyingTxHash: 'C3D4E5F6'.padEnd(64, '0')
+      })
+
+      const r = await stats.underlyingMinterAddresses(PA)
+      expect(r).to.deep.equal([SOURCE])
+    })
+
+    it('returns nothing for a smart-account mint whose personal account is unmapped', async () => {
+      const fx = new Fixtures(db.orm.em.fork())
+      const PA = '0x00000000000000000000000000000000000000b2'
+      await fx.directMintingExecutedToSmartAccount({
+        fasset: FAssetType.FXRP,
+        sourceText: 'rSourceSAunmapped',
+        executorHex: '0x103b384064AE85577127097A7CCadFD6FB13F437',
+        mintedAmountUBA: 1_000_000n,
+        underlyingTxHash: 'D4E5F607'.padEnd(64, '0')
+      })
+
+      const r = await stats.underlyingMinterAddresses(PA)
       expect(r).to.deep.equal([])
     })
 

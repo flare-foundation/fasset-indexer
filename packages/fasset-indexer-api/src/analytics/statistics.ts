@@ -169,7 +169,7 @@ export class AgentStatistics extends SharedAnalytics {
 
   async underlyingMinterAddresses(address: string): Promise<string[]> {
     const em = this.orm.em.fork()
-    const minters = await em.execute(SQL.UNDERLYING_MINTERS, [address, address]) as { address: string }[]
+    const minters = await em.execute(SQL.UNDERLYING_MINTERS, [address, address, address]) as { address: string }[]
     return minters.map(({ address }) => address)
   }
 

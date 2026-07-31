@@ -1,6 +1,6 @@
 import * as Entities from '../../../orm/entities'
 import * as shared from '../../../shared'
-import { findOrCreateEntity, findOrCreateEntities } from "../../../orm/utils"
+import { findOrCreateEntity, findOrCreateEntities, evmLogId } from "../../../orm/utils"
 import { isUntrackedAgentVault } from "../../utils"
 import { ContractLookup } from "../../../context/lookup"
 import { CollateralPoolEventMigration } from "../migrations/collateral-pool-migrations"
@@ -354,8 +354,9 @@ export class EventStorer {
   }
 
   protected async logExists(em: EntityManager, log: Event): Promise<boolean> {
-    const { block: { index: blockIndex }, index } = log
-    const evmLog = await em.findOne(Entities.EvmLog, { index, block: { index: blockIndex }})
+    // The id is derived from chain position, so this is a primary-key lookup
+    // rather than a search on the (block_index, index) unique index.
+    const evmLog = await em.findOne(Entities.EvmLog, { id: evmLogId(log.block.index, log.index) })
     return evmLog !== null
   }
 
@@ -1746,8 +1747,13 @@ export class EventStorer {
       { index: log.block.index, timestamp: log.block.timestamp }, { persist: false })
     const transaction = existingTransaction ?? em.create(Entities.EvmTransaction,
       { ...log.transaction, block, source, target }, { persist: false })
-    return em.create(Entities.EvmLog,
-      { index: log.index, name: log.name, address, transaction, block }, { persist: false })
+    return em.create(Entities.EvmLog, {
+      // Derived from chain position rather than a sequence, so a log re-indexed
+      // later lands at its true place in id order. Also makes re-processing the
+      // same log an upsert instead of a second row.
+      id: evmLogId(log.block.index, log.index),
+      index: log.index, name: log.name, address, transaction, block
+    }, { persist: false })
   }
 
   private async changeTokenBalance(
