@@ -81,8 +81,18 @@ migration widens the id columns itself, so it does not need a schema update to
 have run first — and deploying first would start the new indexer against a
 database it cannot write correctly.
 
-1. Stop every writer: the `core`, `watchdog`, `ripple` and `dogecoin` services.
-   Stop `api` too if you would rather it not serve mid-rewrite.
+1. Stop every writer, naming the services explicitly. `db-postgres` belongs to
+   all five profiles, so a profile-wide `stop` takes the database down with them:
+
+   ```
+   docker compose --profile core --profile watchdog --profile ripple --profile dogecoin \
+     stop core watchdog ripple dogecoin
+   ```
+
+   The profile flags only bring those services into the model; the trailing list
+   is what limits what gets stopped. `docker compose ps` should leave
+   `db-postgres` as the only service still up. Add `api` to the list if you would
+   rather it not serve mid-rewrite.
 2. Take a backup. This is the only rollback path: there is no inverse migration,
    and once the migration commits the old code can no longer insert, because the
    sequence it relied on is gone.
