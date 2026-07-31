@@ -47,6 +47,14 @@ DECLARE
   encoded   bigint;
   r         record;
 BEGIN
+  -- Bypassing foreign-key triggers below needs superuser. Fail here rather than
+  -- part-way through, once the widening has already happened.
+  IF NOT (SELECT usesuper FROM pg_user WHERE usename = current_user) THEN
+    RAISE EXCEPTION
+      'this migration must run as a superuser (current_user is %); it disables foreign-key triggers to renumber parent and children separately',
+      current_user;
+  END IF;
+
   SELECT max("index"), min(block_index), max(id)
     INTO max_index, min_block, max_id
     FROM evm_log;
@@ -103,20 +111,20 @@ BEGIN
     EXECUTE 'DROP SEQUENCE evm_log_id_seq';
   END IF;
 
-  -- 3. Let foreign keys settle at COMMIT instead of per statement: parent and
-  --    children cannot be renumbered in the same statement.
-  FOR r IN
-    SELECT con.conname, con.conrelid::regclass AS tbl
-    FROM pg_constraint con
-    WHERE con.contype = 'f'
-      AND con.conrelid IN (SELECT table_name::regclass FROM evm_log_ref_cols)
-  LOOP
-    EXECUTE format('ALTER TABLE %s ALTER CONSTRAINT %I DEFERRABLE INITIALLY IMMEDIATE',
-                   r.tbl, r.conname);
-  END LOOP;
 END $$;
 
-SET CONSTRAINTS ALL DEFERRED;
+-- Stop foreign-key triggers from firing at all, so parent and children can be
+-- renumbered in separate statements.
+--
+-- The obvious alternative, SET CONSTRAINTS ALL DEFERRED, does not survive
+-- production volume: deferring queues an after-trigger event for every row
+-- touched by every foreign key and holds them until COMMIT. At ~2M rows that
+-- queue exhausted memory and the backend was killed mid-migration.
+--
+-- Nothing is queued or checked here, so referential integrity rests on the
+-- rewrite being a consistent bijection rather than on postgres verifying it.
+-- Run 001-verify.sql afterwards to confirm no reference was left dangling.
+SET session_replication_role = replica;
 
 DO $$
 DECLARE
@@ -154,14 +162,13 @@ BEGIN
   RAISE NOTICE 'renumbered % evm_log rows', n;
 END $$;
 
+SET session_replication_role = origin;
+
 COMMIT;
 
--- Foreign keys are left DEFERRABLE INITIALLY IMMEDIATE, which behaves exactly as
--- before unless a transaction opts into deferral. To restore them verbatim:
+-- Foreign key definitions are untouched -- session_replication_role only stops
+-- their triggers firing for the duration of this transaction, and is reset above.
+-- Because nothing was verified while it was in effect, run 001-verify.sql before
+-- starting the indexer:
 --
---   DO $$ DECLARE r record; BEGIN
---     FOR r IN SELECT conname, conrelid::regclass AS tbl FROM pg_constraint
---              WHERE contype = 'f' AND condeferrable LOOP
---       EXECUTE format('ALTER TABLE %s ALTER CONSTRAINT %I NOT DEFERRABLE', r.tbl, r.conname);
---     END LOOP;
---   END $$;
+--   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 -f 001-verify.sql

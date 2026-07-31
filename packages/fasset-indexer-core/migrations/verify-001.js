@@ -18,6 +18,7 @@ const req = createRequire(path.join(repoRoot, 'packages/fasset-indexer-api/node_
 const { PGlite } = req('@electric-sql/pglite')
 
 const MIGRATION = fs.readFileSync(path.join(__dirname, '001-encode-evm-log-ids.sql'), 'utf8')
+const VERIFY = fs.readFileSync(path.join(__dirname, '001-verify.sql'), 'utf8')
 const SCALE = 1048576
 
 const SCHEMA = `
@@ -94,6 +95,21 @@ function check(label, actual, expected) {
   const again = await db.query('SELECT id FROM evm_log ORDER BY id')
   check('second run is a no-op', again.rows.map(r => Number(r.id)), [
     1000 * SCALE + 5, 2000 * SCALE + 0, 3000 * SCALE + 2])
+
+  console.log('001-verify.sql')
+  let verifyErr = null
+  try { await db.exec(VERIFY) } catch (e) { verifyErr = String(e.message || e); await db.exec('ROLLBACK') }
+  check('passes on a correctly migrated database', verifyErr, null)
+
+  // and it has to actually detect a broken one, or it is worth nothing.
+  // Foreign keys are bypassed the same way the migration bypasses them.
+  await db.exec(`SET session_replication_role = replica;
+                 UPDATE redemption_requested SET evm_log_id = 999999999
+                  WHERE evm_log_id = (SELECT min(evm_log_id) FROM redemption_requested);
+                 SET session_replication_role = origin;`)
+  let brokenErr = null
+  try { await db.exec(VERIFY) } catch (e) { brokenErr = String(e.message || e); await db.exec('ROLLBACK') }
+  check('detects a dangling reference', /dangling references/.test(brokenErr || ''), true)
 
   // guard: a log index at the scale must abort the whole migration
   console.log('guard: log index at scale')

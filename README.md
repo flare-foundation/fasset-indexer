@@ -103,15 +103,30 @@ psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
   -f packages/fasset-indexer-core/migrations/001-encode-evm-log-ids.sql
 ```
 
-4. Deploy the new image with `DB_SCHEMA_UPDATE_TYPE=full` once, to pick up the
+4. Verify, before starting anything. The migration renumbers with foreign-key
+   triggers disabled, so postgres never checked the references and this is what
+   confirms they survived:
+
+   ```
+   psql "$DATABASE_URL" -v ON_ERROR_STOP=1 \
+     -f packages/fasset-indexer-core/migrations/001-verify.sql
+   ```
+
+5. Deploy the new image with `DB_SCHEMA_UPDATE_TYPE=full` once, to pick up the
    entity changes the migration does not cover, then set it back to `safe`.
-5. `VACUUM ANALYZE` — the rewrite leaves a dead row version for every row it
+6. `VACUUM ANALYZE` — the rewrite leaves a dead row version for every row it
    touched.
 
-The migration is a single transaction that refuses to proceed if any existing log
-index has reached `EVM_LOG_INDEX_SCALE`, or if the encoded ids would overlap ids
-already in use. A second run is a no-op. Preconditions can be checked without
-committing to anything:
+The migration must run as a superuser: it sets `session_replication_role` to stop
+foreign-key triggers firing, because parent and children cannot be renumbered in
+one statement. Deferring the constraints instead does not survive production
+volume — deferral queues an after-trigger event per touched row and holds them
+until COMMIT, which at ~2M rows exhausts memory and the backend is killed.
+
+It is a single transaction that refuses to proceed if any existing log index has
+reached `EVM_LOG_INDEX_SCALE`, or if the encoded ids would overlap ids already in
+use. A second run is a no-op. Preconditions can be checked without committing to
+anything:
 
 ```sql
 SELECT count(*)                                        AS rows,
@@ -122,10 +137,9 @@ FROM evm_log;
 ```
 
 Because every referencing row is updated, the rewrite roughly doubles the space
-those tables occupy until vacuumed; check free space first. All foreign keys are
-validated in one burst at COMMIT, so raise `statement_timeout` and
-`idle_in_transaction_session_timeout` for the session rather than letting it be
-killed part-way.
+those tables occupy until vacuumed; check free space first. Raise
+`statement_timeout` and `idle_in_transaction_session_timeout` for the session
+rather than letting a long run be killed part-way.
 
 `node packages/fasset-indexer-core/migrations/verify-001.js` exercises the
 migration on a throwaway in-process postgres, and
