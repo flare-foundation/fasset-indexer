@@ -18,6 +18,12 @@
 
 BEGIN;
 
+-- Serialise against other runners. Every service calls createOrm on startup, so
+-- a rolling deploy can start several at once; the second waits here and then
+-- finds the ids already encoded and returns. Transaction-scoped, so it is
+-- released on commit or rollback without any cleanup.
+SELECT pg_advisory_xact_lock(4051982001);
+
 -- Every column holding an evm_log id, discovered by walking the foreign-key
 -- graph out from evm_log.id rather than by name. This catches the event tables
 -- (evm_log_id) and the cross-event references between them

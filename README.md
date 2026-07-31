@@ -76,10 +76,32 @@ on-chain position and a block range converts to an id range arithmetically. This
 is what keeps back-indexed events sorted where they belong instead of at the top
 of the list with a fresh high id.
 
-Run the data migration **before** deploying the new code, not after. The
-migration widens the id columns itself, so it does not need a schema update to
-have run first — and deploying first would start the new indexer against a
-database it cannot write correctly.
+### Applying them on deploy
+
+Migrations apply themselves on startup when **`DB_SCHEMA_UPDATE_TYPE=full`**, so a
+deployment nobody can shell into is migrated by setting that variable and rolling
+the image. They run after the schema is reconciled and before anything is
+indexed, each inside its own transaction under an advisory lock, so a rolling
+start of several services queues rather than collides. A migration is recorded in
+`var` only once its `NNN-verify.sql` has passed, so a failed verification leaves
+it pending rather than silently marked done.
+
+Set `DB_SCHEMA_UPDATE_TYPE` back to `safe` afterwards.
+
+With anything outstanding and `DB_SCHEMA_UPDATE_TYPE` **not** `full`, startup
+fails rather than proceeding. That is deliberate: the id encoding is a hard
+cutover, and an indexer writing encoded ids into an unmigrated database produces
+exactly the mixed ordering the encoding exists to prevent. The error names the
+migrations it is waiting on.
+
+### Applying them by hand
+
+If you do have shell access and would rather run it yourself, the migration is
+plain SQL and safe to apply directly — it is the same file, and applying it this
+way still lets the runner record it afterwards. Do it **before** deploying the
+new code, not after: the migration widens the id columns itself, so it does not
+need a schema update first, and deploying first would start the new indexer
+against a database it cannot write correctly.
 
 1. Stop every writer, naming the services explicitly. `db-postgres` belongs to
    all five profiles, so a profile-wide `stop` takes the database down with them:

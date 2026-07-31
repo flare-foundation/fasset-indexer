@@ -1,6 +1,7 @@
 import { defineConfig, MikroORM } from "@mikro-orm/core"
 import * as Entities from './entities'
 import { updateSchema } from "./utils"
+import { runDataMigrations } from "./data-migrations"
 import { MIN_DATABASE_POOL_CONNECTIONS, MAX_DATABASE_POOL_CONNECTIONS } from "../config/constants"
 import type { Options } from "@mikro-orm/core"
 import type { AbstractSqlDriver } from "@mikro-orm/knex"
@@ -22,6 +23,9 @@ export async function createOrm(options: OrmOptions, update: SchemaUpdate): Prom
   await updateSchema(orm, update)
   if (!await orm.isConnected())
     throw new Error("Failed to connect to database")
+  // After the schema matches the entities, before anything writes: a migration
+  // that rewrites ids has to land before the first row is indexed.
+  await runDataMigrations(orm, update)
   return orm
 }
 
