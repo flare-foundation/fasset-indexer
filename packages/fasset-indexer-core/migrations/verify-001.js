@@ -134,6 +134,44 @@ function check(label, actual, expected) {
   try { await db.exec(AUDIT) } catch (e) { shuffleErr = String(e.message || e); await db.exec('ROLLBACK') }
   check('detects logs shuffled out of position', /do not encode their own position/.test(shuffleErr || ''), true)
 
+  // guard: a column the foreign-key graph cannot see must still be rewritten.
+  // This reproduces the flare incident: underlying_balance_topped_up carried an
+  // evm_log_id with no FK to evm_log, so graph-only discovery skipped it and
+  // renumbering the parent orphaned every row.
+  console.log('guard: column with no foreign key')
+  const db4 = await PGlite.create()
+  await db4.exec(SCHEMA)
+  await db4.exec(`CREATE TABLE underlying_balance_topped_up (
+                    evm_log_id int4 PRIMARY KEY, deposited_uba numeric NOT NULL);`)
+  await db4.exec(SEED)
+  await db4.exec(`INSERT INTO underlying_balance_topped_up VALUES (1, 10000), (2, 20000);`)
+  await db4.exec(MIGRATION)
+  const noFk = await db4.query('SELECT evm_log_id FROM underlying_balance_topped_up ORDER BY evm_log_id')
+  check('rewrites a column with no foreign key', noFk.rows.map(r => Number(r.evm_log_id)),
+    [1000 * SCALE + 5, 2000 * SCALE + 0])
+  const stranded = await db4.query(`SELECT count(*)::int AS n FROM underlying_balance_topped_up c
+    LEFT JOIN evm_log l ON l.id = c.evm_log_id WHERE l.id IS NULL`)
+  check('leaves it non-orphaned', stranded.rows[0].n, 0)
+
+  // Exactly the flare shape: a column with no foreign key, holding a row that
+  // already dangles. Nothing re-validates it (an FK-backed column would be
+  // caught by ALTER ... TYPE re-checking the constraint), the remap cannot match
+  // it, and it keeps a pre-migration id while the parent moves. That is how
+  // 95,950 rows were orphaned. The in-transaction assertion must now refuse.
+  console.log('guard: a dangling row on an unconstrained column rolls everything back')
+  const db5 = await PGlite.create()
+  await db5.exec(SCHEMA)
+  await db5.exec(`CREATE TABLE underlying_balance_topped_up (
+                    evm_log_id int4 PRIMARY KEY, deposited_uba numeric NOT NULL);`)
+  await db5.exec(SEED)
+  await db5.exec(`INSERT INTO underlying_balance_topped_up VALUES (1, 10000), (999999, 42);`)
+  let strandedErr = null
+  try { await db5.exec(MIGRATION) } catch (e) { strandedErr = String(e.message || e) }
+  await db5.exec('ROLLBACK')
+  check('refuses to commit', /still hold pre-migration ids/.test(strandedErr || ''), true)
+  const untouched5 = await db5.query('SELECT id FROM evm_log ORDER BY id')
+  check('evm_log left unrenumbered', untouched5.rows.map(r => Number(r.id)), [1, 2, 3])
+
   // guard: a log index at the scale must abort the whole migration
   console.log('guard: log index at scale')
   const db2 = await PGlite.create()

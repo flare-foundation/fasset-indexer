@@ -24,13 +24,19 @@ BEGIN;
 -- released on commit or rollback without any cleanup.
 SELECT pg_advisory_xact_lock(4051982001);
 
--- Every column holding an evm_log id, discovered by walking the foreign-key
--- graph out from evm_log.id rather than by name. This catches the event tables
--- (evm_log_id) and the cross-event references between them
--- (e.g. redemption_default.redemption_requested_evm_log_id) without assuming a
--- naming convention.
+-- Every column holding an evm_log id, found two independent ways and unioned.
+--
+-- Walking the foreign-key graph catches cross-event references without relying
+-- on names, but it trusts the live catalog -- and the catalog can be incomplete.
+-- A database whose schema has drifted may simply be missing a constraint, and a
+-- concurrent updateSchema (which runs with wrap:false) transiently drops them to
+-- alter column types. Either way a column silently drops out of the rewrite, its
+-- rows keep pre-migration ids, and renumbering the parent orphans them.
+--
+-- Matching on name covers exactly the cases the graph misses, so the union is
+-- what gets rewritten and any disagreement between the two is reported.
 CREATE TEMP TABLE evm_log_ref_cols ON COMMIT DROP AS
-WITH RECURSIVE cols AS (
+WITH RECURSIVE by_fk AS (
   SELECT 'evm_log'::regclass AS rel, 'id'::name AS col
   UNION
   SELECT con.conrelid::regclass, child.attname
@@ -39,10 +45,20 @@ WITH RECURSIVE cols AS (
   JOIN unnest(con.confkey) WITH ORDINALITY AS rk(attnum, ord) ON rk.ord = k.ord
   JOIN pg_attribute child  ON child.attrelid  = con.conrelid  AND child.attnum  = k.attnum
   JOIN pg_attribute parent ON parent.attrelid = con.confrelid AND parent.attnum = rk.attnum
-  JOIN cols ON con.confrelid = cols.rel AND parent.attname = cols.col
+  JOIN by_fk ON con.confrelid = by_fk.rel AND parent.attname = by_fk.col
   WHERE con.contype = 'f'
+), by_name AS (
+  SELECT c.table_name::text AS table_name, c.column_name::text AS column_name
+  FROM information_schema.columns c
+  JOIN information_schema.tables t
+    ON t.table_schema = c.table_schema AND t.table_name = c.table_name
+   AND t.table_type = 'BASE TABLE'
+  WHERE c.table_schema = current_schema()
+    AND (c.column_name ~ 'evm_log_id$' OR (c.table_name = 'evm_log' AND c.column_name = 'id'))
 )
-SELECT rel::text AS table_name, col::text AS column_name FROM cols;
+SELECT table_name, column_name FROM by_name
+UNION
+SELECT rel::text, col::text FROM by_fk;
 
 DO $$
 DECLARE
@@ -135,8 +151,9 @@ SET session_replication_role = replica;
 DO $$
 DECLARE
   scale constant bigint := 1048576;
-  r     record;
-  n     bigint;
+  r        record;
+  n        bigint;
+  floor_id bigint;
 BEGIN
   IF NOT EXISTS (SELECT 1 FROM evm_log) THEN
     RETURN;
@@ -166,6 +183,31 @@ BEGIN
   UPDATE evm_log t SET id = m.new_id FROM evm_log_id_map m WHERE t.id = m.old_id;
   GET DIAGNOSTICS n = ROW_COUNT;
   RAISE NOTICE 'renumbered % evm_log rows', n;
+
+  -- Assert, before committing, that nothing was left behind. Every encoded id is
+  -- at least min(block_index) * scale, so a value below that is a row this
+  -- rewrite failed to reach -- which after the parent renumber is an orphan.
+  --
+  -- This lives inside the transaction on purpose. The first version verified
+  -- only after COMMIT, which meant a column missed by discovery was detected
+  -- when the damage was already permanent. Here it rolls the whole thing back.
+  SELECT min(new_id) INTO floor_id FROM evm_log_id_map;
+  FOR r IN
+    SELECT table_name, column_name FROM evm_log_ref_cols
+    WHERE NOT (table_name = 'evm_log' AND column_name = 'id')
+  LOOP
+    EXECUTE format(
+      'SELECT count(*) FROM %I WHERE %I IS NOT NULL AND %I < $1',
+      r.table_name, r.column_name, r.column_name)
+      INTO n USING floor_id;
+    IF n > 0 THEN
+      RAISE EXCEPTION
+        'rolling back: % rows in %.% still hold pre-migration ids. The rewrite '
+        'did not cover this column -- renumbering evm_log would orphan them.',
+        n, r.table_name, r.column_name;
+    END IF;
+  END LOOP;
+  RAISE NOTICE 'all referencing columns rewritten; no row left behind';
 END $$;
 
 SET session_replication_role = origin;
