@@ -1,6 +1,7 @@
 import { existsSync, readdirSync, readFileSync } from "fs"
 import { dirname, join, resolve } from "path"
-import { getVar, setVar } from "./utils"
+import { getVar } from "./utils"
+import { Var } from "./entities/state/var"
 import { logger } from "../logger"
 import type { ORM, SchemaUpdate } from "./interface"
 
@@ -95,7 +96,14 @@ export async function runDataMigrations(orm: ORM, update: SchemaUpdate): Promise
       logger.info(`verifying data migration ${migration.name}`)
       await conn.execute(migration.verifySql)
     }
-    await setVar(orm.em.fork(), APPLIED_VAR_PREFIX + migration.name, new Date().toISOString())
+    // upsert, not setVar: the advisory lock is released when the migration's own
+    // transaction commits, so two services starting together can reach this line
+    // at once. setVar reads then inserts, which would collide on the primary key
+    // and fail one of their startups.
+    await orm.em.fork().upsert(Var, {
+      key: APPLIED_VAR_PREFIX + migration.name,
+      value: new Date().toISOString()
+    })
     logger.info(`applied data migration ${migration.name}`)
   }
 }

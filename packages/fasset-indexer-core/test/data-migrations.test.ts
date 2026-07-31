@@ -77,6 +77,27 @@ describe("data migrations", () => {
         .to.be.rejectedWith(/not applied.*DB_SCHEMA_UPDATE_TYPE=full/s)
     })
 
+    // The production case: the migration was applied by hand, so the database is
+    // already encoded but carries no marker. The first automated start has to
+    // recognise that as a no-op rather than trying to rewrite anything.
+    it("should record a migration that was already applied by hand", async () => {
+      const conn = context.orm.em.getConnection()
+      const encoded = await conn.execute(
+        'SELECT count(*) FILTER (WHERE id <> block_index::bigint * 1048576 + "index") AS wrong FROM evm_log'
+      ) as [{ wrong: string }]
+      expect(Number(encoded[0].wrong), 'fixture db is already encoded').to.equal(0)
+
+      await runDataMigrations(context.orm, 'full')
+      expect(await pendingDataMigrations(context.orm)).to.be.empty
+    })
+
+    it("should record the marker atomically, so concurrent starts cannot collide", async () => {
+      // Five services start at once on a rolling deploy; the advisory lock only
+      // covers the migration's own transaction, not the marker write.
+      await Promise.all(Array.from({ length: 5 }, () => runDataMigrations(context.orm, 'full')))
+      expect(await pendingDataMigrations(context.orm)).to.be.empty
+    })
+
     it("should start normally with safe once the migration is recorded", async () => {
       await setVar(context.orm.em.fork(), 'dataMigration:001-encode-evm-log-ids', 'already-done')
       await expect(runDataMigrations(context.orm, 'safe')).to.eventually.be.undefined
