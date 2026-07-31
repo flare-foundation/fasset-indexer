@@ -144,8 +144,8 @@ BEGIN
     SELECT id AS old_id, block_index::bigint * scale + "index" AS new_id FROM evm_log;
   CREATE UNIQUE INDEX ON evm_log_id_map (old_id);
 
-  -- Children first, then the parent. Order is irrelevant while constraints are
-  -- deferred, but it keeps the intent readable.
+  -- Children first, then the parent. Order is irrelevant while foreign-key
+  -- triggers are off, but it keeps the intent readable.
   FOR r IN
     SELECT table_name, column_name FROM evm_log_ref_cols
     WHERE NOT (table_name = 'evm_log' AND column_name = 'id')
