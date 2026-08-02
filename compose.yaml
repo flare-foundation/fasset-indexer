@@ -13,6 +13,11 @@ x-templates:
     DB_USER: ${POSTGRES_USER}
     DB_PASSWORD: ${POSTGRES_PASSWORD}
     DB_SCHEMA_UPDATE_TYPE: ${DB_SCHEMA_UPDATE_TYPE}
+    # Applies outstanding data migrations on startup; set for one deploy, then
+    # unset. Separate from DB_SCHEMA_UPDATE_TYPE on purpose -- that reconciles the
+    # schema, this rewrites data. Defaulted so an unset value is simply off
+    # rather than an unresolved-variable warning.
+    RUN_DATA_MIGRATIONS: ${RUN_DATA_MIGRATIONS:-}
 
 services:
   core:
