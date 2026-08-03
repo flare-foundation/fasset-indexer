@@ -1,6 +1,7 @@
 import { getContractInfo } from "../config/contracts"
 import { FAssetType } from "../shared"
 import { EventInterface } from "./events"
+import type { FAssetIface } from "../shared"
 import type { ContractInfo } from "../config/interface"
 
 
@@ -115,12 +116,69 @@ export class ContractLookup extends EventInterface {
     return this.requireContractAddress('MintingTagManager')
   }
 
+  contractAddress(name: string): string | null {
+    return this.contractNameToAddress.get(name) ?? null
+  }
+
   requireContractAddress(name: string): string {
-    const address = this.contractNameToAddress.get(name)
+    const address = this.contractAddress(name)
     if (address == null) {
       throw new Error(`Contract address not found for ${name}`)
     }
     return address
+  }
+
+  /**
+   * Every address a log of the given interfaces can legitimately come from, or
+   * null when at least one of them has no statically known source set.
+   *
+   * This is what lets the scraper narrow an eth_getLogs request; null means
+   * "cannot narrow, fetch everything". COLLATERAL_POOL and ERC20 are what force
+   * that: EventParser resolves collateral pools and pool tokens out of
+   * agent_vault, so their address set grows as agent vaults are created —
+   * including inside the very block range a request is fetching, whose events an
+   * address list computed beforehand would silently drop.
+   *
+   * A contract missing from the deployment degrades to null for the same reason,
+   * as does an empty set: a narrowed request must never be stricter than what
+   * EventParser would accept, and eth_getLogs has no way to spell "no address".
+   */
+  eventSourceAddresses(ifaces: Iterable<FAssetIface>): string[] | null {
+    const addresses = new Set<string>()
+    for (const iface of ifaces) {
+      const sources = this.staticEventSourceAddresses(iface)
+      if (sources == null) return null
+      for (const source of sources) {
+        addresses.add(source)
+      }
+    }
+    return addresses.size > 0 ? Array.from(addresses) : null
+  }
+
+  protected staticEventSourceAddresses(iface: FAssetIface): string[] | null {
+    switch (iface) {
+      case 'ASSET_MANAGER':
+        return Array.from(this.assetManagerToFAsset__cache.keys())
+      case 'CORE_VAULT_MANAGER':
+        return Array.from(this.coreVaultToFAsset__cache.keys())
+      case 'MASTER_ACCOUNT_CONTROLLER':
+        return Array.from(this.fAssetToMasterAccountController__cache.values())
+      case 'PRICE_READER':
+        return this.deployedAt('PriceReader')
+      case 'OFT_ADAPTER':
+        return this.deployedAt('FAssetOFTAdapter')
+      case 'MINTING_TAG_MANAGER':
+        return this.deployedAt('MintingTagManager')
+      // ERC20 and COLLATERAL_POOL are resolved against the database at parse
+      // time, so their sources are not knowable before the request.
+      default:
+        return null
+    }
+  }
+
+  private deployedAt(name: string): string[] | null {
+    const address = this.contractAddress(name)
+    return address == null ? null : [address]
   }
 
   protected populateFAssetTypeToAssetManagerCache(): void {

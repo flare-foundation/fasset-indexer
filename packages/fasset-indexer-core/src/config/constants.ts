@@ -6,6 +6,12 @@ export const DEFAULT_EVM_LOG_FETCH_SLEEP_MS = 10 * 1000 // collect logs every 10
 export const DEFAULT_EVM_STATE_UPDATE_SLEEP_MS = 60 * 1000 // collect state every one minute
 export const DEFAULT_EVM_BLOCK_HEIGHT_OFFSET = 10 // log collection offset from the current block height
 export const DEFAULT_EVM_LOG_FETCH_BLOCK_BATCH_SIZE = 29
+// Upper bound on how many topics the scraper will put in an eth_getLogs filter.
+// The full event set is well inside it, so narrowing is on by default; the knob
+// exists because filter size limits are an RPC-side policy we do not control,
+// and an operator whose node rejects large filters needs a way out (0 disables
+// topic narrowing entirely, restoring the unfiltered fetch).
+export const DEFAULT_EVM_LOG_FETCH_MAX_FILTER_TOPICS = 256
 
 // db settings
 export const MIN_DATABASE_POOL_CONNECTIONS = 2

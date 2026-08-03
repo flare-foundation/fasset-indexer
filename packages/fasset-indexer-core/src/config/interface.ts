@@ -9,6 +9,7 @@ export interface ConfigJson {
     logFetchBlockBatchSize: number
     logFetchCycleSleepMs: number,
     logFetchBlockHeightOffset: number
+    logFetchMaxFilterTopics?: number
   }
   watchdog: {
     cycleSleepMs: number

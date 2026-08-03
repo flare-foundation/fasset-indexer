@@ -9,6 +9,7 @@ import {
   EVENT_NAMES,
   DEFAULT_EVM_BLOCK_HEIGHT_OFFSET,
   DEFAULT_EVM_LOG_FETCH_BLOCK_BATCH_SIZE,
+  DEFAULT_EVM_LOG_FETCH_MAX_FILTER_TOPICS,
   DEFAULT_EVM_LOG_FETCH_SLEEP_MS,
   DEFAULT_EVM_STATE_UPDATE_SLEEP_MS
 } from "./constants"
@@ -110,6 +111,12 @@ export class ConfigLoader {
   get evmLogFetchBlockBatchSize(): number {
     const def = DEFAULT_EVM_LOG_FETCH_BLOCK_BATCH_SIZE
     const val = this.json?.events.logFetchBlockBatchSize
+    return val == null ? def : val
+  }
+
+  get evmLogFetchMaxFilterTopics(): number {
+    const def = DEFAULT_EVM_LOG_FETCH_MAX_FILTER_TOPICS
+    const val = this.json?.events.logFetchMaxFilterTopics
     return val == null ? def : val
   }
 

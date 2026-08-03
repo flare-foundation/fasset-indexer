@@ -19,7 +19,7 @@ export class EventIndexer {
   constructor(public readonly context: Context, eventnames?: string[],
     public firstUnhandledEventBlockName = FIRST_UNHANDLED_EVENT_BLOCK_DB_KEY
   ) {
-    this.eventScraper = new EventScraper(context)
+    this.eventScraper = new EventScraper(context, eventnames)
     this.eventParser = new EventParser(context, eventnames)
     this.stateUpdater = new StateUpdater(context)
   }
