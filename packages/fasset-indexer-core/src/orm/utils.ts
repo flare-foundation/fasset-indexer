@@ -35,6 +35,21 @@ export function evmLogId(blockIndex: number, logIndex: number): number {
   return id
 }
 
+// The bounds of the id space a single block owns. Because ids encode position,
+// a block range converts to an id range by arithmetic alone -- no lookup, and no
+// slack needed to cover ids that fall outside their block.
+//
+// Consecutive blocks tile the space exactly: lastEvmLogIdInBlock(n) + 1 equals
+// firstEvmLogIdInBlock(n + 1), so a range built from these covers every log in
+// [lo, hi] and nothing outside it.
+export function firstEvmLogIdInBlock(blockIndex: number): number {
+  return evmLogId(blockIndex, 0)
+}
+
+export function lastEvmLogIdInBlock(blockIndex: number): number {
+  return evmLogId(blockIndex, EVM_LOG_INDEX_SCALE - 1)
+}
+
 export async function updateSchema(orm: ORM, update: SchemaUpdate = "full"): Promise<void> {
   if (update === "none") return;
   const generator = orm.getSchemaGenerator();

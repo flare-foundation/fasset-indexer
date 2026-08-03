@@ -2,7 +2,7 @@ import { describe, before, beforeEach, after, it } from "mocha"
 import { use, expect } from "chai"
 import chaiAsPromised from "chai-as-promised"
 import * as Entities from "../src/orm/entities"
-import { evmLogId } from "../src/orm/utils"
+import { evmLogId, firstEvmLogIdInBlock, lastEvmLogIdInBlock } from "../src/orm/utils"
 import { EVENTS, EVM_LOG_INDEX_SCALE } from "../src/config/constants"
 import { Context } from "../src/context/context"
 import { EventStorer } from "../src/indexer/eventlib/store-logic/event-storer"
@@ -40,6 +40,29 @@ describe("evm log id encoding", () => {
       // Without this the row would silently sort as though it belonged to
       // block+1, since most blocks have no log to collide with.
       expect(() => evmLogId(7, EVM_LOG_INDEX_SCALE)).to.throw(/exceeds the id encoding scale/)
+    })
+
+    it("should bound the id space a block owns", () => {
+      expect(firstEvmLogIdInBlock(4)).to.equal(evmLogId(4, 0))
+      expect(lastEvmLogIdInBlock(4)).to.equal(evmLogId(4, EVM_LOG_INDEX_SCALE - 1))
+      expect(firstEvmLogIdInBlock(4)).to.be.lessThan(lastEvmLogIdInBlock(4))
+    })
+
+    it("should tile consecutive blocks with no gap and no overlap", () => {
+      // The property the explorer's range filter depends on: a range built from
+      // these covers every log in [lo, hi] and nothing outside it.
+      expect(lastEvmLogIdInBlock(4) + 1).to.equal(firstEvmLogIdInBlock(5))
+    })
+
+    it("should contain every id a block can hold", () => {
+      for (const index of [0, 1, 3148, EVM_LOG_INDEX_SCALE - 1]) {
+        const id = evmLogId(9, index)
+        expect(id).to.be.at.least(firstEvmLogIdInBlock(9))
+        expect(id).to.be.at.most(lastEvmLogIdInBlock(9))
+      }
+      // and nothing from a neighbouring block
+      expect(evmLogId(10, 0)).to.be.greaterThan(lastEvmLogIdInBlock(9))
+      expect(evmLogId(8, EVM_LOG_INDEX_SCALE - 1)).to.be.lessThan(firstEvmLogIdInBlock(9))
     })
 
     it("should reject positions that are not natural numbers", () => {

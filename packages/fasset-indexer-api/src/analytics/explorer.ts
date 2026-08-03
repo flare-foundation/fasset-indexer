@@ -1,4 +1,4 @@
-import { raw } from "fasset-indexer-core/orm"
+import { raw, firstEvmLogIdInBlock, lastEvmLogIdInBlock } from "fasset-indexer-core/orm"
 import * as core from "fasset-indexer-core"
 import * as Entities from "fasset-indexer-core/entities"
 import { PaymentReference } from "fasset-indexer-core/utils"
@@ -10,7 +10,6 @@ import * as ExplorerType from "./types"
 import * as SQL from "./utils/raw-sql"
 import { batchedRedemptionEventDetails } from "./utils/batched-redemption-details"
 import { findEvmLogIdsByTxHash } from "./utils/find-by-evm-tx"
-import { EVM_LOG_INDEX_SCALE } from "fasset-indexer-core/config"
 import { DEAD_ADDRESS, EXPLORER_DEFAULT_LOOKBACK_SECONDS } from "../config/constants"
 import type { EntityManager, ORM } from "fasset-indexer-core/orm"
 import type { FilterQuery } from "@mikro-orm/core"
@@ -74,11 +73,10 @@ export class ExplorerAnalytics extends SharedAnalytics {
     const conn = em.getConnection('read')
     let windowParams: (number | string)[] = []
     if (hasWindow) {
-      // Resolve the timestamp window to a block range, then to an evm_log_id
-      // range by arithmetic: ids encode block_index * EVM_LOG_INDEX_SCALE + index,
-      // so [lo_block, hi_block] maps exactly onto the ids those blocks can hold.
-      // The range is therefore the whole window predicate — no separate timestamp
-      // filter, and no margin to cover ids that fall outside their block's range.
+      // Resolve the timestamp window to a block range, then to the id range those
+      // blocks own. Ids encode chain position, so this is exact — it is the whole
+      // window predicate, with no separate timestamp filter and no margin to
+      // cover ids falling outside their block.
       const [bounds] = await conn.execute(
         SQL.EXPLORER_TRANSACTIONS_BLOCK_BOUNDS, [start, end]
       ) as [{ lo_block: string | number | null, hi_block: string | number | null }]
@@ -86,8 +84,8 @@ export class ExplorerAnalytics extends SharedAnalytics {
         // Requested window falls outside the indexed block range — no rows can match.
         return { transactions: [], count: 0 }
       }
-      const idLo = Number(bounds.lo_block) * EVM_LOG_INDEX_SCALE
-      const idHi = (Number(bounds.hi_block) + 1) * EVM_LOG_INDEX_SCALE - 1
+      const idLo = firstEvmLogIdInBlock(Number(bounds.lo_block))
+      const idHi = lastEvmLogIdInBlock(Number(bounds.hi_block))
       windowParams = [idLo, idHi]
     }
     const filterParams = [user ?? agent, ...windowParams, status].filter(x => x != null)
