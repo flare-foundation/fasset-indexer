@@ -32,14 +32,16 @@ export async function raceIndexerSynced(em: EntityManager, updateName: string): 
 }
 
 export async function backIndexerStats(em: EntityManager, updateName: string): Promise<[number, number]> {
-  const firstUnhandled = await getVar(em, backUpdateLastBlockName(updateName))
-  const last = await getVar(em, backUpdateFirstUnhandledBlockName(updateName))
+  const firstUnhandled = await getVar(em, backUpdateFirstUnhandledBlockName(updateName))
+  const last = await getVar(em, backUpdateLastBlockName(updateName))
   return [parseInt(firstUnhandled?.value ?? ''), parseInt(last?.value ?? '')]
 }
 
 export async function backIndexerSynced(em: EntityManager, updateName: string): Promise<boolean> {
   const [f, l] = await backIndexerStats(em, updateName)
-  return f >= l
+  // runHistoric leaves firstUnhandled at last + 1, and the back population keeps
+  // indexing while firstUnhandled <= last, so equality still means one block to go.
+  return f > l
 }
 
 export async function updateDistance(em: EntityManager, updateName: string): Promise<number | null> {
