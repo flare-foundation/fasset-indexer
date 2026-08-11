@@ -3,7 +3,7 @@ import * as Entities from "fasset-indexer-core/entities"
 import { findOrCreateEntity, getVar, setVar, type EntityManager } from "fasset-indexer-core/orm"
 import { PaymentReference } from "fasset-indexer-core/utils"
 import { logger } from "fasset-indexer-core/logger"
-import { IXrpMemo, IXrpBlock, IXrpTransaction } from "../client/interface"
+import { IXrpMemo, IXrpBlock, IXrpNativeTransaction, IXrpTransaction } from "../client/interface"
 import { XRP_BLOCK_HEIGHT_OFFSET, XRP_TIMESTAMP_UNIX_OFFSET } from "../config/constants"
 import type { XrpContext } from "../context"
 
@@ -109,6 +109,7 @@ export class XrpIndexer {
     transaction: IXrpTransaction,
     block: Entities.UnderlyingBlock
   ): Promise<void> {
+    if (!this.deliversXrp(transaction)) return
     let utransaction = null
     const { Account, Destination } = transaction
     if (this.tracked.has(Account) || this.tracked.has(Destination!)) {
@@ -132,9 +133,16 @@ export class XrpIndexer {
     }
   }
 
+  // xrpl denominates an amount in drops (a string) only when it is xrp itself -
+  // issued currencies and mpts arrive as objects and deliver no xrp, so such a
+  // transaction can never be an fasset underlying payment
+  protected deliversXrp(transaction: IXrpTransaction): transaction is IXrpNativeTransaction {
+    return typeof transaction.Amount != 'object'
+  }
+
   protected async storeTransaction(
     em: EntityManager,
-    transaction: IXrpTransaction,
+    transaction: IXrpNativeTransaction,
     block: Entities.UnderlyingBlock
   ): Promise<Entities.UnderlyingTransaction> {
     let source = undefined

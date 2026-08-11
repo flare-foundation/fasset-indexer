@@ -12,9 +12,26 @@ export interface IXrpBlock {
   ledger_index: number
 }
 
+export interface IXrpIssuedAmount {
+  currency: string
+  issuer: string
+  value: string
+}
+
+export interface IXrpMptAmount {
+  mpt_issuance_id: string
+  value: string
+}
+
+// drops of xrp as a decimal string, or a token amount object
+export type IXrpAmount = string | IXrpIssuedAmount | IXrpMptAmount
+
+// a transaction whose amount is xrp itself, so denominated in drops
+export type IXrpNativeTransaction = IXrpTransaction & { Amount?: string }
+
 export interface IXrpTransaction {
   Account: string
-  Amount?: string
+  Amount?: IXrpAmount
   Fee: string
   Memos?: IXrpMemo[]
   Sequence: number
