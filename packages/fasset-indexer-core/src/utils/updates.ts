@@ -23,7 +23,7 @@ export async function raceIndexerStats(em: EntityManager, updateName: string): P
   // parseInt(undefined) returns NaN — the callers (updateDistance) already
   // gate on isNaN, so propagate undefined through `??` instead of pretending
   // with a non-null assertion that the row always exists.
-  return [parseInt(firstUnhandledRace?.value ?? ''), parseInt(firstUnhandledRegular?.value ?? '')]
+  return [parseInt(firstUnhandledRace?.value ?? '', 10), parseInt(firstUnhandledRegular?.value ?? '', 10)]
 }
 
 export async function raceIndexerSynced(em: EntityManager, updateName: string): Promise<boolean> {
@@ -34,7 +34,7 @@ export async function raceIndexerSynced(em: EntityManager, updateName: string): 
 export async function backIndexerStats(em: EntityManager, updateName: string): Promise<[number, number]> {
   const firstUnhandled = await getVar(em, backUpdateFirstUnhandledBlockName(updateName))
   const last = await getVar(em, backUpdateLastBlockName(updateName))
-  return [parseInt(firstUnhandled?.value ?? ''), parseInt(last?.value ?? '')]
+  return [parseInt(firstUnhandled?.value ?? '', 10), parseInt(last?.value ?? '', 10)]
 }
 
 export async function backIndexerSynced(em: EntityManager, updateName: string): Promise<boolean> {
@@ -48,8 +48,8 @@ export async function updateDistance(em: EntityManager, updateName: string): Pro
   const synced = await raceIndexerSynced(em, updateName)
   if (synced) return 0
   const [frace, lrace] = await raceIndexerStats(em, updateName)
-  if (!isNaN(frace) && !isNaN(lrace)) return lrace - frace + 1
+  if (!Number.isNaN(frace) && !Number.isNaN(lrace)) return lrace - frace + 1
   const [fback, lback] = await backIndexerStats(em, updateName)
-  if (!isNaN(fback) && !isNaN(lback)) return lback - fback + 1
+  if (!Number.isNaN(fback) && !Number.isNaN(lback)) return lback - fback + 1
   return null
 }

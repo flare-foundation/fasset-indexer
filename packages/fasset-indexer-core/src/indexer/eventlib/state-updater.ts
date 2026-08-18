@@ -77,9 +77,9 @@ export class StateUpdater extends EventStorer {
     } catch (e: unknown) {
       const err = e as { reason?: string, data?: string, invocation?: { args: string[] } }
       if (
-          err?.reason == 'invalid agent vault address' // pre-upgraded asset manager
+          err?.reason === 'invalid agent vault address' // pre-upgraded asset manager
         || err?.reason === 'InvalidAgentVaultAddress()' // upgraded asset manager, decodes with ABI
-        || err?.data == '0xd68a46c5' // upgraded asset manager encoded in case of missing ABI
+        || err?.data === '0xd68a46c5' // upgraded asset manager encoded in case of missing ABI
       ) {
         return await em.transactional(async (em) => {
           const address = err.invocation!.args[0]

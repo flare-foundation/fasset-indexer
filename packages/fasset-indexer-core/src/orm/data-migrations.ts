@@ -1,5 +1,5 @@
 import { existsSync, readdirSync, readFileSync } from "fs"
-import { dirname, join, resolve } from "path"
+import { dirname, join, resolve } from "node:path"
 import { getVar } from "./utils"
 import { Var } from "./entities/state/var"
 import { logger } from "../logger"

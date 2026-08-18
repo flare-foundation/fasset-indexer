@@ -8,7 +8,7 @@ export class MetadataAnalytics {
 
   async currentBlock(): Promise<number | null> {
     const v = await getVar(this.orm.em.fork(), FIRST_UNHANDLED_EVENT_BLOCK_DB_KEY)
-    return (v && v.value) ? parseInt(v.value) : null
+    return (v?.value) ? parseInt(v.value, 10) : null
   }
 
   async blocksToBackSync(): Promise<[string | null, number | null]> {

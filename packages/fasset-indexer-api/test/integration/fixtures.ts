@@ -169,7 +169,7 @@ export class Fixtures {
     const dm = this.em.create(E.DirectMintingExecuted, {
       evmLog: log,
       fasset: opts.fasset,
-      transactionId: '0x' + txHashRaw.toLowerCase(),
+      transactionId: `0x${txHashRaw.toLowerCase()}`,
       targetAddress,
       executor,
       mintedAmountUBA: opts.mintedAmountUBA,
@@ -229,7 +229,7 @@ export class Fixtures {
     const owner = await this.agentOwner(manager, opts.ownerHex ?? '0x00000000000000000000000000000000000000bb')
     const underlying = await this.underlyingAddress(opts.underlyingText)
     const pool = await this.evmAddress(opts.poolHex)
-    const poolToken = await this.evmAddress(opts.poolTokenHex ?? opts.poolHex + '01')
+    const poolToken = await this.evmAddress(opts.poolTokenHex ?? `${opts.poolHex}01`)
     const e = this.em.create(E.AgentVault, {
       fasset: opts.fasset, address, underlyingAddress: underlying,
       collateralPool: pool, collateralPoolToken: poolToken,
@@ -338,7 +338,7 @@ export class Fixtures {
     underlyingBlockTimestamp?: number,
     blockTimestamp?: number
   }): Promise<E.MintingExecuted> {
-    const ref = opts.paymentReference ?? '0x46' + ('0'.repeat(62 - 8)) + Math.floor(Math.random() * 16777215).toString(16).padStart(8, '0')
+    const ref = opts.paymentReference ?? `0x46${'0'.repeat(62 - 8)}${Math.floor(Math.random() * 16777215).toString(16).padStart(8, '0')}`
     const cr = await this.collateralReserved({
       fasset: opts.fasset,
       agentVault: opts.agentVault,
@@ -474,7 +474,7 @@ export class Fixtures {
     underlyingBlockHeight?: number,
     underlyingBlockTimestamp?: number
   }): Promise<E.RedemptionPerformed> {
-    const ref = opts.paymentReference ?? '0x52' + ('0'.repeat(62 - 8)) + Math.floor(Math.random() * 16777215).toString(16).padStart(8, '0')
+    const ref = opts.paymentReference ?? `0x52${'0'.repeat(62 - 8)}${Math.floor(Math.random() * 16777215).toString(16).padStart(8, '0')}`
     const rr = await this.redemptionRequested({
       fasset: opts.fasset,
       agentVault: opts.agentVault,
@@ -499,7 +499,7 @@ export class Fixtures {
       fasset: opts.fasset, reference: ref, transaction: tx, address: target, block
     })
     return this.redemptionPerformed({
-      redemptionRequested: rr, transactionHash: '0x' + txHash.toLowerCase(),
+      redemptionRequested: rr, transactionHash: `0x${txHash.toLowerCase()}`,
       blockTimestamp: opts.blockTimestamp
     })
   }
@@ -558,7 +558,7 @@ export class Fixtures {
     const dms = this.em.create(E.DirectMintingExecutedToSmartAccount, {
       evmLog: log,
       fasset: opts.fasset,
-      transactionId: '0x' + txHashRaw.toLowerCase(),
+      transactionId: `0x${txHashRaw.toLowerCase()}`,
       sourceAddress,
       executor,
       mintedAmountUBA: opts.mintedAmountUBA,

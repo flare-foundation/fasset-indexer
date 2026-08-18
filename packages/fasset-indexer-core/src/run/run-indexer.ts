@@ -19,10 +19,10 @@ async function runIndexer() {
   const allEvents = config.indexEvents
   if (config.reindexing == null) {
     indexer = new EventIndexer(context, allEvents)
-  } else if (config.reindexing.type == 'back') {
+  } else if (config.reindexing.type === 'back') {
     indexer = new EventIndexerParallelBackPopulation(
       context, config.reindexing.diff, config.reindexing.name, allEvents, config.reindexing.startBlock)
-  } else if (config.reindexing.type == 'race') {
+  } else if (config.reindexing.type === 'race') {
     const newEvents = new Set(config.reindexing.diff)
     const oldEvents = allEvents.filter(event => !newEvents.has(event))
     indexer = new EventIndexerParallelRacePopulation(

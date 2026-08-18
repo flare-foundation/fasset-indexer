@@ -40,10 +40,10 @@ export class ConfigLoader {
       return 'safe'
     }
     if (
-      type == 'safe'
-      || type == 'none'
-      || type == 'full'
-      || type == 'recreate'
+      type === 'safe'
+      || type === 'none'
+      || type === 'full'
+      || type === 'recreate'
     ) {
       return type
     }
@@ -105,7 +105,7 @@ export class ConfigLoader {
 
   get minBlock(): number | undefined {
     const minBlock = process.env.MIN_BLOCK_NUMBER
-    return this.isNull(minBlock) ? undefined : parseInt(minBlock!)
+    return this.isNull(minBlock) ? undefined : parseInt(minBlock!, 10)
   }
 
   get evmLogFetchBlockBatchSize(): number {
@@ -151,7 +151,7 @@ export class ConfigLoader {
     const diff = this.required('REINDEX_DIFF')
     const name = this.required('REINDEX_NAME')
     const rawStartBlock = process.env.REINDEX_START_BLOCK
-    const startBlock = this.isNull(rawStartBlock) ? undefined : parseInt(rawStartBlock!)
+    const startBlock = this.isNull(rawStartBlock) ? undefined : parseInt(rawStartBlock!, 10)
     if (startBlock !== undefined && Number.isNaN(startBlock)) {
       throw new Error(`REINDEX_START_BLOCK must be an integer, got "${rawStartBlock}"`)
     }
@@ -183,7 +183,7 @@ export class ConfigLoader {
 
   protected get dbPort(): number {
     const port = this.required('DB_PORT')
-    return parseInt(port)
+    return parseInt(port, 10)
   }
 
   protected get dbUser(): string {
@@ -203,6 +203,6 @@ export class ConfigLoader {
   }
 
   protected isNull(value: string | undefined): boolean {
-    return value == '' || value == null
+    return value === '' || value == null
   }
 }

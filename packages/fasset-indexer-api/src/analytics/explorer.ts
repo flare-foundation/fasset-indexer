@@ -285,13 +285,13 @@ export class ExplorerAnalytics extends SharedAnalytics {
   ): Promise<ExplorerType.MintEventDetails> {
     let resolutionPromise: Promise<Entities.MintingExecuted | Entities.MintingPaymentDefault | Entities.CollateralReservationDeleted | undefined>
       = Promise.resolve(undefined)
-    if (collateralReserved.resolution == core.CollateralReservationResolution.EXECUTED) {
+    if (collateralReserved.resolution === core.CollateralReservationResolution.EXECUTED) {
       resolutionPromise = em.findOneOrFail(Entities.MintingExecuted,
         { collateralReserved }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    } else if (collateralReserved.resolution == core.CollateralReservationResolution.DEFAULTED) {
+    } else if (collateralReserved.resolution === core.CollateralReservationResolution.DEFAULTED) {
       resolutionPromise = em.findOneOrFail(Entities.MintingPaymentDefault,
         { collateralReserved }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    } else if (collateralReserved.resolution == core.CollateralReservationResolution.DELETED) {
+    } else if (collateralReserved.resolution === core.CollateralReservationResolution.DELETED) {
       resolutionPromise = em.findOneOrFail(Entities.CollateralReservationDeleted,
         { collateralReserved }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
     }
@@ -315,19 +315,19 @@ export class ExplorerAnalytics extends SharedAnalytics {
   ): Promise<ExplorerType.RedeemEventDetails> {
     let resolutionPromise: Promise<Entities.RedemptionPerformed | Entities.RedemptionDefault | Entities.RedemptionRejected | Entities.RedemptionPaymentBlocked | Entities.RedemptionPaymentFailed | undefined>
       = Promise.resolve(undefined)
-    if (redemptionRequested.resolution == core.RedemptionResolution.PERFORMED) {
+    if (redemptionRequested.resolution === core.RedemptionResolution.PERFORMED) {
       resolutionPromise = em.findOneOrFail(Entities.RedemptionPerformed,
         { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    } else if (redemptionRequested.resolution == core.RedemptionResolution.DEFAULTED) {
+    } else if (redemptionRequested.resolution === core.RedemptionResolution.DEFAULTED) {
       resolutionPromise = em.findOneOrFail(Entities.RedemptionDefault,
         { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    } else if (redemptionRequested.resolution == core.RedemptionResolution.REJECTED) {
+    } else if (redemptionRequested.resolution === core.RedemptionResolution.REJECTED) {
       resolutionPromise = em.findOneOrFail(Entities.RedemptionRejected,
         { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    } else if (redemptionRequested.resolution == core.RedemptionResolution.BLOCKED) {
+    } else if (redemptionRequested.resolution === core.RedemptionResolution.BLOCKED) {
       resolutionPromise = em.findOneOrFail(Entities.RedemptionPaymentBlocked,
         { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    } else if (redemptionRequested.resolution == core.RedemptionResolution.FAILED) {
+    } else if (redemptionRequested.resolution === core.RedemptionResolution.FAILED) {
       resolutionPromise = em.findOneOrFail(Entities.RedemptionPaymentFailed,
         { redemptionRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
     }
@@ -354,10 +354,10 @@ export class ExplorerAnalytics extends SharedAnalytics {
   ): Promise<ExplorerType.TransferToCoreVaultEventDetails> {
     let resolutionPromise: Promise<Entities.TransferToCoreVaultSuccessful | Entities.TransferToCoreVaultDefaulted | undefined>
       = Promise.resolve(undefined)
-    if (transferToCoreVaultStarted.resolution == core.TransferToCoreVaultResolution.SUCCESSFUL) {
+    if (transferToCoreVaultStarted.resolution === core.TransferToCoreVaultResolution.SUCCESSFUL) {
       resolutionPromise = em.findOneOrFail(Entities.TransferToCoreVaultSuccessful,
         { transferToCoreVaultStarted }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    } else if (transferToCoreVaultStarted.resolution == core.TransferToCoreVaultResolution.DEFAULTED) {
+    } else if (transferToCoreVaultStarted.resolution === core.TransferToCoreVaultResolution.DEFAULTED) {
       resolutionPromise = em.findOneOrFail(Entities.TransferToCoreVaultDefaulted,
         { transferToCoreVaultStarted }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
     }
@@ -389,10 +389,10 @@ export class ExplorerAnalytics extends SharedAnalytics {
   ): Promise<ExplorerType.ReturnFromCoreVaultEventDetails> {
     let resolutionPromise: Promise<Entities.ReturnFromCoreVaultConfirmed | Entities.ReturnFromCoreVaultCancelled | undefined>
       = Promise.resolve(undefined)
-    if (returnFromCoreVaultRequested.resolution == core.ReturnFromCoreVaultResolution.CONFIRMED) {
+    if (returnFromCoreVaultRequested.resolution === core.ReturnFromCoreVaultResolution.CONFIRMED) {
       resolutionPromise = em.findOneOrFail(Entities.ReturnFromCoreVaultConfirmed,
         { returnFromCoreVaultRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    } else if (returnFromCoreVaultRequested.resolution == core.ReturnFromCoreVaultResolution.CANCELLED) {
+    } else if (returnFromCoreVaultRequested.resolution === core.ReturnFromCoreVaultResolution.CANCELLED) {
       resolutionPromise = em.findOneOrFail(Entities.ReturnFromCoreVaultCancelled,
         { returnFromCoreVaultRequested }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
     }
@@ -420,10 +420,10 @@ export class ExplorerAnalytics extends SharedAnalytics {
   ): Promise<ExplorerType.WithdrawalEventDetails> {
     let resolutionPromise: Promise<Entities.UnderlyingWithdrawalConfirmed | Entities.UnderlyingWithdrawalCancelled | null | undefined>
       = Promise.resolve(undefined)
-    if (underlyingWithdrawalAnnounced.resolution == core.UnderlyingWithdrawalResolution.CONFIRMED) {
+    if (underlyingWithdrawalAnnounced.resolution === core.UnderlyingWithdrawalResolution.CONFIRMED) {
       resolutionPromise = em.findOne(Entities.UnderlyingWithdrawalConfirmed,
         { underlyingWithdrawalAnnounced }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
-    } else if (underlyingWithdrawalAnnounced.resolution == core.UnderlyingWithdrawalResolution.CANCELLED) {
+    } else if (underlyingWithdrawalAnnounced.resolution === core.UnderlyingWithdrawalResolution.CANCELLED) {
       resolutionPromise = em.findOne(Entities.UnderlyingWithdrawalCancelled,
         { underlyingWithdrawalAnnounced }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
     }
@@ -594,7 +594,7 @@ export class ExplorerAnalytics extends SharedAnalytics {
         oglog = await em.findOneOrFail(Entities.UnderlyingWithdrawalAnnounced,
           { paymentReference: reference.reference, fasset }, { populate: [ 'evmLog.transaction' ] })
       } else if (PaymentReference.isTopup(reference.reference)) {
-        const transactionHash = '0x' + hash.toLowerCase()
+        const transactionHash = `0x${hash.toLowerCase()}`
         oglog = await em.findOneOrFail(Entities.UnderlyingBalanceToppedUp,
           { transactionHash, fasset }, { populate: [ 'evmLog.transaction' ] })
       } else if (PaymentReference.isSelfMint(reference.reference)) {
@@ -619,7 +619,7 @@ export class ExplorerAnalytics extends SharedAnalytics {
       }
     }
     // fallback: direct minting (no reference, or unrecognized reference)
-    const transactionId = '0x' + hash.toLowerCase()
+    const transactionId = `0x${hash.toLowerCase()}`
     const [directMints, directMintsSA] = await Promise.all([
       em.find(Entities.DirectMintingExecuted,
         { transactionId, fasset }, { populate: [ 'evmLog.transaction' ] }),
@@ -632,7 +632,7 @@ export class ExplorerAnalytics extends SharedAnalytics {
   }
 
   protected async mintStats(em: EntityManager, start: number, end: number): Promise<ExplorerType.ExplorerStatistics> {
-    // eslint-disable-next-line
+    // biome-ignore lint/suspicious/noExplicitAny: accepts any MikroORM entity constructor for the shared direct-mint query.
     const directMintQuery = (entity: new () => any) =>
       em.createQueryBuilder(entity, 'dm')
         .select(['dm.fasset', raw('count(dm.evm_log_id) as count'), raw('sum(dm.minted_amount_uba) as value')])
@@ -724,8 +724,8 @@ export class ExplorerAnalytics extends SharedAnalytics {
         orderBy: { block: { timestamp: 'DESC' } }
       }
     )
-    if (transactions.length == 0) return null
-    const successful = transactions.filter(x => x.transaction.result == XRP_TRANSACTION_SUCCESS_CODE)
+    if (transactions.length === 0) return null
+    const successful = transactions.filter(x => x.transaction.result === XRP_TRANSACTION_SUCCESS_CODE)
     if (successful.length > 0) return successful.length > 1 ? successful : successful[0]
     return transactions.length > 1 ? transactions : transactions[0]
   }

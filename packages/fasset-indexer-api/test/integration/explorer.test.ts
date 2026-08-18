@@ -32,7 +32,7 @@ describe('ExplorerAnalytics.redemptionTransactionDetails — batched per-tx', ()
       fasset: FAssetType.FXRP,
       addressHex: addr,
       underlyingText: underlying,
-      poolHex: '0xcc' + addr.slice(4)
+      poolHex: `0xcc${addr.slice(4)}`
     })
   }
 
@@ -46,13 +46,13 @@ describe('ExplorerAnalytics.redemptionTransactionDetails — batched per-tx', ()
     // Five requests in the same tx (same blockIndex → same EvmTransaction via
     // the fixture's findOrCreate). Resolutions: PERFORMED, DEFAULTED, REJECTED,
     // BLOCKED, FAILED-but-still-NONE (unresolved).
-    const refs = ['0x' + 'a'.repeat(64), '0x' + 'b'.repeat(64), '0x' + 'c'.repeat(64),
-                  '0x' + 'd'.repeat(64), '0x' + 'e'.repeat(64)]
+    const refs = [`0x${'a'.repeat(64)}`, `0x${'b'.repeat(64)}`, `0x${'c'.repeat(64)}`,
+                  `0x${'d'.repeat(64)}`, `0x${'e'.repeat(64)}`]
     const rr: any[] = []
     for (let i = 0; i < 5; i++) {
       rr.push(await fx.redemptionRequested({
         fasset: FAssetType.FXRP, agentVault: ag,
-        redeemerHex: REDEEMER, paymentAddressText: 'rRedC01' + i,
+        redeemerHex: REDEEMER, paymentAddressText: `rRedC01${i}`,
         paymentReference: refs[i], valueUBA: BigInt(100 + i), requestId: 5000 + i,
         blockIndex: SHARED_BLOCK, blockTimestamp: SHARED_TS
       }))
@@ -72,7 +72,7 @@ describe('ExplorerAnalytics.redemptionTransactionDetails — batched per-tx', ()
     }
     // Create the matching resolution rows.
     await fx.redemptionPerformed({
-      redemptionRequested: rr[0], transactionHash: '0x' + '01'.repeat(32),
+      redemptionRequested: rr[0], transactionHash: `0x${'01'.repeat(32)}`,
       blockTimestamp: SHARED_TS + 100
     })
     await fx.redemptionDefault({
@@ -97,7 +97,7 @@ describe('ExplorerAnalytics.redemptionTransactionDetails — batched per-tx', ()
     })
     em2.create(Entities.RedemptionPaymentBlocked, {
       evmLog: blockedLog, fasset: FAssetType.FXRP, redemptionRequested: rr[3],
-      transactionHash: '0x' + '02'.repeat(32), spentUnderlyingUBA: 0n
+      transactionHash: `0x${'02'.repeat(32)}`, spentUnderlyingUBA: 0n
     })
     await em2.flush()
 
@@ -150,7 +150,7 @@ describe('ExplorerAnalytics.redemptionTransactionDetails — batched per-tx', ()
 
   it('returns empty flows when the tx has no RedemptionRequested events', async () => {
     const result = await explorer.redemptionTransactionDetails(
-      '0x' + 'deadbeef'.padEnd(64, '0')
+      `0x${'deadbeef'.padEnd(64, '0')}`
     )
     expect(result.flows).to.deep.equal([])
     expect(result.flags).to.deep.equal([])
@@ -167,8 +167,8 @@ describe('ExplorerAnalytics.redemptionTransactionDetails — batched per-tx', ()
   it('preserves every populated field on events.original and events.resolution', async () => {
     const fx = new Fixtures(db.orm.em.fork())
     const ag = await vault(fx, '0x0000000000000000000000000000000000000d01', 'rAgentD01')
-    const refPlain = '0x' + '11'.repeat(32)
-    const refTagged = '0x' + '22'.repeat(32)
+    const refPlain = `0x${'11'.repeat(32)}`
+    const refTagged = `0x${'22'.repeat(32)}`
     const SHARED_BLOCK = 6000
     const SHARED_TS = 1_700_020_000
     const rrPlain = await fx.redemptionRequested({
@@ -193,11 +193,11 @@ describe('ExplorerAnalytics.redemptionTransactionDetails — batched per-tx', ()
     }
     await em.flush()
     await fx.redemptionPerformed({
-      redemptionRequested: rrPlain, transactionHash: '0x' + '01'.repeat(32),
+      redemptionRequested: rrPlain, transactionHash: `0x${'01'.repeat(32)}`,
       blockTimestamp: SHARED_TS + 100
     })
     await fx.redemptionPerformed({
-      redemptionRequested: rrTagged, transactionHash: '0x' + '02'.repeat(32),
+      redemptionRequested: rrTagged, transactionHash: `0x${'02'.repeat(32)}`,
       blockTimestamp: SHARED_TS + 100
     })
 
@@ -457,7 +457,7 @@ describe('ExplorerAnalytics.transactions — DirectMint parity with no personal_
     })
     await fx.collateralReserved({
       fasset: FAssetType.FXRP, agentVault: ag, minterHex: MINTER,
-      paymentAddressText: 'rPayE01', paymentReference: '0x' + '33'.repeat(32),
+      paymentAddressText: 'rPayE01', paymentReference: `0x${'33'.repeat(32)}`,
       valueUBA: 555n, blockIndex: 8011, blockTimestamp: TS
     })
   }

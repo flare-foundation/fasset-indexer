@@ -101,10 +101,10 @@ export class DogeIndexer {
 
   private extractReference(vout: IDogeVout): string | null {
     const candidate = vout?.scriptPubKey?.asm
-    if (typeof candidate != 'string' || !candidate.startsWith('OP_RETURN ')) {
+    if (typeof candidate !== 'string' || !candidate.startsWith('OP_RETURN ')) {
       return null
     }
-    const formattedReference = '0x' + candidate.slice(10)
+    const formattedReference = `0x${candidate.slice(10)}`
     const isValid = PaymentReference.isValid(formattedReference)
     return isValid ? formattedReference : null
   }

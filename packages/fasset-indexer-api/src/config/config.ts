@@ -4,7 +4,7 @@ import { ConfigLoader } from "fasset-indexer-core"
 export class ApiConfigLoader extends ConfigLoader {
 
   get port(): number {
-    return parseInt(process.env.API_PORT ?? '3000')
+    return parseInt(process.env.API_PORT ?? '3000', 10)
   }
 
   get rootPath(): string {

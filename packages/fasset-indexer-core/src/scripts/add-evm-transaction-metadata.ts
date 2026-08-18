@@ -30,7 +30,7 @@ async function updateTransactions(context: Context) {
     await em.persistAndFlush(tx)
   }
 
-  return txs.length == TX_LIMIT
+  return txs.length === TX_LIMIT
 }
 
 async function main() {

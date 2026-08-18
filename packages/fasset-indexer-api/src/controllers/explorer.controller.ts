@@ -52,7 +52,7 @@ export class ExplorerController {
     @Query('status', new ParseIntPipe({ optional: true })) status?: number,
     @Query('types') types?: string | string[]
   ): Promise<ApiResponse<Types.TransactionsInfo>> {
-    if (types != null && typeof types == 'string') types = [types]
+    if (types != null && typeof types === 'string') types = [types]
     const transactionTypes = types != null ? this.parseTransactionTypes(types as string[]) : undefined
     return apiResponse(this.service.transactions(limit, offset, user, agent, start, end, asc, status, transactionTypes), 200)
   }
@@ -170,8 +170,7 @@ export class ExplorerController {
     return types.map(t => Types.TransactionType[t])
   }
 
-  // eslint-disable-next-line
-  private restrictPoints(end: number, npoints: number, start?: number): Error | null {
+  private restrictPoints(_end: number, npoints: number, _start?: number): Error | null {
     if (npoints > MAX_TIMESERIES_PTS) {
       return new Error(`Cannot request more than ${MAX_TIMESERIES_PTS} points`)
     }

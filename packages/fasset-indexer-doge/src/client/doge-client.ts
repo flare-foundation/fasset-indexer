@@ -69,6 +69,6 @@ export class DogeClient {
   }
 
   private basicAuthHeader(user: string, pass: string): string {
-    return 'Basic ' + Buffer.from(`${user}:${pass}`).toString('base64')
+    return `Basic ${Buffer.from(`${user}:${pass}`).toString('base64')}`
   }
 }

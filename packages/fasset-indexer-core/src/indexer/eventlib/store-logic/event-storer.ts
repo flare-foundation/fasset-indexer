@@ -55,11 +55,11 @@ export class EventStorer {
   }
 
   protected async _processEvent(em: EntityManager, log: Event, evmLog: Entities.EvmLog): Promise<boolean> {
-    if (log.sourcename == 'MASTER_ACCOUNT_CONTROLLER') {
+    if (log.sourcename === 'MASTER_ACCOUNT_CONTROLLER') {
       return this.smartAccounts.processEvent(em, log, evmLog)
-    } else if (log.sourcename == 'OFT_ADAPTER') {
+    } else if (log.sourcename === 'OFT_ADAPTER') {
       return this.oftAdapter.processEvent(em, log, evmLog)
-    } else if (log.sourcename == 'MINTING_TAG_MANAGER') {
+    } else if (log.sourcename === 'MINTING_TAG_MANAGER') {
       return this.mintingTagManager.processEvent(em, log, evmLog)
     }
     switch (log.name) {
@@ -73,13 +73,13 @@ export class EventStorer {
         await this.onCollateralRatiosChanged(em, evmLog, log.args)
         break
       } case EVENTS.ASSET_MANAGER.COLLATERAL_TYPE_ADDED: {
-        if (log.topic == this.oldCollateralTypeAddedTopic) {
+        if (log.topic === this.oldCollateralTypeAddedTopic) {
           log.args = AssetManagerEventMigration.migrateCollateralTypeAdded(log.args)
         }
         await this.onCollateralTypeAdded(em, evmLog, log.args)
         break
       } case EVENTS.ASSET_MANAGER.AGENT_VAULT_CREATED: {
-        if (log.topic == this.oldAgentVaultCreatedTopic) {
+        if (log.topic === this.oldAgentVaultCreatedTopic) {
           log.args = AssetManagerEventMigration.migrateAgentVaultCreated(log.args)
         }
         await this.onAgentVaultCreated(em, evmLog, log.args)
@@ -262,7 +262,7 @@ export class EventStorer {
         await this.onCoreVaultFundsAdded(em, evmLog, log.args)
         break
       } case EVENTS.ASSET_MANAGER.EMERGENCY_PAUSE_TRIGGERED: {
-        if (log.topic == this.oldEmergencySystemPauseTopic) {
+        if (log.topic === this.oldEmergencySystemPauseTopic) {
           log.args = AssetManagerEventMigration.migrateEmergencyPauseTriggered(log.args)
         }
         await this.onEmergencyPauseTriggered(em, evmLog, log.args)

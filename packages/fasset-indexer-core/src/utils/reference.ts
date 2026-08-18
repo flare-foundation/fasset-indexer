@@ -22,7 +22,7 @@ const TOPUP = BigInt(TOPUP_PREFIX) << TYPE_SHIFT
 const SELF_MINT = BigInt(SELF_MINT_PREFIX) << TYPE_SHIFT
 
 function toHex(value: bigint, length: number): string {
-  return "0x" + value.toString(16).padStart(length * 2, "0").slice(0, length * 2)
+  return `0x${value.toString(16).padStart(length * 2, "0").slice(0, length * 2)}`
 }
 
 // Callers use PaymentReference.<fn>(...) — object shape preserves the

@@ -28,7 +28,7 @@ describe('DashboardAnalytics — sql hot paths', () => {
       fasset: FAssetType.FXRP,
       addressHex: addr,
       underlyingText: underlying,
-      poolHex: '0xcc' + addr.slice(4)
+      poolHex: `0xcc${addr.slice(4)}`
     })
   }
 
@@ -92,7 +92,7 @@ describe('DashboardAnalytics — sql hot paths', () => {
           fasset: FAssetType.FXRP, agentVault: A,
           redeemerHex: '0xddddddddddddddddddddddddddddddddddddDDDD',
           paymentAddressText: 'rRedeemerB04',
-          paymentReference: '0x' + i.toString(16).padStart(64, '0'),
+          paymentReference: `0x${i.toString(16).padStart(64, '0')}`,
           valueUBA: 1n, requestId: 7000 + i
         })
       }
@@ -109,18 +109,18 @@ describe('DashboardAnalytics — sql hot paths', () => {
         fasset: FAssetType.FXRP, agentVault: A,
         redeemerHex: '0xddddddddddddddddddddddddddddddddddddDDDD',
         paymentAddressText: 'rRdmB05',
-        paymentReference: '0x' + 'a'.repeat(64),
+        paymentReference: `0x${'a'.repeat(64)}`,
         valueUBA: 1n, requestId: 8001
       })
       await fx.redemptionRequested({
         fasset: FAssetType.FXRP, agentVault: A,
         redeemerHex: '0xddddddddddddddddddddddddddddddddddddDDDD',
         paymentAddressText: 'rRdmB05',
-        paymentReference: '0x' + 'b'.repeat(64),
+        paymentReference: `0x${'b'.repeat(64)}`,
         valueUBA: 1n, requestId: 8002
       }) // not performed
       await fx.redemptionPerformed({
-        redemptionRequested: ok, transactionHash: '0x' + '11'.repeat(32)
+        redemptionRequested: ok, transactionHash: `0x${'11'.repeat(32)}`
       })
       const r = await dashboard.agentRedemptionPerformedCount(A.address.hex)
       expect(r.amount).to.equal(1)
@@ -169,7 +169,7 @@ describe('DashboardAnalytics — sql hot paths', () => {
         fasset: FAssetType.FXRP, agentVault: A,
         redeemerHex: '0xddddddddddddddddddddddddddddddddddddDDDD',
         paymentAddressText: 'rRedB08',
-        paymentReference: '0x' + 'c'.repeat(64),
+        paymentReference: `0x${'c'.repeat(64)}`,
         valueUBA: 1n, requestId: 12345
       })
       await fx.redemptionDefault({ redemptionRequested: rr })

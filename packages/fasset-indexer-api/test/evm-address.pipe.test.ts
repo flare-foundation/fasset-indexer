@@ -21,7 +21,7 @@ describe('EvmAddressPipe', () => {
     })
 
     it('accepts an uppercased (post-0x) address and re-checksums it', () => {
-      const upper = '0x' + ADDR.USER.slice(2).toUpperCase()
+      const upper = `0x${ADDR.USER.slice(2).toUpperCase()}`
       expect(pipe.transform(upper)).to.equal(ADDR.USER)
     })
 

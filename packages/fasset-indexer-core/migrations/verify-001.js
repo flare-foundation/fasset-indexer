@@ -9,9 +9,9 @@
 //
 // pglite is resolved from the api workspace, which already depends on it for its
 // own integration tests.
-const { createRequire } = require('module')
+const { createRequire } = require('node:module')
 const fs = require('fs')
-const path = require('path')
+const path = require('node:path')
 
 const repoRoot = path.resolve(__dirname, '../../..')
 const req = createRequire(path.join(repoRoot, 'packages/fasset-indexer-api/node_modules/'))
@@ -54,8 +54,8 @@ INSERT INTO redemption_default VALUES (3, 1);
 let failures = 0
 function check(label, actual, expected) {
   const a = JSON.stringify(actual), e = JSON.stringify(expected)
-  if (a === e) { console.log('  ok   ' + label) }
-  else { failures++; console.log('  FAIL ' + label + '\n         got ' + a + '\n         want ' + e) }
+  if (a === e) { console.log(`  ok   ${label}`) }
+  else { failures++; console.log(`  FAIL ${label}\n         got ${a}\n         want ${e}`) }
 }
 
 ;(async () => {

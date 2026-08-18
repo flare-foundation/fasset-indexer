@@ -158,7 +158,7 @@ export class EventInterface {
         topics.add(parsed.topicHash)
       }
     }
-    if (topics.size == 0) {
+    if (topics.size === 0) {
        new Error(`Event ${eventName} not found in interface`)
     }
     return Array.from(topics)

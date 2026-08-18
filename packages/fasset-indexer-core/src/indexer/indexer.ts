@@ -54,7 +54,7 @@ export class EventIndexer {
 
   async firstUnhandledBlock(startBlock?: number): Promise<number> {
     const firstUnhandled = await getVar(this.context.orm.em.fork(), this.firstUnhandledEventBlockName)
-    return (firstUnhandled !== null ? parseInt(firstUnhandled.value!) : startBlock) ?? await this.minBlockNumber()
+    return (firstUnhandled !== null ? parseInt(firstUnhandled.value!, 10) : startBlock) ?? await this.minBlockNumber()
   }
 
   async setFirstUnhandledBlock(blockNumber: number): Promise<void> {
@@ -76,7 +76,7 @@ export class EventIndexer {
     const em = this.context.orm.em.fork()
     const fromDb = await getVar(em, MIN_EVM_BLOCK_NUMBER_DB_KEY)
     if (fromDb?.value != null) {
-      return parseInt(fromDb.value)
+      return parseInt(fromDb.value, 10)
     } else {
       throw new Error(`Could not find min block number in database`)
     }

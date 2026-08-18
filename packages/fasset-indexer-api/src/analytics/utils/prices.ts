@@ -32,15 +32,15 @@ export class FAssetPriceLoader {
   }
 
   protected fassetDecimals(fasset: FAssetType): number {
-    if (fasset == FAssetType.FXRP) {
+    if (fasset === FAssetType.FXRP) {
       return 6
-    } else if (fasset == FAssetType.FBTC) {
+    } else if (fasset === FAssetType.FBTC) {
       return 8
-    } else if (fasset == FAssetType.FDOGE) {
+    } else if (fasset === FAssetType.FDOGE) {
       return 8
-    } else if (fasset == FAssetType.FLTC) {
+    } else if (fasset === FAssetType.FLTC) {
       return 8
-    } else if (fasset == FAssetType.FALG) {
+    } else if (fasset === FAssetType.FALG) {
       return 6
     } else {
       throw new Error(`Decimals not known for fasset ${FAssetType[fasset]}`)
@@ -48,7 +48,7 @@ export class FAssetPriceLoader {
   }
 
   protected async fassetToUsdPrice(em: EntityManager, fasset: FAssetType): Promise<[mul: bigint, div: bigint]> {
-    if (fasset == FAssetType.FSIMCOINX || fasset == FAssetType.FLTC || fasset == FAssetType.FALG) {
+    if (fasset === FAssetType.FSIMCOINX || fasset === FAssetType.FLTC || fasset === FAssetType.FALG) {
       return [ BigInt(0), BigInt(1) ]
     }
     const fassetToken = await em.findOneOrFail(CollateralTypeAdded, { fasset })

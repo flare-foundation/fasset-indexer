@@ -1,5 +1,5 @@
 import { readFileSync } from "fs"
-import { resolve } from "path"
+import { resolve } from "node:path"
 import { describe, before, beforeEach, after, it } from "mocha"
 import { expect } from "chai"
 import { evmLogId } from "../src/orm/utils"

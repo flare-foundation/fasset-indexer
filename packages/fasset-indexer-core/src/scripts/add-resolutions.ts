@@ -51,7 +51,7 @@ async function setResolutions(em: EntityManager) {
       await em.execute(`
         update ${k} cr
         set resolution = ?
-        where resolution is null ${t == '-' ? '' : and}
+        where resolution is null ${t === '-' ? '' : and}
       `, [e]);
     }
   }

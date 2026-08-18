@@ -9,9 +9,9 @@ let apiDocPath = 'api-doc'
 async function bootstrap() {
   const apiConfig = new ApiConfigLoader()
   const app = await NestFactory.create(FAssetIndexerModule)
-  if (apiConfig.rootPath != '') {
+  if (apiConfig.rootPath !== '') {
     app.setGlobalPrefix(apiConfig.rootPath)
-    apiDocPath = apiConfig.rootPath + '/' + apiDocPath
+    apiDocPath = `${apiConfig.rootPath}/${apiDocPath}`
   }
   const config = new DocumentBuilder()
     .setTitle('FAsset Indexer Api')

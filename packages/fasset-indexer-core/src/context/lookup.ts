@@ -20,8 +20,10 @@ export class ContractLookup extends EventInterface {
   public fassetTokens: string[] = []
   public contractInfos!: ContractInfo[]
 
+  // biome-ignore lint/correctness/noUnreachableSuper: deliberate singleton -- returning an object from a derived constructor before super() is legal and yields the cached instance.
   constructor(public readonly chain: string, file?: string, deployment?: string) {
     if (ContractLookup.singleton !== null) {
+      // biome-ignore lint/correctness/noConstructorReturn: repeat construction reuses the cached lookup instead of rebuilding every cache.
       return ContractLookup.singleton
     }
     super()

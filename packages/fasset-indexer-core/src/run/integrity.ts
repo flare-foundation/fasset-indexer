@@ -48,7 +48,7 @@ export async function ensureDatabaseIntegrity(context: Context): Promise<void> {
 export async function ensureUpdateIndexerIntegrity(context: Context, updateName?: string): Promise<void> {
   const em = context.orm.em.fork()
   const currentUpdate = await getVar(em, 'current_update')
-  if (currentUpdate != null && currentUpdate.value != updateName) {
+  if (currentUpdate != null && currentUpdate.value !== updateName) {
     const currentUpdateName = currentUpdate.value!
     const raceSynced = await raceIndexerSynced(em, currentUpdateName)
     const backSynced = await backIndexerSynced(em, currentUpdateName)

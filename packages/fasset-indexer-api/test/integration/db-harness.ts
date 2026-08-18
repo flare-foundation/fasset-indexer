@@ -2,8 +2,8 @@ import { PGlite } from '@electric-sql/pglite'
 import { PGLiteSocketServer } from '@electric-sql/pglite-socket'
 import { createOrm } from 'fasset-indexer-core/orm'
 import type { ORM } from 'fasset-indexer-core/orm'
-import { createRequire } from 'module'
-import type { AddressInfo } from 'net'
+import { createRequire } from 'node:module'
+import type { AddressInfo } from 'node:net'
 
 
 // Resolve @mikro-orm/postgresql from fasset-indexer-core's node_modules so the

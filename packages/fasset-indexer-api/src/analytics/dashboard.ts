@@ -18,8 +18,8 @@ import type {
 
 const add = (x: bigint, y: bigint) => x + y
 const sub = (x: bigint, y: bigint) => x - y
-const rat = (x: bigint, y: bigint) => y == BigInt(0) ? 0 : Number(MAX_BIPS * x / y) / Number(MAX_BIPS)
-const div = (x: bigint, y: bigint) => y == BigInt(0) ? BigInt(0) : x / y
+const rat = (x: bigint, y: bigint) => y === BigInt(0) ? 0 : Number(MAX_BIPS * x / y) / Number(MAX_BIPS)
+const div = (x: bigint, y: bigint) => y === BigInt(0) ? BigInt(0) : x / y
 
 /**
  * DashboardAnalytics provides a set of analytics functions for the FAsset UI's dashboard.
@@ -631,7 +631,7 @@ export class DashboardAnalytics extends SharedAnalytics {
     for (const [fasset, ts] of Object.entries(timeseries)) {
       for (const point of ts) {
         let value = BigInt(0)
-        if (point.value != BigInt(0)) {
+        if (point.value !== BigInt(0)) {
           const [priceMul, priceDiv] = await this.price.getFAssetToUsdPrice(em, FAssetType[fasset as FAsset])
           value = PRICE_FACTOR * point.value * priceMul / priceDiv
         }
@@ -642,7 +642,7 @@ export class DashboardAnalytics extends SharedAnalytics {
         acc[point.index].value += value
       }
     }
-    return Object.entries(acc).map(([index, data]) => ({ index: parseInt(index), ...data }))
+    return Object.entries(acc).map(([index, data]) => ({ index: parseInt(index, 10), ...data }))
   }
 
   protected async prepareTimespan(
@@ -678,7 +678,7 @@ export class DashboardAnalytics extends SharedAnalytics {
     for (const [fasset, timespan] of Object.entries(timespans)) {
       for (const point of timespan) {
         let value = BigInt(0)
-        if (point.value != BigInt(0)) {
+        if (point.value !== BigInt(0)) {
           const [priceMul, priceDiv] = await this.price.getFAssetToUsdPrice(em, FAssetType[fasset as FAsset])
           value = PRICE_FACTOR * point.value * priceMul / priceDiv
         }
@@ -689,7 +689,7 @@ export class DashboardAnalytics extends SharedAnalytics {
         acc[point.timestamp] += value
       }
     }
-    return Object.entries(acc).map(([timestamp, value]) => ({ timestamp: parseInt(timestamp), value }))
+    return Object.entries(acc).map(([timestamp, value]) => ({ timestamp: parseInt(timestamp, 10), value }))
   }
 
   protected async getMinTimestamp(em: EntityManager): Promise<number> {

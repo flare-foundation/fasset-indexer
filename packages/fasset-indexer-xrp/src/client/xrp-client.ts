@@ -100,7 +100,7 @@ export class XrpClient {
   }
 
   private ensureSuccess(resp: { result: { status: string, error_message?: string }}): void {
-    if (resp.result.status != 'success') {
+    if (resp.result.status !== 'success') {
       throw new Error(`rpc returned ${JSON.stringify(resp.result.error_message)}`)
     }
   }

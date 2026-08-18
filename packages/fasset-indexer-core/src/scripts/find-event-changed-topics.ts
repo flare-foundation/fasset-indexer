@@ -9,11 +9,11 @@ const iface2 = IAssetManager__latest__factory.createInterface()
 
 async function am(context: Context) {
   for (const iface of Object.keys(EVENTS)) {
-    if (iface != 'ASSET_MANAGER') continue
+    if (iface !== 'ASSET_MANAGER') continue
     for (const event of Object.values(EVENTS[iface as keyof typeof EVENTS])) {
       const resp1 = context.getEventTopics(event, [iface1])[0]
       const resp2 = context.getEventTopics(event, [iface2])[0]
-      if (resp1 != resp2) console.log(event)
+      if (resp1 !== resp2) console.log(event)
     }
   }
 }

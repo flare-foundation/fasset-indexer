@@ -874,7 +874,7 @@ export class VisualiserAnalytics extends DashboardAnalytics {
    * Joins UnderlyingReference by (fasset, paymentReference) for mint/redemption/transfer/return,
    * and UnderlyingTransaction by hash for direct mints.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: takes a loosely-typed EntityManager to keep this private helper reusable.
   private async attachUnderlyingPayments(em: any, flows: VT.Flow[]): Promise<void> {
     if (flows.length === 0) return
     const referenceKeys: { fasset: FAssetType, reference: string }[] = []
@@ -942,7 +942,7 @@ export class VisualiserAnalytics extends DashboardAnalytics {
    * Strictly-after cursor filter on (evmLog.block.timestamp, evmLog.block.index).
    * Without sinceBlock, falls back to inclusive timestamp filter for backwards-compat.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: takes a loosely-typed EntityManager to keep this private helper reusable.
   private evmSinceWhere(sinceTimestamp: number, sinceBlock?: number): any {
     if (sinceBlock == null) {
       return { evmLog: { block: { timestamp: { $gte: sinceTimestamp } } } }
@@ -956,7 +956,7 @@ export class VisualiserAnalytics extends DashboardAnalytics {
   }
 
   /** Same as evmSinceWhere but for entities whose block field is direct (e.g. UnderlyingReference). */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  // biome-ignore lint/suspicious/noExplicitAny: takes a loosely-typed EntityManager to keep this private helper reusable.
   private underlyingSinceWhere(sinceTimestamp: number, sinceBlock?: number): any {
     if (sinceBlock == null) {
       return { block: { timestamp: { $gte: sinceTimestamp } } }
@@ -1080,7 +1080,7 @@ export class VisualiserAnalytics extends DashboardAnalytics {
     ])
 
     const evs: VT.VisualiserEvent[] = []
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    // biome-ignore lint/suspicious/noExplicitAny: takes a loosely-typed EntityManager to keep this private helper reusable.
     const pushEvent = (kind: VT.VisualiserEventKind, e: any, opts: { agentVault?: string, valueUBA?: bigint, user?: string, fasset?: FAsset, flowId?: string, flowKind?: VT.FlowKind, txHash?: string }) => {
       evs.push({
         kind,

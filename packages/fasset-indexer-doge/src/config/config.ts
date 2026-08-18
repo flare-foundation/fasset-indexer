@@ -19,6 +19,6 @@ export class DogeConfigLoader extends ConfigLoader {
   }
 
   get dogeMinBlockNumber(): number {
-    return parseInt(this.required('DOGE_MIN_BLOCK_NUMBER'))
+    return parseInt(this.required('DOGE_MIN_BLOCK_NUMBER'), 10)
   }
 }

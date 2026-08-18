@@ -20,19 +20,19 @@ async function buildScenario(fx: Fixtures) {
     fasset: FAssetType.FXRP,
     addressHex: '0x0000000000000000000000000000000000000c01',
     underlyingText: 'rAgentBench',
-    poolHex: '0xcc' + '0000000000000000000000000000000000000c01'.slice(0)
+    poolHex: `0xcc${'0000000000000000000000000000000000000c01'.slice(0)}`
   })
   const SHARED_BLOCK = 5000
   const SHARED_TS = 1_700_010_000
   const refs: string[] = []
   const rrs: any[] = []
   for (let i = 0; i < N_REDEMPTIONS; i++) {
-    const ref = '0x' + (i + 1).toString(16).padStart(64, '0')
+    const ref = `0x${(i + 1).toString(16).padStart(64, '0')}`
     refs.push(ref)
     rrs.push(await fx.redemptionRequested({
       fasset: FAssetType.FXRP, agentVault: ag,
       redeemerHex: '0xddddddddddddddddddddddddddddddddddddDDDD',
-      paymentAddressText: 'rRedBench' + i,
+      paymentAddressText: `rRedBench${i}`,
       paymentReference: ref, valueUBA: BigInt(100 + i), requestId: 9000 + i,
       blockIndex: SHARED_BLOCK, blockTimestamp: SHARED_TS
     }))
@@ -51,7 +51,7 @@ async function buildScenario(fx: Fixtures) {
   await fx['em'].flush()
 
   await fx.redemptionPerformed({
-    redemptionRequested: rrs[0], transactionHash: '0x' + '01'.repeat(32),
+    redemptionRequested: rrs[0], transactionHash: `0x${'01'.repeat(32)}`,
     blockTimestamp: SHARED_TS + 100
   })
   await fx.redemptionDefault({
@@ -74,11 +74,11 @@ async function buildScenario(fx: Fixtures) {
   })
   em2.create(Entities.RedemptionPaymentBlocked, {
     evmLog: blockedLog, fasset: FAssetType.FXRP, redemptionRequested: rrs[3],
-    transactionHash: '0x' + '02'.repeat(32), spentUnderlyingUBA: 0n
+    transactionHash: `0x${'02'.repeat(32)}`, spentUnderlyingUBA: 0n
   })
   await em2.flush()
   await fx.redemptionPerformed({
-    redemptionRequested: rrs[4], transactionHash: '0x' + '03'.repeat(32),
+    redemptionRequested: rrs[4], transactionHash: `0x${'03'.repeat(32)}`,
     blockTimestamp: SHARED_TS + 100
   })
 

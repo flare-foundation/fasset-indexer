@@ -22,7 +22,7 @@ export class TestConfigLoader extends ConfigLoader {
   override get dbConfig(): Options<SqliteDriver | PostgreSqlDriver> {
     return {
       ...super.dbConfig,
-      pool: { min: 1, max: parseInt(process.env.TEST_DB_POOL_MAX ?? '5') }
+      pool: { min: 1, max: parseInt(process.env.TEST_DB_POOL_MAX ?? '5', 10) }
     }
   }
 
@@ -39,7 +39,7 @@ export class TestConfigLoader extends ConfigLoader {
   }
 
   protected override get dbPort(): number {
-    return parseInt(process.env.TEST_DB_PORT ?? '5432')
+    return parseInt(process.env.TEST_DB_PORT ?? '5432', 10)
   }
 
   protected override get dbUser(): string {

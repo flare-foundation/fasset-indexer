@@ -19,7 +19,7 @@ export class EventParser {
   async logToEvent(log: Log): Promise<Event | null> {
     const topic = log.topics[0]
     const iface = this.topicToIfaces.get(topic)
-    if (iface == null || iface.length == 0) return null
+    if (iface == null || iface.length === 0) return null
     const source = await this.logSource(iface, log.address)
     if (source == null) return null
     const parsed = this.context.parseLog(iface[0], log)
@@ -69,17 +69,17 @@ export class EventParser {
       }
     }
     if (ifaces.includes('MASTER_ACCOUNT_CONTROLLER')) {
-      if (this.context.fassetTypeToMasterAccountController(FAssetType.FXRP) == source) {
+      if (this.context.fassetTypeToMasterAccountController(FAssetType.FXRP) === source) {
         return 'MASTER_ACCOUNT_CONTROLLER'
       }
     }
     if (ifaces.includes('OFT_ADAPTER')) {
-      if (this.context.oftAdapterAddress() == source) {
+      if (this.context.oftAdapterAddress() === source) {
         return 'OFT_ADAPTER'
       }
     }
     if (ifaces.includes('MINTING_TAG_MANAGER')) {
-      if (this.context.mintingTagManagerAddress() == source) {
+      if (this.context.mintingTagManagerAddress() === source) {
         return 'MINTING_TAG_MANAGER'
       }
     }

@@ -1,4 +1,4 @@
-import { resolve } from "path"
+import { resolve } from "node:path"
 import type { ContractInfo } from "./interface"
 
 export function getContractInfo(chain: string, file?: string, deployment?: string): ContractInfo[] {

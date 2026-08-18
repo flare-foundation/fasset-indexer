@@ -137,7 +137,7 @@ export class XrpIndexer {
   // issued currencies and mpts arrive as objects and deliver no xrp, so such a
   // transaction can never be an fasset underlying payment
   protected deliversXrp(transaction: IXrpTransaction): transaction is IXrpNativeTransaction {
-    return typeof transaction.Amount != 'object'
+    return typeof transaction.Amount !== 'object'
   }
 
   protected async storeTransaction(
@@ -145,8 +145,8 @@ export class XrpIndexer {
     transaction: IXrpNativeTransaction,
     block: Entities.UnderlyingBlock
   ): Promise<Entities.UnderlyingTransaction> {
-    let source = undefined
-    let target = undefined
+    let source: Entities.UnderlyingAddress | undefined
+    let target: Entities.UnderlyingAddress | undefined
     const { Account, Destination, DestinationTag, Amount } = transaction
     if (Account != null) {
       source = await findOrCreateEntity(em, Entities.UnderlyingAddress, { text: Account })
@@ -205,10 +205,10 @@ export class XrpIndexer {
 
   private extractReference(memo: IXrpMemo): string | null {
     const candidate = memo.Memo.MemoData
-    if (typeof candidate != 'string') {
+    if (typeof candidate !== 'string') {
       return null
     }
-    const formattedReference = '0x' + candidate.toLowerCase()
+    const formattedReference = `0x${candidate.toLowerCase()}`
     const isValid = PaymentReference.isValid(formattedReference)
     return isValid ? formattedReference : null
   }

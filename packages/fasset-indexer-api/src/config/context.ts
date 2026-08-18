@@ -12,7 +12,7 @@ export class ApiContext {
 
     static async create(loader: ApiConfigLoader): Promise<ApiContext> {
       const orm = await createOrm({ ...loader.dbConfig, loadStrategy: LoadStrategy.JOINED }, 'safe')
-      const chain = await this.getChain(orm)
+      const chain = await ApiContext.getChain(orm)
       return new ApiContext(loader, orm, chain)
     }
 

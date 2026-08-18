@@ -20,7 +20,7 @@ export function randomString(n: number) {
 }
 
 export function randomHex(length: number) {
-  return '0x' + Array.from({ length }, () => Math.floor(Math.random() * 16).toString(16)).join('')
+  return `0x${Array.from({ length }, () => Math.floor(Math.random() * 16).toString(16)).join('')}`
 }
 
 export function randomBase58(length: number) {

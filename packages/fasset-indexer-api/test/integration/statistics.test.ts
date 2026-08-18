@@ -29,7 +29,7 @@ describe('AgentStatistics — broader surface', () => {
       fasset: FAssetType.FXRP,
       addressHex: addr,
       underlyingText: underlying,
-      poolHex: '0xcc' + addr.slice(4)
+      poolHex: `0xcc${addr.slice(4)}`
     })
   }
 
@@ -145,14 +145,14 @@ describe('AgentStatistics — broader surface', () => {
       const cr1 = await fx.collateralReserved({
         fasset: FAssetType.FXRP, agentVault: ag, minterHex: MINTER,
         paymentAddressText: ag.underlyingAddress.text,
-        paymentReference: '0x46' + '0'.repeat(60) + '11',
+        paymentReference: `0x46${'0'.repeat(60)}11`,
         valueUBA: 1n,
         collateralReservationId: 100
       })
       const cr2 = await fx.collateralReserved({
         fasset: FAssetType.FXRP, agentVault: ag, minterHex: MINTER,
         paymentAddressText: ag.underlyingAddress.text,
-        paymentReference: '0x46' + '0'.repeat(60) + '22',
+        paymentReference: `0x46${'0'.repeat(60)}22`,
         valueUBA: 1n,
         collateralReservationId: 101
       })
@@ -178,7 +178,7 @@ describe('AgentStatistics — broader surface', () => {
           fasset: FAssetType.FXRP, agentVault: ag,
           redeemerHex: '0xddddddddddddddddddddddddddddddddddddDDDD',
           paymentAddressText: 'rRedeemerForCount',
-          paymentReference: '0x52' + i.toString(16).padStart(62, '0'),
+          paymentReference: `0x52${i.toString(16).padStart(62, '0')}`,
           valueUBA: 1n, requestId: 1000 + i,
           blockTimestamp: now - 1000
         })
@@ -194,13 +194,13 @@ describe('AgentStatistics — broader surface', () => {
       const recent = await fx.redemptionRequested({
         fasset: FAssetType.FXRP, agentVault: ag,
         redeemerHex: '0xddddddddddddddddddddddddddddddddddddDDDD',
-        paymentAddressText: 'rR1', paymentReference: '0x' + 'a'.repeat(64),
+        paymentAddressText: 'rR1', paymentReference: `0x${'a'.repeat(64)}`,
         valueUBA: 100n, requestId: 9001, blockTimestamp: now - 100
       })
       const old = await fx.redemptionRequested({
         fasset: FAssetType.FXRP, agentVault: ag,
         redeemerHex: '0xddddddddddddddddddddddddddddddddddddDDDD',
-        paymentAddressText: 'rR1', paymentReference: '0x' + 'b'.repeat(64),
+        paymentAddressText: 'rR1', paymentReference: `0x${'b'.repeat(64)}`,
         valueUBA: 100n, requestId: 9002, blockTimestamp: now - WEEK * 5
       })
       await fx.redemptionDefault({ redemptionRequested: recent, blockTimestamp: now - 90 })

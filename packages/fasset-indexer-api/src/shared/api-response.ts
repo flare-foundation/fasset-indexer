@@ -30,7 +30,7 @@ export class ApiResponse<T> {
 
 function getJsonReplacer() {
   const seen = new WeakSet<object>()
-  return function (_key: string, value: unknown): unknown {
+  return (_key: string, value: unknown): unknown => {
     if (typeof value === 'bigint') return value.toString()
     if (value && typeof value === 'object') {
       if (seen.has(value)) return undefined

@@ -340,9 +340,9 @@ export class DashboardController {
 
   protected parseTimestamps(timestamps: string | string[]): number[] {
     if (typeof timestamps === 'string') {
-      return timestamps.split(',').map(x => parseInt(x))
+      return timestamps.split(',').map(x => parseInt(x, 10))
     }
-    return timestamps.map(x => parseInt(x))
+    return timestamps.map(x => parseInt(x, 10))
   }
 
   private restrictTimespan(timespan: number[]): Error | null {
@@ -352,8 +352,7 @@ export class DashboardController {
     return null
   }
 
-  // eslint-disable-next-line
-  private restrictPoints(end: number, npoints: number, start?: number): Error | null {
+  private restrictPoints(_end: number, npoints: number, _start?: number): Error | null {
     if (npoints > MAX_TIMESERIES_PTS) {
       return new Error(`Cannot request more than ${MAX_TIMESERIES_PTS} points`)
     }

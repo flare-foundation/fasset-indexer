@@ -20,6 +20,6 @@ export class BtcConfigLoader extends ConfigLoader {
   }
 
   get btcMinBlockNumber(): number {
-    return parseInt(this.required('BTC_MIN_BLOCK_NUMBER'))
+    return parseInt(this.required('BTC_MIN_BLOCK_NUMBER'), 10)
   }
 }
