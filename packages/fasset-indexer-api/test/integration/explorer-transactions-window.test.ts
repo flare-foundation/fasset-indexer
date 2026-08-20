@@ -127,6 +127,18 @@ describe('ExplorerAnalytics.transactions — default window vs. narrowing filter
     expect(r.transactions.every(t => t.user === REDEEMER)).to.equal(true)
   })
 
+  it('applies user and agent together instead of failing the query', async () => {
+    const both = await explorer.transactions(
+      25, 0, REDEEMER, AGENT, undefined, undefined, false, undefined, REDEEM
+    )
+    expect(both.count).to.equal(2)
+    // The pair has to intersect, not fall back to whichever address was bound.
+    const crossed = await explorer.transactions(
+      25, 0, REDEEMER, OTHER_AGENT, undefined, undefined, false, undefined, REDEEM
+    )
+    expect(crossed.count).to.equal(0)
+  })
+
   it('honours an explicit window over the filters', async () => {
     const r = await explorer.transactions(
       25, 0, undefined, undefined, RECENT_TS - 10, RECENT_TS + 10, false,

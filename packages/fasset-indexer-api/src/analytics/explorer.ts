@@ -94,7 +94,11 @@ export class ExplorerAnalytics extends SharedAnalytics {
       const idHi = lastEvmLogIdInBlock(Number(bounds.hi_block))
       windowParams = [idLo, idHi]
     }
-    const filterParams = [user ?? agent, ...windowParams, status].filter(x => x != null)
+    // Order matches the placeholders explorerTransactionsFilter emits: user,
+    // agent, window, status. Both addresses are bound when both are asked for --
+    // the filter has a clause for each, so passing one value for two
+    // placeholders slid limit into the agent comparison and failed the query.
+    const filterParams = [user, agent, ...windowParams, status].filter(x => x != null)
     const [transactions, countResult] = await Promise.all([
       conn.execute(
         SQL.EXPLORER_TRANSACTIONS(hasUser, hasAgent, asc, hasWindow, hasStatus, types),
