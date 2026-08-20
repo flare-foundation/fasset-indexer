@@ -58,18 +58,24 @@ export class ExplorerAnalytics extends SharedAnalytics {
     types: ExplorerType.TransactionType[] = ALL_TRANSACTION_TYPES
   ): Promise<ExplorerType.TransactionsInfo> {
     const em = this.orm.em.fork()
+    const hasUser = user != null
+    const hasAgent = agent != null
+    const hasStatus = status != null
     ;[start, end] = this.standardizeInterval(start, end)
-    if (start == null && end == null) {
+    if (start == null && end == null && !hasUser && !hasAgent && !hasStatus) {
       // Bound an unqualified request to a recent window. Ordering no longer
       // depends on this -- encoded ids keep reindexed events in place -- so it is
       // now only about how much of the union an open-ended query has to scan.
+      //
+      // Unqualified means exactly that: user, agent and status are each indexed
+      // and narrow the union on their own, so the window would only truncate an
+      // already-cheap query. It truncates silently, which is the problem -- a
+      // status whose every row predates the window reads as "there are none"
+      // rather than "there are none recently".
       end = unixnow()
       start = end - EXPLORER_DEFAULT_LOOKBACK_SECONDS
     }
-    const hasUser = user != null
-    const hasAgent = agent != null
     const hasWindow = start != null || end != null
-    const hasStatus = status != null
     const conn = em.getConnection('read')
     let windowParams: (number | string)[] = []
     if (hasWindow) {
