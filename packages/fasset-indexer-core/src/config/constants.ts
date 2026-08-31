@@ -88,6 +88,7 @@ export const EVENTS = {
     REDEMPTION_AMOUNT_INCOMPLETE: "RedemptionAmountIncomplete",
     REDEEMED_IN_COLLATERAL: "RedeemedInCollateral",
     REDEMPTION_POOL_FEE_MINTED: "RedemptionPoolFeeMinted",
+    SYSTEM_REDEMPTION_FEE_PAID: "SystemRedemptionFeePaid",
     // redemption tickets
     REDEMPTION_TICKET_CREATED: 'RedemptionTicketCreated',
     REDEMPTION_TICKET_UPDATED: 'RedemptionTicketUpdated',

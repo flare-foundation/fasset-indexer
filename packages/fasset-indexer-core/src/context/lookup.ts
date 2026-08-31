@@ -118,6 +118,13 @@ export class ContractLookup extends EventInterface {
     return this.requireContractAddress('MintingTagManager')
   }
 
+  // The wrapped native token is a network-wide constant shared by every asset
+  // manager, so it is read from the deployment file rather than from the chain.
+  // IAssetManager (unlike the internal IIAssetManager) exposes no getWNat().
+  wNatAddress(): string {
+    return this.requireContractAddress('WNat')
+  }
+
   contractAddress(name: string): string | null {
     return this.contractNameToAddress.get(name) ?? null
   }

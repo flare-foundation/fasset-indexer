@@ -201,6 +201,9 @@ export class EventStorer {
       } case EVENTS.ASSET_MANAGER.REDEMPTION_POOL_FEE_MINTED: {
         await this.onRedemptionPoolFeeMinted(em, evmLog, log.args)
         break
+      } case EVENTS.ASSET_MANAGER.SYSTEM_REDEMPTION_FEE_PAID: {
+        await this.onSystemRedemptionFeePaid(em, evmLog, log.args)
+        break
       } case EVENTS.ASSET_MANAGER.LIQUIDATION_STARTED: {
         await this.onLiquidationStarted(em, evmLog, log.args)
         break
@@ -986,6 +989,22 @@ export class EventStorer {
     const [ , requestId, poolFeeUBA ] = logArgs
     const redemptionRequested = await em.findOneOrFail(Entities.RedemptionRequested, { fasset, requestId: Number(requestId) })
     return em.create(Entities.RedemptionPoolFeeMinted, { evmLog, fasset, redemptionRequested, poolFeeUBA })
+  }
+
+  // Note this event precedes RedemptionRequested within the same transaction, so
+  // the request it points at cannot be looked up here - see the entity comment.
+  protected async onSystemRedemptionFeePaid(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.SystemRedemptionFeePaidEvent.OutputTuple
+  ): Promise<Entities.SystemRedemptionFeePaid>
+  {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ agentVault, requestId, feeUBA ] = logArgs
+    const _agentVault = await em.findOneOrFail(Entities.AgentVault, { address: { hex: agentVault }})
+    return em.create(Entities.SystemRedemptionFeePaid, {
+      evmLog, fasset, agentVault: _agentVault, requestId: Number(requestId), feeUBA
+    })
   }
 
   //////////////////////////////////////////////////////////////////////////////////////////////////////

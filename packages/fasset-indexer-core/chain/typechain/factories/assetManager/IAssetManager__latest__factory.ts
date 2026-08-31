@@ -10,41 +10,6 @@ import type {
 
 const _abi = [
   {
-    inputs: [],
-    name: "AlreadyInProductionMode",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "GovernedAddressZero",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "GovernedAlreadyInitialized",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "OnlyExecutor",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "OnlyGovernance",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "TimelockInvalidSelector",
-    type: "error",
-  },
-  {
-    inputs: [],
-    name: "TimelockNotAllowedYet",
-    type: "error",
-  },
-  {
     anonymous: false,
     inputs: [
       {
@@ -688,48 +653,6 @@ const _abi = [
     anonymous: false,
     inputs: [
       {
-        components: [
-          {
-            internalType: "address",
-            name: "facetAddress",
-            type: "address",
-          },
-          {
-            internalType: "enum IDiamond.FacetCutAction",
-            name: "action",
-            type: "uint8",
-          },
-          {
-            internalType: "bytes4[]",
-            name: "functionSelectors",
-            type: "bytes4[]",
-          },
-        ],
-        indexed: false,
-        internalType: "struct IDiamond.FacetCut[]",
-        name: "_diamondCut",
-        type: "tuple[]",
-      },
-      {
-        indexed: false,
-        internalType: "address",
-        name: "_init",
-        type: "address",
-      },
-      {
-        indexed: false,
-        internalType: "bytes",
-        name: "_calldata",
-        type: "bytes",
-      },
-    ],
-    name: "DiamondCut",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
         indexed: false,
         internalType: "bytes32",
         name: "transactionId",
@@ -979,57 +902,6 @@ const _abi = [
       },
     ],
     name: "FullLiquidationStarted",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "bytes",
-        name: "encodedCall",
-        type: "bytes",
-      },
-      {
-        indexed: false,
-        internalType: "bytes32",
-        name: "encodedCallHash",
-        type: "bytes32",
-      },
-      {
-        indexed: false,
-        internalType: "uint256",
-        name: "allowedAfterTimestamp",
-        type: "uint256",
-      },
-    ],
-    name: "GovernanceCallTimelocked",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "address",
-        name: "initialGovernance",
-        type: "address",
-      },
-    ],
-    name: "GovernanceInitialised",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
-      {
-        indexed: false,
-        internalType: "address",
-        name: "governanceSettings",
-        type: "address",
-      },
-    ],
-    name: "GovernedProductionModeEntered",
     type: "event",
   },
   {
@@ -1979,26 +1851,25 @@ const _abi = [
     anonymous: false,
     inputs: [
       {
-        indexed: false,
-        internalType: "bytes32",
-        name: "encodedCallHash",
-        type: "bytes32",
+        indexed: true,
+        internalType: "address",
+        name: "agentVault",
+        type: "address",
       },
-    ],
-    name: "TimelockedGovernanceCallCanceled",
-    type: "event",
-  },
-  {
-    anonymous: false,
-    inputs: [
+      {
+        indexed: true,
+        internalType: "uint256",
+        name: "requestId",
+        type: "uint256",
+      },
       {
         indexed: false,
-        internalType: "bytes32",
-        name: "encodedCallHash",
-        type: "bytes32",
+        internalType: "uint256",
+        name: "feeUBA",
+        type: "uint256",
       },
     ],
-    name: "TimelockedGovernanceCallExecuted",
+    name: "SystemRedemptionFeePaid",
     type: "event",
   },
   {
@@ -2259,66 +2130,6 @@ const _abi = [
       },
     ],
     name: "addAlwaysAllowedMinterForAgent",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        components: [
-          {
-            internalType: "enum CollateralType.Class",
-            name: "collateralClass",
-            type: "uint8",
-          },
-          {
-            internalType: "contract IERC20",
-            name: "token",
-            type: "address",
-          },
-          {
-            internalType: "uint256",
-            name: "decimals",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "validUntil",
-            type: "uint256",
-          },
-          {
-            internalType: "bool",
-            name: "directPricePair",
-            type: "bool",
-          },
-          {
-            internalType: "string",
-            name: "assetFtsoSymbol",
-            type: "string",
-          },
-          {
-            internalType: "string",
-            name: "tokenFtsoSymbol",
-            type: "string",
-          },
-          {
-            internalType: "uint256",
-            name: "minCollateralRatioBIPS",
-            type: "uint256",
-          },
-          {
-            internalType: "uint256",
-            name: "safetyMinCollateralRatioBIPS",
-            type: "uint256",
-          },
-        ],
-        internalType: "struct CollateralType.Data",
-        name: "_data",
-        type: "tuple",
-      },
-    ],
-    name: "addCollateralType",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -2599,68 +2410,6 @@ const _abi = [
       },
     ],
     stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "assetPriceNatWei",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "_multiplier",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_divisor",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "bool",
-        name: "attached",
-        type: "bool",
-      },
-    ],
-    name: "attachController",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "contract IERC20",
-        name: "_token",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "_valueNATWei",
-        type: "uint256",
-      },
-    ],
-    name: "beforeCollateralWithdrawal",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "bytes",
-        name: "_encodedCall",
-        type: "bytes",
-      },
-    ],
-    name: "cancelGovernanceCall",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -4071,46 +3820,6 @@ const _abi = [
   {
     inputs: [
       {
-        components: [
-          {
-            internalType: "address",
-            name: "facetAddress",
-            type: "address",
-          },
-          {
-            internalType: "enum IDiamond.FacetCutAction",
-            name: "action",
-            type: "uint8",
-          },
-          {
-            internalType: "bytes4[]",
-            name: "functionSelectors",
-            type: "bytes4[]",
-          },
-        ],
-        internalType: "struct IDiamond.FacetCut[]",
-        name: "_diamondCut",
-        type: "tuple[]",
-      },
-      {
-        internalType: "address",
-        name: "_init",
-        type: "address",
-      },
-      {
-        internalType: "bytes",
-        name: "_calldata",
-        type: "bytes",
-      },
-    ],
-    name: "diamondCut",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
         internalType: "bytes32",
         name: "_transactionId",
         type: "bytes32",
@@ -4344,55 +4053,12 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "enum EmergencyPause.Level",
-        name: "_level",
-        type: "uint8",
-      },
-      {
-        internalType: "bool",
-        name: "_byGovernance",
-        type: "bool",
-      },
-      {
-        internalType: "uint256",
-        name: "_duration",
-        type: "uint256",
-      },
-    ],
-    name: "emergencyPause",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
     inputs: [],
-    name: "emergencyPauseDetails",
+    name: "effectiveSystemRedemptionFeeBIPS",
     outputs: [
       {
-        internalType: "enum EmergencyPause.Level",
-        name: "_level",
-        type: "uint8",
-      },
-      {
         internalType: "uint256",
-        name: "_pausedUntil",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_totalPauseDuration",
-        type: "uint256",
-      },
-      {
-        internalType: "enum EmergencyPause.Level",
-        name: "_governanceLevel",
-        type: "uint8",
-      },
-      {
-        internalType: "uint256",
-        name: "_governancePausedUntil",
+        name: "",
         type: "uint256",
       },
     ],
@@ -4618,14 +4284,152 @@ const _abi = [
   {
     inputs: [
       {
+        components: [
+          {
+            internalType: "bytes32[]",
+            name: "merkleProof",
+            type: "bytes32[]",
+          },
+          {
+            components: [
+              {
+                internalType: "bytes32",
+                name: "attestationType",
+                type: "bytes32",
+              },
+              {
+                internalType: "bytes32",
+                name: "sourceId",
+                type: "bytes32",
+              },
+              {
+                internalType: "uint64",
+                name: "votingRound",
+                type: "uint64",
+              },
+              {
+                internalType: "uint64",
+                name: "lowestUsedTimestamp",
+                type: "uint64",
+              },
+              {
+                components: [
+                  {
+                    internalType: "bytes32",
+                    name: "transactionId",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "address",
+                    name: "proofOwner",
+                    type: "address",
+                  },
+                ],
+                internalType: "struct IXRPPayment.RequestBody",
+                name: "requestBody",
+                type: "tuple",
+              },
+              {
+                components: [
+                  {
+                    internalType: "uint64",
+                    name: "blockNumber",
+                    type: "uint64",
+                  },
+                  {
+                    internalType: "uint64",
+                    name: "blockTimestamp",
+                    type: "uint64",
+                  },
+                  {
+                    internalType: "string",
+                    name: "sourceAddress",
+                    type: "string",
+                  },
+                  {
+                    internalType: "bytes32",
+                    name: "sourceAddressHash",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "bytes32",
+                    name: "receivingAddressHash",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "bytes32",
+                    name: "intendedReceivingAddressHash",
+                    type: "bytes32",
+                  },
+                  {
+                    internalType: "int256",
+                    name: "spentAmount",
+                    type: "int256",
+                  },
+                  {
+                    internalType: "int256",
+                    name: "intendedSpentAmount",
+                    type: "int256",
+                  },
+                  {
+                    internalType: "int256",
+                    name: "receivedAmount",
+                    type: "int256",
+                  },
+                  {
+                    internalType: "int256",
+                    name: "intendedReceivedAmount",
+                    type: "int256",
+                  },
+                  {
+                    internalType: "bool",
+                    name: "hasMemoData",
+                    type: "bool",
+                  },
+                  {
+                    internalType: "bytes",
+                    name: "firstMemoData",
+                    type: "bytes",
+                  },
+                  {
+                    internalType: "bool",
+                    name: "hasDestinationTag",
+                    type: "bool",
+                  },
+                  {
+                    internalType: "uint256",
+                    name: "destinationTag",
+                    type: "uint256",
+                  },
+                  {
+                    internalType: "uint8",
+                    name: "status",
+                    type: "uint8",
+                  },
+                ],
+                internalType: "struct IXRPPayment.ResponseBody",
+                name: "responseBody",
+                type: "tuple",
+              },
+            ],
+            internalType: "struct IXRPPayment.Response",
+            name: "data",
+            type: "tuple",
+          },
+        ],
+        internalType: "struct IXRPPayment.Proof",
+        name: "_payment",
+        type: "tuple",
+      },
+      {
         internalType: "bytes",
-        name: "_encodedCall",
+        name: "_data",
         type: "bytes",
       },
     ],
-    name: "executeGovernanceCall",
+    name: "executeDirectMintingWithData",
     outputs: [],
-    stateMutability: "nonpayable",
+    stateMutability: "payable",
     type: "function",
   },
   {
@@ -5607,19 +5411,6 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "getCollateralPoolTokenTimelockSeconds",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [
       {
         internalType: "enum CollateralType.Class",
@@ -6021,25 +5812,6 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_agentVault",
-        type: "address",
-      },
-    ],
-    name: "getFAssetsBackedByPool",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [],
     name: "getMintingTagManager",
     outputs: [
@@ -6381,64 +6153,6 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "getWNat",
-    outputs: [
-      {
-        internalType: "contract IWNat",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_managementAddress",
-        type: "address",
-      },
-    ],
-    name: "getWorkAddress",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "governance",
-    outputs: [
-      {
-        internalType: "address",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "governanceSettings",
-    outputs: [
-      {
-        internalType: "contract IGovernanceSettings",
-        name: "",
-        type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
     inputs: [
       {
         components: [
@@ -6544,98 +6258,12 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "address",
-        name: "_agentVault",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "_address",
-        type: "address",
-      },
-    ],
-    name: "isAgentVaultOwner",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_address",
-        type: "address",
-      },
-    ],
-    name: "isExecutor",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_agentVault",
-        type: "address",
-      },
-      {
-        internalType: "contract IERC20",
-        name: "_token",
-        type: "address",
-      },
-    ],
-    name: "isLockedVaultToken",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
         internalType: "string",
         name: "_suffix",
         type: "string",
       },
     ],
     name: "isPoolTokenSuffixReserved",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "contract IERC20",
-        name: "_token",
-        type: "address",
-      },
-    ],
-    name: "isVaultCollateralToken",
     outputs: [
       {
         internalType: "bool",
@@ -6717,25 +6345,6 @@ const _abi = [
     name: "markUnblockedDirectMintingAllowed",
     outputs: [],
     stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_agentVault",
-        type: "address",
-      },
-    ],
-    name: "maxRedemptionFromAgent",
-    outputs: [
-      {
-        internalType: "uint256",
-        name: "",
-        type: "uint256",
-      },
-    ],
-    stateMutability: "view",
     type: "function",
   },
   {
@@ -6931,32 +6540,12 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "pauseMinting",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
     name: "priceReader",
     outputs: [
       {
         internalType: "address",
         name: "",
         type: "address",
-      },
-    ],
-    stateMutability: "view",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "productionMode",
-    outputs: [
-      {
-        internalType: "bool",
-        name: "",
-        type: "bool",
       },
     ],
     stateMutability: "view",
@@ -7018,62 +6607,6 @@ const _abi = [
       },
     ],
     stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_agentVault",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "_receiver",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "_amountUBA",
-        type: "uint256",
-      },
-      {
-        internalType: "string",
-        name: "_receiverUnderlyingAddress",
-        type: "string",
-      },
-      {
-        internalType: "address payable",
-        name: "_executor",
-        type: "address",
-      },
-    ],
-    name: "redeemFromAgent",
-    outputs: [],
-    stateMutability: "payable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_agentVault",
-        type: "address",
-      },
-      {
-        internalType: "address",
-        name: "_receiver",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "_amountUBA",
-        type: "uint256",
-      },
-    ],
-    name: "redeemFromAgentInCollateral",
-    outputs: [],
-    stateMutability: "nonpayable",
     type: "function",
   },
   {
@@ -7702,13 +7235,6 @@ const _abi = [
     type: "function",
   },
   {
-    inputs: [],
-    name: "resetEmergencyPauseTotalDuration",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
     inputs: [
       {
         internalType: "address",
@@ -7879,242 +7405,6 @@ const _abi = [
       },
     ],
     name: "selfMint",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setAgentExitAvailableTimelockSeconds",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setAgentFeeChangeTimelockSeconds",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setAgentMintingCRChangeTimelockSeconds",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_value",
-        type: "address",
-      },
-    ],
-    name: "setAgentOwnerRegistry",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setAgentTimelockedOperationWindowSeconds",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_value",
-        type: "address",
-      },
-    ],
-    name: "setAgentVaultFactory",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setAttestationWindowSeconds",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setAverageBlockTimeMS",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_value",
-        type: "address",
-      },
-    ],
-    name: "setCleanerContract",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_value",
-        type: "address",
-      },
-    ],
-    name: "setCleanupBlockNumberManager",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_value",
-        type: "address",
-      },
-    ],
-    name: "setCollateralPoolFactory",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_value",
-        type: "address",
-      },
-    ],
-    name: "setCollateralPoolTokenFactory",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setCollateralPoolTokenTimelockSeconds",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "enum CollateralType.Class",
-        name: "_collateralClass",
-        type: "uint8",
-      },
-      {
-        internalType: "contract IERC20",
-        name: "_token",
-        type: "address",
-      },
-      {
-        internalType: "uint256",
-        name: "_minCollateralRatioBIPS",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_safetyMinCollateralRatioBIPS",
-        type: "uint256",
-      },
-    ],
-    name: "setCollateralRatiosForToken",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setCollateralReservationFeeBips",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setConfirmationByOthersAfterSeconds",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setConfirmationByOthersRewardUSD5",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -8315,159 +7605,11 @@ const _abi = [
     inputs: [
       {
         internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setEmergencyPauseDurationResetAfterSeconds",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_value",
-        type: "address",
-      },
-    ],
-    name: "setFdcVerification",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256[]",
-        name: "_liquidationFactors",
-        type: "uint256[]",
-      },
-      {
-        internalType: "uint256[]",
-        name: "_vaultCollateralFactors",
-        type: "uint256[]",
-      },
-    ],
-    name: "setLiquidationPaymentFactors",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_stepSeconds",
-        type: "uint256",
-      },
-    ],
-    name: "setLiquidationStepSeconds",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setLotSizeAmg",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setMaxEmergencyPauseDurationSeconds",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setMaxRedeemedTickets",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setMaxTrustedPriceAgeSeconds",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setMinUpdateRepeatTimeSeconds",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
         name: "_valueUBA",
         type: "uint256",
       },
     ],
     name: "setMinimumRedeemAmountUBA",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setMintingCapAmg",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setMintingPoolHoldingsRequiredBIPS",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -8481,76 +7623,6 @@ const _abi = [
       },
     ],
     name: "setMintingTagManager",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_rewardUSD5",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_rewardBIPS",
-        type: "uint256",
-      },
-    ],
-    name: "setPaymentChallengeReward",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setPoolExitCRChangeTimelockSeconds",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_value",
-        type: "address",
-      },
-    ],
-    name: "setPriceReader",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setRedemptionDefaultFactorVaultCollateralBIPS",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setRedemptionFeeBips",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -8585,16 +7657,11 @@ const _abi = [
     inputs: [
       {
         internalType: "uint256",
-        name: "_underlyingBlocks",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_underlyingSeconds",
+        name: "_feeBIPS",
         type: "uint256",
       },
     ],
-    name: "setTimeForPayment",
+    name: "setSystemRedemptionFeeBIPS",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -8602,25 +7669,12 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
+        internalType: "address",
+        name: "_receiver",
+        type: "address",
       },
     ],
-    name: "setVaultCollateralBuyForFlareFactorBIPS",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_value",
-        type: "uint256",
-      },
-    ],
-    name: "setWithdrawalOrDestroyWaitMinSeconds",
+    name: "setSystemRedemptionFeeReceiver",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -8665,9 +7719,28 @@ const _abi = [
   },
   {
     inputs: [],
-    name: "switchToProductionMode",
-    outputs: [],
-    stateMutability: "nonpayable",
+    name: "systemRedemptionFeeBIPS",
+    outputs: [
+      {
+        internalType: "uint256",
+        name: "",
+        type: "uint256",
+      },
+    ],
+    stateMutability: "view",
+    type: "function",
+  },
+  {
+    inputs: [],
+    name: "systemRedemptionFeeReceiver",
+    outputs: [
+      {
+        internalType: "address",
+        name: "",
+        type: "address",
+      },
+    ],
+    stateMutability: "view",
     type: "function",
   },
   {
@@ -8697,13 +7770,6 @@ const _abi = [
       },
     ],
     name: "unblockDirectMintingsUntil",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [],
-    name: "unpauseMinting",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
@@ -8807,24 +7873,6 @@ const _abi = [
   {
     inputs: [
       {
-        internalType: "address",
-        name: "_agentVault",
-        type: "address",
-      },
-      {
-        internalType: "contract IERC20",
-        name: "_token",
-        type: "address",
-      },
-    ],
-    name: "updateCollateral",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
         components: [
           {
             internalType: "bytes32[]",
@@ -8917,83 +7965,11 @@ const _abi = [
     inputs: [
       {
         internalType: "address",
-        name: "_controller",
-        type: "address",
-      },
-      {
-        internalType: "contract IWNat",
-        name: "_wNat",
-        type: "address",
-      },
-    ],
-    name: "updateSystemContracts",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
         name: "_agentVault",
         type: "address",
       },
     ],
     name: "upgradeAgentVaultAndPool",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_start",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_end",
-        type: "uint256",
-      },
-    ],
-    name: "upgradeAgentVaultsAndPools",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "address",
-        name: "_value",
-        type: "address",
-      },
-      {
-        internalType: "bytes",
-        name: "callData",
-        type: "bytes",
-      },
-    ],
-    name: "upgradeFAssetImplementation",
-    outputs: [],
-    stateMutability: "nonpayable",
-    type: "function",
-  },
-  {
-    inputs: [
-      {
-        internalType: "uint256",
-        name: "_start",
-        type: "uint256",
-      },
-      {
-        internalType: "uint256",
-        name: "_end",
-        type: "uint256",
-      },
-    ],
-    name: "upgradeWNatContract",
     outputs: [],
     stateMutability: "nonpayable",
     type: "function",
