@@ -159,7 +159,7 @@ export class EventInterface {
       }
     }
     if (topics.size === 0) {
-       new Error(`Event ${eventName} not found in interface`)
+      throw new Error(`Event ${eventName} not found in interface`)
     }
     return Array.from(topics)
   }

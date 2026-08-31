@@ -36,4 +36,23 @@ describe("FAsset evm events", () => {
     }
   })
 
+  // Covers every contract group, not just the three asserted above. An event
+  // configured for indexing but absent from the artifact used to yield no topic
+  // and be dropped from the scrape filter in silence, so it is worth checking
+  // the whole set resolves rather than one interface at a time.
+  it("should resolve a topic for every configured event", async () => {
+    for (const contract of Object.keys(EVENTS) as (keyof typeof EVENTS)[]) {
+      const ifaces = eventIface.contractToIface(contract)
+      for (const eventname of Object.values(EVENTS[contract])) {
+        expect(() => eventIface.getEventTopics(eventname, ifaces), `${contract}:${eventname}`).to.not.throw()
+      }
+    }
+  })
+
+  it("should throw when an event is in no interface", async () => {
+    const ifaces = eventIface.contractToIface("ASSET_MANAGER")
+    expect(() => eventIface.getEventTopics("NoSuchEventExists", ifaces))
+      .to.throw("Event NoSuchEventExists not found in interface")
+  })
+
 })
