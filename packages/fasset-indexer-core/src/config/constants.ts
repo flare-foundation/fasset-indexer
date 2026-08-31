@@ -183,7 +183,7 @@ export const EVENTS = {
     PAYMENT_PROOF_VALIDITY_DURATION_SECONDS_SET: 'PaymentProofValidityDurationSecondsSet',
     PERSONAL_ACCOUNT_CREATED: 'PersonalAccountCreated',
     SWAP_EXECUTED: 'SwapExecuted',
-    SWAP_PARAMS_SET: 'SwapExecuted',
+    SWAP_PARAMS_SET: 'SwapParamsSet',
     FXRP_REDEEMED: 'FXrpRedeemed',
     FXRP_TRANSFERRED: 'FXrpTransferred',
     XRPL_PROVIDER_WALLET_ADDED: 'XrplProviderWalletAdded',

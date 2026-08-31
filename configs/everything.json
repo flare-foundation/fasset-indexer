@@ -108,7 +108,6 @@
         "MASTER_ACCOUNT_CONTROLLER:CollateralReserved",
         "MASTER_ACCOUNT_CONTROLLER:DefaultInstructionFeeSet",
         "MASTER_ACCOUNT_CONTROLLER:Deposited",
-        "DiamondCut",
         "MASTER_ACCOUNT_CONTROLLER:ExecutorFeeSet",
         "MASTER_ACCOUNT_CONTROLLER:ExecutorSet",
         "MASTER_ACCOUNT_CONTROLLER:FXrpRedeemed",
