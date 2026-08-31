@@ -78,6 +78,7 @@
         "ASSET_MANAGER:RedemptionTicketUpdated",
         "ASSET_MANAGER:RedemptionTicketDeleted",
         "ASSET_MANAGER:RedemptionPoolFeeMinted",
+        "ASSET_MANAGER:SystemRedemptionFeePaid",
         "MASTER_ACCOUNT_CONTROLLER:PersonalAccountCreated"
       ]
 }

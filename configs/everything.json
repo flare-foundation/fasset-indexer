@@ -88,6 +88,7 @@
         "ASSET_MANAGER:UnderlyingBalanceToppedUp",
         "ASSET_MANAGER:UnderlyingBalanceChanged",
         "ASSET_MANAGER:RedemptionPoolFeeMinted",
+        "ASSET_MANAGER:SystemRedemptionFeePaid",
         "ASSET_MANAGER:DustChanged",
         "ASSET_MANAGER:ConfirmedClosedMintingPayment",
         "ASSET_MANAGER:DirectMintingExecuted",
