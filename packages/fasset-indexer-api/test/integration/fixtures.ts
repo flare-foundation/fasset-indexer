@@ -239,6 +239,56 @@ export class Fixtures {
     return e
   }
 
+  // The watchdog-polled live state of a vault. Everything the analytics read is
+  // non-nullable, so all of it defaults to zero and a test spells out only the
+  // fields it asserts on. Keyed by agentVault (the PK).
+  async agentVaultInfo(
+    overrides: Partial<E.AgentVaultInfo> & { agentVault: E.AgentVault }
+  ): Promise<E.AgentVaultInfo> {
+    const base = {
+      status: 0, publiclyAvailable: true,
+      freeCollateralLots: 0n,
+      totalVaultCollateralWei: 0n, freeVaultCollateralWei: 0n, vaultCollateralRatioBIPS: 0n,
+      totalPoolCollateralNATWei: 0n, freePoolCollateralNATWei: 0n, poolCollateralRatioBIPS: 0n,
+      totalAgentPoolTokensWei: 0n, freeAgentPoolTokensWei: 0n,
+      mintedUBA: 0n, reservedUBA: 0n, redeemingUBA: 0n, poolRedeemingUBA: 0n, dustUBA: 0n,
+      liquidationStartTimestamp: 0, maxLiquidationAmountUBA: 0n,
+      liquidationPaymentFactorVaultBIPS: 0n, liquidationPaymentFactorPoolBIPS: 0n,
+      underlyingBalanceUBA: 0n, requiredUnderlyingBalanceUBA: 0n, freeUnderlyingBalanceUBA: 0n
+    }
+    const e = this.em.create(E.AgentVaultInfo, { ...base, ...overrides })
+    await this.em.persistAndFlush(e)
+    return e
+  }
+
+  // A bot's answer to a liveness ping. `response` is off-chain defined; the
+  // real fasset-bots payload is {"name":...,"version":...}.
+  async agentPingResponse(opts: {
+    fasset: FAssetType,
+    agentVault: E.AgentVault,
+    response: string,
+    query?: bigint,
+    blockIndex?: number,
+    blockTimestamp?: number,
+    assetManagerHex?: string
+  }): Promise<E.AgentPingResponse> {
+    const log = await this.logAt({
+      name: 'AgentPingResponse',
+      addressHex: opts.assetManagerHex ?? '0x00000000000000000000000000000000000000ff',
+      blockIndex: opts.blockIndex ?? 1000 + monotonicEvmLogIndex,
+      blockTimestamp: opts.blockTimestamp ?? 1_700_000_000
+    })
+    const e = this.em.create(E.AgentPingResponse, {
+      evmLog: log,
+      fasset: opts.fasset,
+      agentVault: opts.agentVault,
+      query: opts.query ?? 0n,
+      response: opts.response
+    })
+    await this.em.persistAndFlush(e)
+    return e
+  }
+
   // ---------- mint: collateral reservation → executed (or defaulted)
 
   async collateralReserved(opts: {

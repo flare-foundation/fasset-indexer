@@ -70,7 +70,10 @@ export class VisualiserController {
 
   @Get('agents')
   @UseInterceptors(CacheInterceptor)
-  @ApiOperation({ summary: 'All agent vaults with their full live state (status, CRs, collateral, in-flight UBA)' })
+  @ApiOperation({
+    summary: 'All agent vaults with their full live state (status, CRs, collateral, in-flight UBA)',
+    description: 'Each entry also carries `bot`: the agent bot software make and version parsed from that vault\'s most recent AgentPingResponse, with the raw response and its timestamp. Absent for vaults whose bot has never answered a ping.'
+  })
   @ApiQuery({ name: 'fasset', type: String, required: false, description: 'Filter by FAsset (FXRP, FBTC, ...)' })
   @ApiQuery({ name: 'status', type: Number, required: false, description: '0=Normal, 1=CCB, 2=Liquidation, 3=FullLiquidation, 4=Destroying' })
   @ApiQuery({ name: 'available', type: Boolean, required: false, description: 'Only publicly available agents' })

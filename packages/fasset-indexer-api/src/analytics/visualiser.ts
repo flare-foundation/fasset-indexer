@@ -3,10 +3,12 @@ import {
   CollateralReservationResolution, RedemptionResolution,
   TransferToCoreVaultResolution, ReturnFromCoreVaultResolution
 } from "fasset-indexer-core"
+import { EntityManager, raw } from "fasset-indexer-core/orm"
 import { PaymentReference } from "fasset-indexer-core/utils"
 import * as Entities from "fasset-indexer-core/entities"
 import { unixnow } from "../shared/utils"
 import { DashboardAnalytics } from "./dashboard"
+import { parseAgentBotResponse, truncateAgentBotResponse } from "./utils/agent-bot-response"
 import * as VT from "./visualiser-types"
 
 
@@ -97,6 +99,7 @@ export class VisualiserAnalytics extends DashboardAnalytics {
     const managers = await em.find(Entities.AgentManager, {}, { populate: ['address'] })
     const managerMeta = new Map<string, { name?: string, iconUrl?: string }>()
     for (const m of managers) managerMeta.set(m.address.hex, { name: m.name, iconUrl: m.iconUrl })
+    const bots = await this.agentBots(em)
 
     const ret: VT.AgentOverview[] = []
     for (const info of infos) {
@@ -119,6 +122,7 @@ export class VisualiserAnalytics extends DashboardAnalytics {
         publiclyAvailable: info.publiclyAvailable,
         destroyed: info.agentVault.destroyed,
         status: info.status as VT.AgentStatus,
+        bot: bots.get(vault),
         vaultCollateralRatioBIPS: info.vaultCollateralRatioBIPS,
         poolCollateralRatioBIPS: info.poolCollateralRatioBIPS,
         totalVaultCollateralWei: info.totalVaultCollateralWei,
@@ -151,6 +155,36 @@ export class VisualiserAnalytics extends DashboardAnalytics {
   async agent(vault: string): Promise<VT.AgentOverview | null> {
     const list = await this.agents()
     return list.find(a => a.vault.toLowerCase() === vault.toLowerCase()) ?? null
+  }
+
+  /**
+   * The latest AgentPingResponse per agent vault, keyed by vault address.
+   *
+   * Agent bots answer liveness pings with their own make and version, so the
+   * newest response is where the visualiser learns which software an agent
+   * runs. Grouping to max(evm_log_id) picks it: log ids encode chain position,
+   * so the largest id for a vault is its most recent response.
+   */
+  async agentBots(em?: EntityManager): Promise<Map<string, VT.AgentBotStatus>> {
+    const _em = em ?? this.orm.em.fork()
+    const latest = await _em.createQueryBuilder(Entities.AgentPingResponse, 'apr')
+      .select([raw('max(apr.evm_log_id) as log_id')])
+      .groupBy('apr.agentVault')
+      .execute() as { log_id: number | string }[]
+    const ret = new Map<string, VT.AgentBotStatus>()
+    if (latest.length === 0) return ret
+    const responses = await _em.find(Entities.AgentPingResponse,
+      { evmLog: { id: { $in: latest.map(r => Number(r.log_id)) } } },
+      { populate: ['agentVault.address', 'evmLog.block'] }
+    )
+    for (const r of responses) {
+      ret.set(r.agentVault.address.hex, {
+        ...parseAgentBotResponse(r.response),
+        response: truncateAgentBotResponse(r.response),
+        respondedAtTimestamp: r.evmLog.block.timestamp
+      })
+    }
+    return ret
   }
 
   ////////////////////////////////////////////////////////////////////////

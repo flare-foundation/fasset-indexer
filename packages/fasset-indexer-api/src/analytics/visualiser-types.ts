@@ -29,6 +29,8 @@ export interface AgentOverview {
   publiclyAvailable: boolean
   destroyed: boolean
   status: AgentStatus
+  // agent bot software, self-reported in the latest ping response (absent if never pinged)
+  bot?: AgentBotStatus
   // collateral
   vaultCollateralRatioBIPS: bigint
   poolCollateralRatioBIPS: bigint
@@ -57,6 +59,19 @@ export interface AgentOverview {
   poolFeeShareBIPS?: bigint
   mintingVaultCollateralRatioBIPS?: bigint
   mintingPoolCollateralRatioBIPS?: bigint
+}
+
+/**
+ * What the agent's bot last said about itself, taken from the most recent
+ * AgentPingResponse for the vault. `name`/`version` are absent when the
+ * response was not the JSON identity payload fasset-bots sends -- `response`
+ * always carries the raw string, and the timestamp doubles as a liveness signal.
+ */
+export interface AgentBotStatus {
+  name?: string
+  version?: string
+  response: string
+  respondedAtTimestamp: number
 }
 
 export enum AgentStatus {
