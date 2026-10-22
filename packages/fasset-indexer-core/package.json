@@ -44,7 +44,7 @@
         "run-watchdog": "node dist/src/run/run-watchdog.js",
         "--------- tests -----------": "----------- tests -----------",
         "test": "mocha --timeout 100000",
-            "--------- code generators -----------": "----------- code generators -----------",
+        "--------- code generators -----------": "----------- code generators -----------",
         "types": "rm -rf chain/typechain && yarn typechain --target=ethers-v6 chain/artifacts/**/*.json --out-dir chain/typechain/"
     },
     "devDependencies": {
@@ -56,7 +56,7 @@
         "chai": "^5.1.1",
         "chai-as-promised": "^8.0.0",
         "fs": "^0.0.1-security",
-        "mocha": "^10.4.0",
+        "mocha": "^11.7.6",
         "tsx": "^4.19.2",
         "typechain": "^8.3.2"
     },

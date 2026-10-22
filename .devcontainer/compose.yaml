@@ -3,7 +3,7 @@
 # the deployed services and expects CI/deploy variables to be set.
 services:
   app:
-    image: mcr.microsoft.com/devcontainers/typescript-node:20
+    image: mcr.microsoft.com/devcontainers/typescript-node:26
     # Keep the container alive; devcontainer.json attaches to it.
     command: sleep infinity
     volumes:
