@@ -8,6 +8,7 @@ import type {
   SelfCloseEvent,
   MintingExecutedEvent,
   MintingPaymentDefaultEvent,
+  MintingPaymentForbiddenEvent,
   CollateralReservationDeletedEvent,
   RedemptionRequestedEvent,
   RedemptionPerformedEvent,
@@ -68,6 +69,7 @@ export type EventNameToEventArgs = {
   [EVENTS.ASSET_MANAGER.COLLATERAL_RESERVED]: CollateralReservedEvent.OutputTuple
   [EVENTS.ASSET_MANAGER.MINTING_EXECUTED]: MintingExecutedEvent.OutputTuple
   [EVENTS.ASSET_MANAGER.MINTING_PAYMENT_DEFAULT]: MintingPaymentDefaultEvent.OutputTuple
+  [EVENTS.ASSET_MANAGER.MINTING_PAYMENT_FORBIDDEN]: MintingPaymentForbiddenEvent.OutputTuple
   [EVENTS.ASSET_MANAGER.COLLATERAL_RESERVATION_DELETED]: CollateralReservationDeletedEvent.OutputTuple
   [EVENTS.ASSET_MANAGER.SELF_MINT]: SelfMintEvent.OutputTuple
   [EVENTS.ASSET_MANAGER.REDEMPTION_REQUESTED]: RedemptionRequestedEvent.OutputTuple

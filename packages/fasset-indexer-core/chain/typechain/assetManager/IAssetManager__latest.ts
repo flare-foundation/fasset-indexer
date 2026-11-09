@@ -1464,6 +1464,7 @@ export interface IAssetManager__latestInterface extends Interface {
       | "MintingExecuted"
       | "MintingPaused"
       | "MintingPaymentDefault"
+      | "MintingPaymentForbidden"
       | "PoolTokenRedemptionAnnounced"
       | "RedeemedInCollateral"
       | "RedemptionAmountIncomplete"
@@ -3464,6 +3465,37 @@ export namespace MintingPaymentDefaultEvent {
     agentVault: string;
     minter: string;
     collateralReservationId: bigint;
+    reservedAmountUBA: bigint;
+  }
+  export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
+  export type Filter = TypedDeferredTopicFilter<Event>;
+  export type Log = TypedEventLog<Event>;
+  export type LogDescription = TypedLogDescription<Event>;
+}
+
+export namespace MintingPaymentForbiddenEvent {
+  export type InputTuple = [
+    agentVault: AddressLike,
+    minter: AddressLike,
+    collateralReservationId: BigNumberish,
+    transactionId: BytesLike,
+    receivedAmountUBA: BigNumberish,
+    reservedAmountUBA: BigNumberish
+  ];
+  export type OutputTuple = [
+    agentVault: string,
+    minter: string,
+    collateralReservationId: bigint,
+    transactionId: string,
+    receivedAmountUBA: bigint,
+    reservedAmountUBA: bigint
+  ];
+  export interface OutputObject {
+    agentVault: string;
+    minter: string;
+    collateralReservationId: bigint;
+    transactionId: string;
+    receivedAmountUBA: bigint;
     reservedAmountUBA: bigint;
   }
   export type Event = TypedContractEvent<InputTuple, OutputTuple, OutputObject>;
@@ -6289,6 +6321,13 @@ export interface IAssetManager__latest extends BaseContract {
     MintingPaymentDefaultEvent.OutputObject
   >;
   getEvent(
+    key: "MintingPaymentForbidden"
+  ): TypedContractEvent<
+    MintingPaymentForbiddenEvent.InputTuple,
+    MintingPaymentForbiddenEvent.OutputTuple,
+    MintingPaymentForbiddenEvent.OutputObject
+  >;
+  getEvent(
     key: "PoolTokenRedemptionAnnounced"
   ): TypedContractEvent<
     PoolTokenRedemptionAnnouncedEvent.InputTuple,
@@ -6955,6 +6994,17 @@ export interface IAssetManager__latest extends BaseContract {
       MintingPaymentDefaultEvent.InputTuple,
       MintingPaymentDefaultEvent.OutputTuple,
       MintingPaymentDefaultEvent.OutputObject
+    >;
+
+    "MintingPaymentForbidden(address,address,uint256,bytes32,uint256,uint256)": TypedContractEvent<
+      MintingPaymentForbiddenEvent.InputTuple,
+      MintingPaymentForbiddenEvent.OutputTuple,
+      MintingPaymentForbiddenEvent.OutputObject
+    >;
+    MintingPaymentForbidden: TypedContractEvent<
+      MintingPaymentForbiddenEvent.InputTuple,
+      MintingPaymentForbiddenEvent.OutputTuple,
+      MintingPaymentForbiddenEvent.OutputObject
     >;
 
     "PoolTokenRedemptionAnnounced(address,uint256,uint256)": TypedContractEvent<

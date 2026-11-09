@@ -66,6 +66,24 @@ export class MintingPaymentDefault extends FAssetEventBound {
   collateralReserved!: CollateralReserved
 }
 
+// The agent released the reservation because its payment came from a forbidden
+// address or its minter is forbidden: nothing was minted, the payment is unaccounted.
+@Entity()
+export class MintingPaymentForbidden extends FAssetEventBound {
+
+  @OneToOne({ entity: () => CollateralReserved, owner: true })
+  collateralReserved!: CollateralReserved
+
+  @Property({ type: 'text', length: BYTES32_LENGTH, index: true })
+  transactionId!: string
+
+  @Property({ type: new uint256() })
+  receivedAmountUBA!: bigint
+
+  @Property({ type: new uint256() })
+  reservedAmountUBA!: bigint
+}
+
 @Entity()
 export class CollateralReservationDeleted extends FAssetEventBound {
 

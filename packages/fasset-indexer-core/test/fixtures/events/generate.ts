@@ -30,6 +30,7 @@ import type {
   SelfCloseEvent,
   MintingExecutedEvent,
   MintingPaymentDefaultEvent,
+  MintingPaymentForbiddenEvent,
   CollateralReservationDeletedEvent,
   RedemptionRequestedEvent,
   RedemptionPerformedEvent,
@@ -223,6 +224,18 @@ export class EventGeneration {
       collateralReserved.agentVault.address.hex,
       collateralReserved.minter.hex,
       BigInt(collateralReserved.collateralReservationId),
+      collateralReserved.valueUBA
+    ]
+  }
+
+  protected async generateMintingPaymentForbidden(): Promise<MintingPaymentForbiddenEvent.OutputTuple> {
+    const collateralReserved = await this.getRandomCollateralReserved()
+    return [
+      collateralReserved.agentVault.address.hex,
+      collateralReserved.minter.hex,
+      BigInt(collateralReserved.collateralReservationId),
+      randomHash(),
+      collateralReserved.valueUBA + collateralReserved.feeUBA,
       collateralReserved.valueUBA
     ]
   }

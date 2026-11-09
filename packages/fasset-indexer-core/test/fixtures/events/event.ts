@@ -106,6 +106,8 @@ export class EventFixture extends EventGeneration {
         return this.generateMintingExecuted()
       } case EVENTS.ASSET_MANAGER.MINTING_PAYMENT_DEFAULT: {
         return this.generateMintingPaymentDefault()
+      } case EVENTS.ASSET_MANAGER.MINTING_PAYMENT_FORBIDDEN: {
+        return this.generateMintingPaymentForbidden()
       } case EVENTS.ASSET_MANAGER.COLLATERAL_RESERVATION_DELETED: {
         return this.generateCollateralReservationDeleted()
       } case EVENTS.ASSET_MANAGER.SELF_MINT: {

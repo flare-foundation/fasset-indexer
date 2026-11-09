@@ -68,6 +68,7 @@ export const EVENTS = {
     MINTING_EXECUTED: "MintingExecuted",
     SELF_MINT: "SelfMint",
     MINTING_PAYMENT_DEFAULT: "MintingPaymentDefault",
+    MINTING_PAYMENT_FORBIDDEN: "MintingPaymentForbidden",
     COLLATERAL_RESERVATION_DELETED: "CollateralReservationDeleted",
     // direct minting
     DIRECT_MINTING_EXECUTED: "DirectMintingExecuted",

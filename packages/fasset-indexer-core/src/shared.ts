@@ -7,7 +7,7 @@ export const FASSETS = Object.keys(FAssetType).filter(([key]) => Number.isNaN(Nu
 
 export type FAssetIface = keyof typeof EVENTS
 
-export enum CollateralReservationResolution { NONE, EXECUTED, DEFAULTED, DELETED }
+export enum CollateralReservationResolution { NONE, EXECUTED, DEFAULTED, DELETED, FORBIDDEN }
 export enum RedemptionResolution { NONE, PERFORMED, DEFAULTED, BLOCKED, FAILED, REJECTED }
 export enum ReturnFromCoreVaultResolution { NONE, CONFIRMED, CANCELLED  }
 export enum TransferToCoreVaultResolution { NONE, SUCCESSFUL, DEFAULTED }

@@ -156,6 +156,9 @@ export class EventStorer {
       } case EVENTS.ASSET_MANAGER.MINTING_PAYMENT_DEFAULT: {
         await this.onMintingPaymentDefault(em, evmLog, log.args)
         break
+      } case EVENTS.ASSET_MANAGER.MINTING_PAYMENT_FORBIDDEN: {
+        await this.onMintingPaymentForbidden(em, evmLog, log.args)
+        break
       } case EVENTS.ASSET_MANAGER.COLLATERAL_RESERVATION_DELETED: {
         await this.onCollateralReservationDeleted(em, evmLog, log.args)
         break
@@ -650,6 +653,21 @@ export class EventStorer {
       { collateralReservationId: Number(collateralReservationId), fasset })
     collateralReserved.resolution = shared.CollateralReservationResolution.DEFAULTED
     return em.create(Entities.MintingPaymentDefault, { evmLog, fasset, collateralReserved })
+  }
+
+  protected async onMintingPaymentForbidden(
+    em: EntityManager,
+    evmLog: Entities.EvmLog,
+    logArgs: AssetManager.MintingPaymentForbiddenEvent.OutputTuple
+  ): Promise<Entities.MintingPaymentForbidden> {
+    const fasset = this.lookup.assetManagerAddressToFAssetType(evmLog.address.hex)
+    const [ ,, collateralReservationId, transactionId, receivedAmountUBA, reservedAmountUBA ] = logArgs
+    const collateralReserved = await em.findOneOrFail(Entities.CollateralReserved,
+      { collateralReservationId: Number(collateralReservationId), fasset })
+    collateralReserved.resolution = shared.CollateralReservationResolution.FORBIDDEN
+    return em.create(Entities.MintingPaymentForbidden, {
+      evmLog, fasset, collateralReserved, transactionId, receivedAmountUBA, reservedAmountUBA
+    })
   }
 
   protected async onCollateralReservationDeleted(

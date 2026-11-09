@@ -12,6 +12,7 @@ const config = {
     ['minting_executed', CollateralReservationResolution.EXECUTED],
     ['minting_payment_default', CollateralReservationResolution.DEFAULTED],
     ['collateral_reservation_deleted', CollateralReservationResolution.DELETED],
+    ['minting_payment_forbidden', CollateralReservationResolution.FORBIDDEN],
     ['-', CollateralReservationResolution.NONE]
   ],
   redemption_requested: [

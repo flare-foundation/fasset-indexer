@@ -1,7 +1,7 @@
 import { describe, before, beforeEach, after, it } from "mocha"
 import { use, expect } from "chai"
 import chaiAsPromised from "chai-as-promised"
-import { FAssetType, RedemptionResolution } from "../src"
+import { CollateralReservationResolution, FAssetType, RedemptionResolution } from "../src"
 import * as Entities from "../src/orm/entities"
 import { Context } from "../src/context/context"
 import { EventInterface } from "../src/context/events"
@@ -316,6 +316,25 @@ describe("FAsset evm events", () => {
       expect(collateralReservationDeleted.evmLog.index).to.equal(collateralReservationDeletedEvent.index)
       expect(collateralReservationDeleted.evmLog.block.index).to.equal(collateralReservationDeletedEvent.block.index)
       expect(collateralReservationDeleted.collateralReserved.collateralReservationId).to.equal(Number(collateralReservationDeletedEvent.args[2]))
+    })
+
+    it("should store minting payment forbidden event and resolve the reservation as forbidden", async () => {
+      const assetManager = context.requireContractAddress(ASSET_MANAGER_FXRP)
+      await fixture.storeInitialAgents()
+      const em = context.orm.em.fork()
+      const collateralReservedEvent = await fixture.generateEvent(EVENTS.ASSET_MANAGER.COLLATERAL_RESERVED, assetManager)
+      await storer.processEventUnsafe(em, collateralReservedEvent)
+      await em.flush()
+      const mintingPaymentForbiddenEvent = await fixture.generateEvent(EVENTS.ASSET_MANAGER.MINTING_PAYMENT_FORBIDDEN, assetManager)
+      await storer.processEventUnsafe(em, mintingPaymentForbiddenEvent)
+      const mintingPaymentForbidden = await em.findOneOrFail(Entities.MintingPaymentForbidden,
+        { evmLog: { index: mintingPaymentForbiddenEvent.index, block: { index: mintingPaymentForbiddenEvent.block.index } } },
+        { populate: ['evmLog.block', 'collateralReserved'] })
+      expect(mintingPaymentForbidden.collateralReserved.collateralReservationId).to.equal(Number(mintingPaymentForbiddenEvent.args[2]))
+      expect(mintingPaymentForbidden.transactionId).to.equal(mintingPaymentForbiddenEvent.args[3])
+      expect(mintingPaymentForbidden.receivedAmountUBA).to.equal(mintingPaymentForbiddenEvent.args[4])
+      expect(mintingPaymentForbidden.reservedAmountUBA).to.equal(mintingPaymentForbiddenEvent.args[5])
+      expect(mintingPaymentForbidden.collateralReserved.resolution).to.equal(CollateralReservationResolution.FORBIDDEN)
     })
 
     it("should store self-mint event", async () => {

@@ -22,6 +22,7 @@
         "ASSET_MANAGER:MintingExecuted",
         "ASSET_MANAGER:SelfMint",
         "ASSET_MANAGER:MintingPaymentDefault",
+        "ASSET_MANAGER:MintingPaymentForbidden",
         "ASSET_MANAGER:CollateralReservationDeleted",
         "ASSET_MANAGER:RedemptionRequested",
         "ASSET_MANAGER:RedemptionWithTagRequested",

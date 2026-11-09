@@ -1102,6 +1102,49 @@
           "type": "address"
         },
         {
+          "indexed": true,
+          "internalType": "address",
+          "name": "minter",
+          "type": "address"
+        },
+        {
+          "indexed": true,
+          "internalType": "uint256",
+          "name": "collateralReservationId",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "bytes32",
+          "name": "transactionId",
+          "type": "bytes32"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "receivedAmountUBA",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "reservedAmountUBA",
+          "type": "uint256"
+        }
+      ],
+      "name": "MintingPaymentForbidden",
+      "type": "event"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": true,
+          "internalType": "address",
+          "name": "agentVault",
+          "type": "address"
+        },
+        {
           "indexed": false,
           "internalType": "uint256",
           "name": "amountWei",
