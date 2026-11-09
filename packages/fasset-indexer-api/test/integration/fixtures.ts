@@ -1,5 +1,5 @@
 import * as E from 'fasset-indexer-core/entities'
-import { FAssetType } from 'fasset-indexer-core'
+import { CollateralReservationResolution, FAssetType } from 'fasset-indexer-core'
 import { evmLogId } from 'fasset-indexer-core/orm'
 import type { EntityManager } from '@mikro-orm/core'
 
@@ -368,6 +368,32 @@ export class Fixtures {
       evmLog: log,
       fasset: opts.collateralReserved.fasset,
       collateralReserved: opts.collateralReserved
+    })
+    await this.em.persistAndFlush(e)
+    return e
+  }
+
+  // Also marks the reservation FORBIDDEN, as the indexer's storer does.
+  async mintingPaymentForbidden(opts: {
+    collateralReserved: E.CollateralReserved,
+    transactionId?: string, receivedAmountUBA?: bigint,
+    blockIndex?: number, blockTimestamp?: number
+  }): Promise<E.MintingPaymentForbidden> {
+    const log = await this.logAt({
+      name: 'MintingPaymentForbidden',
+      addressHex: '0x00000000000000000000000000000000000000ff',
+      blockIndex: opts.blockIndex ?? 2700 + monotonicEvmLogIndex,
+      blockTimestamp: opts.blockTimestamp ?? 1_700_000_700
+    })
+    const cr = opts.collateralReserved
+    cr.resolution = CollateralReservationResolution.FORBIDDEN
+    const e = this.em.create(E.MintingPaymentForbidden, {
+      evmLog: log,
+      fasset: cr.fasset,
+      collateralReserved: cr,
+      transactionId: opts.transactionId ?? `0x${'ab'.repeat(32)}`,
+      receivedAmountUBA: opts.receivedAmountUBA ?? cr.valueUBA + cr.feeUBA,
+      reservedAmountUBA: cr.valueUBA
     })
     await this.em.persistAndFlush(e)
     return e

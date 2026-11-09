@@ -93,6 +93,7 @@ export type MintEventDetails = EventDetails<
   Entities.CollateralReserved,
   Entities.MintingExecuted
     | Entities.MintingPaymentDefault
+    | Entities.MintingPaymentForbidden
     | Entities.CollateralReservationDeleted
 >
 export type RedeemEventDetails = EventDetails<

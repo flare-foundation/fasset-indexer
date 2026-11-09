@@ -293,13 +293,16 @@ export class ExplorerAnalytics extends SharedAnalytics {
   protected async mintingEventDetails(
     em: EntityManager, collateralReserved: Entities.CollateralReserved
   ): Promise<ExplorerType.MintEventDetails> {
-    let resolutionPromise: Promise<Entities.MintingExecuted | Entities.MintingPaymentDefault | Entities.CollateralReservationDeleted | undefined>
+    let resolutionPromise: Promise<Entities.MintingExecuted | Entities.MintingPaymentDefault | Entities.MintingPaymentForbidden | Entities.CollateralReservationDeleted | undefined>
       = Promise.resolve(undefined)
     if (collateralReserved.resolution === core.CollateralReservationResolution.EXECUTED) {
       resolutionPromise = em.findOneOrFail(Entities.MintingExecuted,
         { collateralReserved }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
     } else if (collateralReserved.resolution === core.CollateralReservationResolution.DEFAULTED) {
       resolutionPromise = em.findOneOrFail(Entities.MintingPaymentDefault,
+        { collateralReserved }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
+    } else if (collateralReserved.resolution === core.CollateralReservationResolution.FORBIDDEN) {
+      resolutionPromise = em.findOneOrFail(Entities.MintingPaymentForbidden,
         { collateralReserved }, { populate: [ 'evmLog.block', 'evmLog.transaction.source' ] })
     } else if (collateralReserved.resolution === core.CollateralReservationResolution.DELETED) {
       resolutionPromise = em.findOneOrFail(Entities.CollateralReservationDeleted,
@@ -539,6 +542,10 @@ export class ExplorerAnalytics extends SharedAnalytics {
       case EVENTS.ASSET_MANAGER.MINTING_PAYMENT_DEFAULT:
         return em.findOneOrFail(Entities.MintingPaymentDefault,
            { evmLog: log }, { populate: [ 'collateralReserved.evmLog.transaction' ] }
+        ).then(x => x.collateralReserved.evmLog)
+      case EVENTS.ASSET_MANAGER.MINTING_PAYMENT_FORBIDDEN:
+        return em.findOneOrFail(Entities.MintingPaymentForbidden,
+          { evmLog: log }, { populate: [ 'collateralReserved.evmLog.transaction' ] }
         ).then(x => x.collateralReserved.evmLog)
       case EVENTS.ASSET_MANAGER.COLLATERAL_RESERVATION_DELETED:
         return em.findOneOrFail(Entities.CollateralReservationDeleted,

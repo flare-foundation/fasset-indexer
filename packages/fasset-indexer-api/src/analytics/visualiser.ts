@@ -611,7 +611,7 @@ export class VisualiserAnalytics extends DashboardAnalytics {
     // Parents touched in window (covers active flows starting in window).
     const [
       reservations, redemptions, transfers, returns, directMints, directMintsToSmartAccount,
-      mintingExecuted, mintingDefault, mintingDeleted,
+      mintingExecuted, mintingDefault, mintingForbidden, mintingDeleted,
       redemptionPerformed, redemptionDefault, redemptionRejected,
       redemptionPaymentBlocked, redemptionPaymentFailed,
       transferSuccess, transferDefault,
@@ -640,6 +640,9 @@ export class VisualiserAnalytics extends DashboardAnalytics {
         populate: ['evmLog.block', 'evmLog.transaction', 'collateralReserved.evmLog.block', 'collateralReserved.evmLog.transaction', 'collateralReserved.agentVault.address', 'collateralReserved.minter', 'collateralReserved.paymentAddress'], ...limitOpt
       }),
       em.find(Entities.MintingPaymentDefault, { ...baseWhere, ...tsWhere }, {
+        populate: ['evmLog.block', 'evmLog.transaction', 'collateralReserved.evmLog.block', 'collateralReserved.evmLog.transaction', 'collateralReserved.agentVault.address', 'collateralReserved.minter', 'collateralReserved.paymentAddress'], ...limitOpt
+      }),
+      em.find(Entities.MintingPaymentForbidden, { ...baseWhere, ...tsWhere }, {
         populate: ['evmLog.block', 'evmLog.transaction', 'collateralReserved.evmLog.block', 'collateralReserved.evmLog.transaction', 'collateralReserved.agentVault.address', 'collateralReserved.minter', 'collateralReserved.paymentAddress'], ...limitOpt
       }),
       em.find(Entities.CollateralReservationDeleted, { ...baseWhere, ...tsWhere }, {
@@ -691,6 +694,7 @@ export class VisualiserAnalytics extends DashboardAnalytics {
     for (const e of directMintsToSmartAccount) upsert(this.directMintToSmartAccountFlow(e), e.evmLog.block.timestamp, e.evmLog.block.index)
     for (const e of mintingExecuted) upsert(this.mintFlowFromReservation(e.collateralReserved, 'completed', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
     for (const e of mintingDefault) upsert(this.mintFlowFromReservation(e.collateralReserved, 'defaulted', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
+    for (const e of mintingForbidden) upsert(this.mintFlowFromReservation(e.collateralReserved, 'defaulted', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
     for (const e of mintingDeleted) upsert(this.mintFlowFromReservation(e.collateralReserved, 'cancelled', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
     for (const e of redemptionPerformed) upsert(this.redemptionFlowFromRequest(e.redemptionRequested, 'completed', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
     for (const e of redemptionDefault) upsert(this.redemptionFlowFromRequest(e.redemptionRequested, 'defaulted', e.evmLog.block.timestamp, e.evmLog.transaction.hash), e.evmLog.block.timestamp, e.evmLog.block.index)
@@ -752,6 +756,8 @@ export class VisualiserAnalytics extends DashboardAnalytics {
     switch (r) {
       case CollateralReservationResolution.EXECUTED: return 'completed'
       case CollateralReservationResolution.DEFAULTED: return 'defaulted'
+      // released for a forbidden payment: fees are paid out as on a default
+      case CollateralReservationResolution.FORBIDDEN: return 'defaulted'
       case CollateralReservationResolution.DELETED: return 'cancelled'
       default: return 'active'
     }
